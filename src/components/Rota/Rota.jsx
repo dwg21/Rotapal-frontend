@@ -7,6 +7,7 @@ import { ClipLoader } from "react-spinners";
 
 import { FaArrowCircleLeft } from "react-icons/fa";
 import { FaArrowCircleRight } from "react-icons/fa";
+import { TiTick } from "react-icons/ti";
 
 import ServerApi from "../../serverApi/axios";
 
@@ -225,12 +226,42 @@ const Rota = () => {
     }
   };
 
+  const handleClickPublishRota = async () => {
+    //setRotaPublished(true);
+    try {
+      setRotaPublished(true);
+      await ServerApi.post(
+        `/api/v1/rotas/${selectedVenue.rota[selectedWeek]}/publish`,
+        { isPublished: true },
+        { withCredentials: true }
+      );
+      console.log("Rota publihsed successfully");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       {selectedVenue && selectedVenue.name && (
         <p className="text-xl font-bold">{selectedVenue.name}</p>
       )}
-      {rotaPublished ? <p>Rota is published</p> : <p>Rota is not published</p>}
+      {rotaPublished ? (
+        <button className="border p-2 my-2 rounded-md bg-green-400">
+          <div className="flex gap-2">
+            <p>Rota is published</p>
+            <TiTick className=" text-2xl" />
+          </div>
+        </button>
+      ) : (
+        <button
+          className="border p-2 my-2 rounded-md bg-orange-400"
+          onClick={handleClickPublishRota}
+        >
+          Publish Rota
+        </button>
+      )}
+
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="my-2">
           <div className="overflow-x-auto">
@@ -283,48 +314,27 @@ const Rota = () => {
                               {...provided.droppableProps}
                               className="min-h-[4rem]"
                             >
-                              {person.schedule[selectedWeek][dayIndex]
-                                .startTime ? (
-                                <Draggable
-                                  draggableId={`${personIndex}-${selectedWeek}-${dayIndex}`}
-                                  index={dayIndex}
-                                  key={`${personIndex}-${selectedWeek}-${dayIndex}`}
-                                >
-                                  {(provided) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className="bg-gray-200 p-2 rounded"
-                                    >
+                              <Draggable
+                                draggableId={`${personIndex}-${selectedWeek}-${dayIndex}`}
+                                index={dayIndex}
+                                key={`${personIndex}-${selectedWeek}-${dayIndex}`}
+                              >
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className="cursor-pointer flex items-center justify-center w-full h-full"
+                                  >
+                                    <div className="flex  text-center items-center justify-center p-1 rounded-md h-[80%] w-[80%]  bg-lightBlue text-white ">
                                       {person.schedule[selectedWeek][dayIndex]
-                                        .startTime &&
-                                      person.schedule[selectedWeek][dayIndex]
-                                        .endTime
+                                        .startTime
                                         ? `${person.schedule[selectedWeek][dayIndex].startTime} - ${person.schedule[selectedWeek][dayIndex].endTime}`
-                                        : ""}
+                                        : "Day Off"}
                                     </div>
-                                  )}
-                                </Draggable>
-                              ) : (
-                                <Draggable
-                                  draggableId={`${personIndex}-${selectedWeek}-${dayIndex}-dayoff`}
-                                  index={dayIndex}
-                                  key={`${personIndex}-${selectedWeek}-${dayIndex}-dayoff`}
-                                >
-                                  {(provided) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className="bg-gray-200 p-2 rounded"
-                                    >
-                                      Day Off
-                                    </div>
-                                  )}
-                                </Draggable>
-                              )}
-                              {provided.placeholder}
+                                  </div>
+                                )}
+                              </Draggable>
                             </div>
                           )}
                         </Droppable>
