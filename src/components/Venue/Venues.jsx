@@ -60,7 +60,7 @@ const Venues = () => {
   //change index to dynamic data later
   const handleViewRota = (index) => {
     setSelectedVenue(venues[index]);
-    navigate("/");
+    navigate("/rota");
   };
 
   return (

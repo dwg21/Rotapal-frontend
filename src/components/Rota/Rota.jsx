@@ -345,38 +345,11 @@ const Rota = () => {
               </tbody>
             </table>
           </div>
-          <div className="my-4">
-            <h2 className="text-lg font-semibold">Common Shifts</h2>
-            <Droppable droppableId="commonShifts" direction="horizontal">
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="flex space-x-2"
-                >
-                  {commonShifts.map((shift, index) => (
-                    <Draggable
-                      key={shift.id}
-                      draggableId={shift.id}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="bg-gray-300 p-2 rounded"
-                        >
-                          {shift.label}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
+
+          <ShiftTemplates
+            commonShifts={commonShifts}
+            setCommonShifts={setCommonShifts}
+          />
         </div>
       </DragDropContext>
 
@@ -399,27 +372,44 @@ const Rota = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
+        ariaHideApp={false}
         style={customStyles}
       >
-        <h2>Edit Shift</h2>
-        <div>
-          <label>Start Time:</label>
-          <input
-            type="time"
-            value={editStartTime}
-            onChange={(e) => setEditStartTime(e.target.value)}
-          />
+        <div className="flex flex-col">
+          <h2 className="text-center">Edit Shift</h2>
+          <div>
+            <label>Start Time:</label>
+            <input
+              type="time"
+              value={editStartTime}
+              onChange={(e) => setEditStartTime(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>End Time:</label>
+            <input
+              type="time"
+              value={editEndTime}
+              onChange={(e) => setEditEndTime(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => {
+              setEditStartTime("");
+              setEditEndTime("");
+              handleSaveShift();
+            }}
+            className="p-1 m-2 border rounded-md bg-red-500 text-white"
+          >
+            Mark as Day Off
+          </button>
+          <button
+            className="p-1 m-2 border rounded-md bg-blue-500 text-white"
+            onClick={handleSaveShift}
+          >
+            Save changes
+          </button>
         </div>
-        <div>
-          <label>End Time:</label>
-          <input
-            type="time"
-            value={editEndTime}
-            onChange={(e) => setEditEndTime(e.target.value)}
-          />
-        </div>
-        <button onClick={handleSaveShift}>Save</button>
-        <button onClick={() => setModalIsOpen(false)}>Cancel</button>
       </Modal>
 
       <div className="mt-4">

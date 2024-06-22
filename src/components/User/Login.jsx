@@ -8,10 +8,8 @@ const loginUrl = "api/v1/auth/login";
 const registerUrl = "api/v1/auth/register";
 
 const Login = () => {
-  const { user, setUser } = userContext();
+  const { state, dispatch } = userContext();
   const navigate = useNavigate();
-
-  console.log(user);
 
   //contians login and register data
   const [loginUser, setLoginUser] = useState({
@@ -34,11 +32,8 @@ const Login = () => {
       const { data } = await ServerApi.post(loginUrl, loginUserJson, {
         withCredentials: true,
       });
-      console.log("worked");
-      console.log(data.user);
-      setUser(data.user);
+      dispatch({ type: "LOGIN", payload: data.user });
       navigate("/venues");
-
       setLoginUser({ email: "", password: "" });
     } catch (error) {
       console.log(error);

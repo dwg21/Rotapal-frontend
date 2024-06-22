@@ -7,8 +7,9 @@ import { userContext } from "../../UserContext";
 
 export default function Sidebar({ children }) {
   const [expanded, setExpanded] = useState(true);
-  const { user } = userContext();
-  console.log(user);
+  const { state } = userContext();
+  console.log(state);
+  //console.log(user);
 
   return (
     <aside className="h-screen sticky top-0 ">
@@ -65,9 +66,8 @@ export default function Sidebar({ children }) {
           >
             <div className="leading-4">
               <h4 className="font-semibold">
-                {user.name ? user.name : "John Doe"}
+                {state.loggedIn ? state.userData.name : "No one logged in"}
               </h4>
-              <span className="text-xs text-gray-600">johndoe@gmail.com</span>
             </div>
             <MoreVertical size={20} />
           </div>

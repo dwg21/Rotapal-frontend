@@ -20,8 +20,8 @@ const CreateVenue = () => {
     try {
       const response = await ServerApi.post("/api/v1/venue/venues", data);
       console.log("Venue created successfully:", response.data);
-      //reset(); // Reset the form after successful submission
-      // navigate("/venues");
+      reset(); // Reset the form after successful submission
+      navigate("/venues");
     } catch (error) {
       console.error("Error creating venue:", error);
     }
@@ -36,11 +36,13 @@ const CreateVenue = () => {
     setEmployeeWage("");
     setEmployeeEmail("");
   };
-  const { user } = userContext();
+  const { state } = userContext();
   return (
     <div className="p-6">
       <h2 className=" font-bold text-2xl">Venues</h2>
-      <div className="my-2">{user.name && <>Hello {user.name}</>}</div>
+      <div className="my-2">
+        {state.loggedIn && <>Hello {state.userData.name}</>}
+      </div>
       <div className="mx-auto  max-w-[900px] mt-10 p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6">Create New Venue</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
