@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useRota } from "../../RotaContext";
 import { FaArrowCircleLeft, FaArrowCircleRight } from "react-icons/fa";
+import { addWeeks, startOfWeek, addDays, format } from "date-fns";
 
 import ServerApi from "../../serverApi/axios";
 
@@ -10,33 +11,41 @@ const EmployeeRota = () => {
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [error, setError] = useState(null);
 
+  // Calculate the dynamic weekStarting date
+  const calculateWeekStarting = () => {
+    const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday as the start of the week
+    const dynamicWeekStart = addWeeks(startOfCurrentWeek, selectedWeek);
+    return format(dynamicWeekStart, "yyyy-MM-dd");
+  };
+
+  const requestObject = {
+    weekStarting: calculateWeekStarting(),
+  };
+
+  console.log(requestObject);
+
   useEffect(() => {
-    const fetchEmployeeRota = async () => {
+    const fetchRota = async () => {
       try {
-        const response = await ServerApi.get(
-          `http://localhost:5000/api/v1/rotas/employeee/rota/${selectedWeek}`,
+        const response = await ServerApi.post(
+          `http://localhost:5000/api/v1/rotas/rota/employee`,
+          requestObject,
           {
             withCredentials: true,
           }
         );
-        console.log("hh");
-        console.log(response);
-        if (response.data.rota) {
-          setRota(response.data.rota.rotaData);
-          setError(null);
-        } else {
-          console.log("fhf");
-          setError("this rota is not published yet");
-        }
+        console.log("the rota:", response.data.rota);
+        setRota(response.data.rota.rotaData);
+        setError(null);
 
         console.log(response.data.rota);
       } catch (err) {
-        console.log(err.message);
-        //setError("Rota is unavailable for this weej");
+        console.log(err);
+        setError("Failed to fetch venues");
       }
     };
 
-    fetchEmployeeRota();
+    fetchRota();
   }, [selectedWeek]);
 
   const getDayLabel = (date) => {
@@ -126,9 +135,8 @@ const EmployeeRota = () => {
                           <div className="min-h-[4rem]">
                             <div className="cursor-pointer flex items-center justify-center w-full h-full">
                               <div className="flex  text-center items-center justify-center p-1 rounded-md h-[80%] w-[80%]  bg-lightBlue text-white ">
-                                {person.schedule[selectedWeek][dayIndex]
-                                  .startTime
-                                  ? `${person.schedule[selectedWeek][dayIndex].startTime} - ${person.schedule[selectedWeek][dayIndex].endTime}`
+                                {person.schedule[dayIndex].startTime
+                                  ? `${person.schedule[dayIndex].startTime} - ${person.schedule[dayIndex].endTime}`
                                   : "Day Off"}
                               </div>
                             </div>
@@ -139,9 +147,17 @@ const EmployeeRota = () => {
                   ))}
                 </tbody>
               ) : (
-                <p>{error}</p>
+                <></>
               )}
             </table>
+            {error && (
+              <>
+                <p className="p-2 text-l ">
+                  This weeks Rota is not yet publihsed
+                </p>
+                <p>Please contact your venue admin for any question</p>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -20,6 +20,7 @@ function App() {
           <NavbarContent />
         </Navbar>
         <Routes>
+          <Route path="/rota/:venueId" element={<Rota />} />
           <Route path="/rota" element={<Rota />} />
           <Route path="/employeerota" element={<EmployeeRota />} />
           <Route path="/staff" element={<Staff />} />

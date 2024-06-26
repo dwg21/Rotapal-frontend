@@ -1,15 +1,28 @@
 import { MoreVertical, ChevronLast, ChevronFirst } from "lucide-react";
 import { useContext, createContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const SidebarContext = createContext();
 import { userContext } from "../../UserContext";
+import ServerApi from "../../serverApi/axios";
 
 export default function Sidebar({ children }) {
   const [expanded, setExpanded] = useState(true);
-  const { state } = userContext();
+  const { state, dispatch } = userContext();
+  const navigate = useNavigate();
   console.log(state);
   //console.log(user);
+
+  const handleLogout = async () => {
+    try {
+      ServerApi.get("api/v1/auth/logout");
+      dispatch({ type: "LOGOUT" });
+    } catch (err) {
+      console.log(err);
+    }
+    dispatch({ type: "LOGOUT" });
+    navigate("/");
+  };
 
   return (
     <aside className="h-screen sticky top-0 ">
@@ -47,11 +60,9 @@ export default function Sidebar({ children }) {
             {expanded ? <ChevronFirst /> : <ChevronLast />}
           </button>
         </div>
-
         <SidebarContext.Provider value={{ expanded }}>
           <ul className="flex-1 px-3">{children}</ul>
         </SidebarContext.Provider>
-
         <div className="border-t flex p-3">
           <img
             src="https://ui-avatars.com/api/?background=c7d2fe&color=3730a3&bold=true"
@@ -69,9 +80,9 @@ export default function Sidebar({ children }) {
                 {state.loggedIn ? state.userData.name : "No one logged in"}
               </h4>
             </div>
-            <MoreVertical size={20} />
+            <button onClick={handleLogout}>Log out</button>
           </div>
-        </div>
+        </div>{" "}
       </nav>
     </aside>
   );

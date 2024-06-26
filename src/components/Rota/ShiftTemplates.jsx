@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Droppable, Draggable } from "react-beautiful-dnd";
 
 const ShiftTemplates = ({ commonShifts, setCommonShifts }) => {
   // State to handle new custom template

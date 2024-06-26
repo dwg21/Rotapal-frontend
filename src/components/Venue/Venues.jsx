@@ -59,8 +59,7 @@ const Venues = () => {
 
   //change index to dynamic data later
   const handleViewRota = (index) => {
-    setSelectedVenue(venues[index]);
-    navigate("/rota");
+    navigate(`/rota/${venues[index]._id}`);
   };
 
   return (
