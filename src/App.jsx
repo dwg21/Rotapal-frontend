@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar/Navbar";
 import EmployeeRota from "./components/Rota/EmployeeRota";
 
 import NavbarContent from "./components/Navbar/NavbarContent";
+import Notifications from "./components/Notifcation/Notifcations";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/forecast" element={<Forecast />} />
           <Route path="/createvenue" element={<CreateVenue />} />
           <Route path="/venues" element={<Venues />} />
+          <Route path="/notifcations" element={<Notifications />} />
         </Routes>
       </div>
     </>

@@ -59,11 +59,18 @@ const NavbarContent = () => {
   );
 
   const userItems = (
-    <SidebarItem
-      icon={<BookText size={20} />}
-      text="View Employee Rota"
-      linkDestination="/employeerota"
-    />
+    <>
+      <SidebarItem
+        icon={<BookText size={20} />}
+        text="View Employee Rota"
+        linkDestination="/employeerota"
+      />
+      <SidebarItem
+        icon={<Home size={20} />}
+        text="View Notifcations"
+        linkDestination="/notifcations"
+      />
+    </>
   );
 
   return state.userData.role === "admin" ? adminItems : userItems;
