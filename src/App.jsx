@@ -23,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/rota/:venueId" element={<Rota />} />
           <Route path="/rota" element={<Rota />} />
+          <Route path="/employeerota/:date" element={<EmployeeRota />} />
           <Route path="/employeerota" element={<EmployeeRota />} />
           <Route path="/staff" element={<Staff />} />
           <Route path="/" element={<Login />} />

@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { useRota } from "../../RotaContext";
 import { FaArrowCircleLeft, FaArrowCircleRight } from "react-icons/fa";
-import { addWeeks, startOfWeek, addDays, format } from "date-fns";
+import { addWeeks, startOfWeek, differenceInDays, format } from "date-fns";
+import { useParams } from "react-router-dom";
 
 import ServerApi from "../../serverApi/axios";
 
 const EmployeeRota = () => {
   const { weeks } = useRota();
+  const { date } = useParams();
+  console.log(date);
+
+  // Calculate the initial selectedWeek based on the date parameter
+  // Calculate the initial selectedWeek based on the date parameter
+  const initialSelectedWeek = date
+    ? Math.ceil(differenceInDays(new Date(date), new Date()) / 7)
+    : 0;
+  console.log(initialSelectedWeek);
+
   const [rota, setRota] = useState([]);
-  const [selectedWeek, setSelectedWeek] = useState(0);
+  const [selectedWeek, setSelectedWeek] = useState(initialSelectedWeek);
   const [error, setError] = useState(null);
 
   // Calculate the dynamic weekStarting date
