@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useRota } from "../../RotaContext";
-import { FaArrowCircleLeft, FaArrowCircleRight } from "react-icons/fa";
 import { addWeeks, startOfWeek, differenceInDays, format } from "date-fns";
 import { useParams } from "react-router-dom";
-
+import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import ServerApi from "../../serverApi/axios";
+import { userContext } from "../../UserContext";
 
 const EmployeeRota = () => {
+  const { state } = userContext(); // Use useContext to access UserContext
   const { weeks } = useRota();
   const { date } = useParams();
-  console.log(date);
-
-  // Calculate the initial selectedWeek based on the date parameter
-  // Calculate the initial selectedWeek based on the date parameter
   const initialSelectedWeek = date
     ? Math.ceil(differenceInDays(new Date(date), new Date()) / 7)
     : 0;
-  console.log(initialSelectedWeek);
 
   const [rota, setRota] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(initialSelectedWeek);
   const [error, setError] = useState(null);
+  const [selectedColleague, setSelectedColleague] = useState("");
+  const [colleagueShift, setColleagueShift] = useState("");
+  const [myShift, setMyShift] = useState("");
+  const [colleagueShiftId, setColleagueShiftId] = useState("");
+  const [myShiftId, setMyShiftId] = useState("");
 
-  // Calculate the dynamic weekStarting date
   const calculateWeekStarting = () => {
-    const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday as the start of the week
+    const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
     const dynamicWeekStart = addWeeks(startOfCurrentWeek, selectedWeek);
     return format(dynamicWeekStart, "yyyy-MM-dd");
   };
@@ -32,8 +32,6 @@ const EmployeeRota = () => {
   const requestObject = {
     weekStarting: calculateWeekStarting(),
   };
-
-  console.log(requestObject);
 
   useEffect(() => {
     const fetchRota = async () => {
@@ -45,13 +43,9 @@ const EmployeeRota = () => {
             withCredentials: true,
           }
         );
-        console.log("the rota:", response.data.rota);
         setRota(response.data.rota.rotaData);
         setError(null);
-
-        console.log(response.data.rota);
       } catch (err) {
-        console.log(err);
         setError("Failed to fetch venues");
       }
     };
@@ -68,45 +62,66 @@ const EmployeeRota = () => {
     }`;
   };
 
-  // const totalHours = rota.reduce((acc, person) => {
-  //   return (
-  //     acc +
-  //     person.shifts[selectedWeek].reduce(
-  //       (weekAcc, shift) => weekAcc + shift.duration,
-  //       0
-  //     )
-  //   );
-  // }, 0);
-
-  // const totalStaffCost = rota
-  //   .reduce((acc, person) => {
-  //     return (
-  //       acc +
-  //       person.hourlyWage *
-  //         person.shifts[selectedWeek].reduce(
-  //           (weekAcc, shift) => weekAcc + shift.duration,
-  //           0
-  //         )
-  //     );
-  //   }, 0)
-  //   .toFixed(2);
-
   const handleChangeWeek = (direction) => {
-    console.log(selectedWeek);
-
     if (direction === "right" && selectedWeek < 3) {
       setSelectedWeek(selectedWeek + 1);
     } else if (direction === "left" && selectedWeek > 0) {
       setSelectedWeek(selectedWeek - 1);
     }
-    console.log(selectedWeek);
   };
+
+  const handleSubmitSwapRequest = async () => {
+    const swapRequest = {
+      fromShiftId: myShiftId,
+      toShiftId: colleagueShiftId,
+      rotaId: rota.id,
+    };
+
+    console.log(swapRequest);
+
+    // try {
+    //   await ServerApi.post(`/api/v1/rotas/request-swap`, swapRequest, {
+    //     withCredentials: true,
+    //   });
+    //   alert("Swap request sent for approval.");
+    //   setSelectedColleague("");
+    //   setColleagueShift("");
+    //   setMyShift("");
+    //   setColleagueShiftId("");
+    //   setMyShiftId("");
+    // } catch (error) {
+    //   console.error("Failed to request swap:", error);
+    // }
+  };
+
+  let startOfweek = getDayLabel(new Date(weeks[selectedWeek][0]));
+  let endOfWeek = getDayLabel(
+    new Date(weeks[selectedWeek][weeks[selectedWeek].length - 1])
+  );
+
+  // Filter shifts based on logged-in user's name
+  const filteredShifts = rota.filter(
+    (person) => person.employeeName === state.userData.name
+  );
 
   return (
     <div className="overflow-x-auto p-4">
       {rota && (
         <div className="my-2">
           <div className="overflow-x-auto">
+            <div className=" w-[300px] flex justify-center gap-1 p-2 ">
+              <IoMdArrowDropleft
+                className="mx-2 text-2xl cursor-pointer"
+                onClick={() => handleChangeWeek("left")}
+              />
+              <p>
+                {startOfweek} - {endOfWeek}
+              </p>
+              <IoMdArrowDropright
+                className="mx-2 text-2xl cursor-pointer"
+                onClick={() => handleChangeWeek("right")}
+              />
+            </div>
             <table className="min-w-full bg-white">
               <thead>
                 <tr>
@@ -115,20 +130,7 @@ const EmployeeRota = () => {
                     weeks[selectedWeek].map((day, dayIndex) => (
                       <th key={day} className="px-4 py-2 border bg-gray-100">
                         <div className="flex justify-center items-center">
-                          {dayIndex === 0 && (
-                            <FaArrowCircleLeft
-                              className="mx-2 text-2xl cursor-pointer"
-                              onClick={() => handleChangeWeek("left")}
-                            />
-                          )}
                           {getDayLabel(new Date(day))}
-                          {dayIndex === weeks[selectedWeek].length - 1 &&
-                            selectedWeek < weeks.length - 1 && (
-                              <FaArrowCircleRight
-                                className="mx-2 text-2xl cursor-pointer"
-                                onClick={() => handleChangeWeek("right")}
-                              />
-                            )}
                         </div>
                       </th>
                     ))}
@@ -164,14 +166,92 @@ const EmployeeRota = () => {
             {error && (
               <>
                 <p className="p-2 text-l ">
-                  This weeks Rota is not yet publihsed
+                  This week's Rota is not yet published
                 </p>
-                <p>Please contact your venue admin for any question</p>
+                <p>Please contact your venue admin for any questions</p>
               </>
             )}
           </div>
         </div>
       )}
+      <div className="my-4 p-4 border rounded bg-gray-100">
+        <h3 className="text-lg font-bold">Request Shift Swap</h3>
+        <div className="my-2">
+          <label className="block mb-2">Select Colleague:</label>
+          <select
+            className="w-full p-2 border rounded"
+            value={selectedColleague}
+            onChange={(e) => setSelectedColleague(e.target.value)}
+          >
+            <option value="">Select a colleague</option>
+            {rota.map((person, index) => (
+              <option key={person.id} value={index}>
+                {person.employeeName}
+              </option>
+            ))}
+          </select>
+        </div>
+        {selectedColleague !== "" && (
+          <div className="my-2">
+            <label className="block mb-2">Select Colleague's Shift:</label>
+            <select
+              className="w-full p-2 border rounded"
+              value={colleagueShift}
+              onChange={(e) => {
+                const [personIndex, dayIndex] = e.target.value.split("-");
+                setColleagueShift(e.target.value);
+                setColleagueShiftId(rota[personIndex].schedule[dayIndex]);
+              }}
+            >
+              <option value="">Select a shift</option>
+              {rota[selectedColleague].schedule.map((shift, dayIndex) => (
+                <option
+                  key={`${selectedColleague}-${dayIndex}`}
+                  value={`${selectedColleague}-${dayIndex}`}
+                >
+                  {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
+                  {shift.startTime
+                    ? `${shift.startTime} - ${shift.endTime}`
+                    : "Day Off"}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="my-2">
+          <label className="block mb-2">Select Your Shift:</label>
+          <select
+            className="w-full p-2 border rounded"
+            value={myShift}
+            onChange={(e) => {
+              const [personIndex, dayIndex] = e.target.value.split("-");
+              setMyShift(e.target.value);
+              setMyShiftId(filteredShifts[personIndex].schedule[dayIndex]);
+            }}
+          >
+            <option value="">Select a shift</option>
+            {filteredShifts.length > 0 &&
+              filteredShifts[0].schedule.map((shift, dayIndex) => (
+                <option
+                  key={`${state.userData.name}-${dayIndex}`}
+                  value={`${0}-${dayIndex}`}
+                >
+                  {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
+                  {shift.startTime
+                    ? `${shift.startTime} - ${shift.endTime}`
+                    : "Day Off"}
+                </option>
+              ))}
+          </select>
+        </div>
+        <button
+          className="mt-4 bg-blue-500 text-white p-2 rounded"
+          onClick={handleSubmitSwapRequest}
+          disabled={!selectedColleague || !colleagueShift || !myShift}
+        >
+          Submit Swap Request
+        </button>
+      </div>
     </div>
   );
 };

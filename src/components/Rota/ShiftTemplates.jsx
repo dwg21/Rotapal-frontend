@@ -20,7 +20,7 @@ const ShiftTemplates = ({ commonShifts, setCommonShifts }) => {
 
     const newTemplate = {
       id: `${newTemplateLabel}-${Date.now()}`,
-      label: newTemplateLabel,
+      desc: newTemplateLabel,
       startTime: newTemplateStartTime,
       endTime: newTemplateEndTime,
     };
@@ -52,7 +52,7 @@ const ShiftTemplates = ({ commonShifts, setCommonShifts }) => {
                     {...provided.dragHandleProps}
                     className="p-2 border cursor-pointer mb-2 mr-2"
                   >
-                    {shift.label}
+                    {shift.desc}
                   </div>
                 )}
               </Draggable>

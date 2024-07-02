@@ -30,11 +30,7 @@ const NavbarContent = () => {
         text="View Rota"
         linkDestination="/rota"
       />
-      <SidebarItem
-        icon={<BookText size={20} />}
-        text="View Employee Rota"
-        linkDestination="/employeerota"
-      />
+
       <SidebarItem
         icon={<UsersRound size={20} />}
         text="Staff"

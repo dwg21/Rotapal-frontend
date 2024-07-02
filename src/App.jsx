@@ -12,8 +12,14 @@ import EmployeeRota from "./components/Rota/EmployeeRota";
 
 import NavbarContent from "./components/Navbar/NavbarContent";
 import Notifications from "./components/Notifcation/Notifcations";
+import ProtectedRoute from "./components/misc/ProtectedRoutes";
 
+import NotFound from "./components/misc/NotFound";
+
+import { userContext } from "./UserContext";
 function App() {
+  const { state } = userContext();
+  console.log(state.userData);
   return (
     <>
       <div className="flex bg-Zinc-50 ">
@@ -21,8 +27,6 @@ function App() {
           <NavbarContent />
         </Navbar>
         <Routes>
-          <Route path="/rota/:venueId" element={<Rota />} />
-          <Route path="/rota" element={<Rota />} />
           <Route path="/employeerota/:date" element={<EmployeeRota />} />
           <Route path="/employeerota" element={<EmployeeRota />} />
           <Route path="/staff" element={<Staff />} />
@@ -31,6 +35,30 @@ function App() {
           <Route path="/createvenue" element={<CreateVenue />} />
           <Route path="/venues" element={<Venues />} />
           <Route path="/notifcations" element={<Notifications />} />
+
+          <Route
+            path="/rota/:venueId"
+            element={
+              <ProtectedRoute
+                element={Rota}
+                user={state.userData}
+                role="admin"
+              />
+            }
+          />
+          <Route
+            path="/rota"
+            element={
+              <ProtectedRoute
+                element={Rota}
+                user={state.userData}
+                role="admin"
+              />
+            }
+          />
+
+          {/* Catch-all route for 404 - Page Not Found */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </>

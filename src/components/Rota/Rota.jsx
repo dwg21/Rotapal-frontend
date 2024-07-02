@@ -5,7 +5,7 @@ import { useRota } from "../../RotaContext";
 import ShiftTemplates from "./ShiftTemplates";
 import { ClipLoader } from "react-spinners";
 import { addWeeks, startOfWeek, addDays, format } from "date-fns";
-import { FaArrowCircleLeft, FaArrowCircleRight } from "react-icons/fa";
+import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import { TiTick } from "react-icons/ti";
 import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
@@ -87,11 +87,13 @@ const Rota = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [commonShifts, setCommonShifts] = useState([
-    { id: "day-off", label: "Day Off", startTime: "", endTime: "" },
-    { id: "9-to-5", label: "9 to 5", startTime: "09:00", endTime: "17:00" },
-    { id: "9-to-3", label: "9 to 3", startTime: "09:00", endTime: "15:00" },
-    { id: "5-to-10", label: "5 to 10", startTime: "17:00", endTime: "22:00" },
+    { id: "day-off", desc: "Day Off", startTime: "", endTime: "" },
+    { id: "9-to-5", desc: "9 to 5", startTime: "09:00", endTime: "17:00" },
+    { id: "9-to-3", desc: "9 to 3", startTime: "09:00", endTime: "15:00" },
+    { id: "5-to-10", desc: "5 to 10", startTime: "17:00", endTime: "22:00" },
   ]);
+
+  const [editLabel, setEditLabel] = useState("");
 
   const calculateWeekStarting = useCallback(() => {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -125,13 +127,15 @@ const Rota = () => {
   const handleEditShift = (personIndex, dayIndex) => {
     const startTime = rota[personIndex].schedule[dayIndex]?.startTime || "";
     const endTime = rota[personIndex].schedule[dayIndex]?.endTime || "";
+    const label = rota[personIndex].schedule[dayIndex]?.label || "";
     setEditShift({ personIndex, dayIndex });
     setEditStartTime(startTime);
     setEditEndTime(endTime);
+    setEditLabel(label);
     setModalIsOpen(true);
   };
 
-  const handleSaveShift = () => {
+  const handleSaveShift = async () => {
     const updatedRota = rota.map((person, personIndex) => {
       if (personIndex === editShift.personIndex) {
         return {
@@ -142,6 +146,7 @@ const Rota = () => {
                 ...shift,
                 startTime: editStartTime,
                 endTime: editEndTime,
+                label: editLabel,
                 duration: calculateDuration(editStartTime, editEndTime),
               };
             }
@@ -153,11 +158,13 @@ const Rota = () => {
     });
 
     setRota(updatedRota);
-    updateRota();
+    console.log(updatedRota);
+    await updateRota(updatedRota);
     setModalIsOpen(false);
     setEditShift(null);
     setEditStartTime("");
     setEditEndTime("");
+    setEditLabel("");
   };
 
   const handleChangeWeek = (direction) => {
@@ -168,17 +175,20 @@ const Rota = () => {
     }
   };
 
-  const updateRota = async () => {
+  const updateRota = async (updatedRota) => {
+    console.log("updateRota called with:", updatedRota);
     setLoading(true);
     setSuccess(false);
     try {
       await ServerApi.post(
         `/api/v1/rotas/${rotaId}`,
-        { newRota: rota },
+        { newRota: updatedRota },
         { withCredentials: true }
       );
       setSuccess(true);
+      console.log("Rota successfully updated on server.");
     } catch (error) {
+      console.error("Failed to update rota on server:", error);
       setError("Failed to update rota");
     } finally {
       setLoading(false);
@@ -231,29 +241,49 @@ const Rota = () => {
     }
 
     setRota(updatedRota);
-    updateRota();
+    updateRota(updatedRota);
   };
+
+  let startOfweek = getDayLabel(new Date(weeks[selectedWeek][0]));
+  let endOfWeek = getDayLabel(
+    new Date(weeks[selectedWeek][weeks[selectedWeek].length - 1])
+  );
 
   return (
     <div className="container mx-auto p-4">
       {selectedVenue && selectedVenue.name && (
         <p className="text-xl font-bold">{selectedVenue.employeeName}</p>
       )}
-      {rotaPublished ? (
-        <button className="border p-2 my-2 rounded-md bg-green-400">
-          <div className="flex gap-2">
-            <p>Rota is published</p>
-            <TiTick className="text-2xl" />
-          </div>
-        </button>
-      ) : (
-        <button
-          className="border p-2 my-2 rounded-md bg-orange-400"
-          onClick={handleClickPublishRota}
-        >
-          Publish Rota
-        </button>
-      )}
+      <div className="flex items-center gap-3">
+        {rotaPublished ? (
+          <button className="border p-2 my-2 rounded-md bg-green-400">
+            <div className="flex gap-2">
+              <p>Rota is published</p>
+              <TiTick className="text-2xl" />
+            </div>
+          </button>
+        ) : (
+          <button
+            className="border p-2 my-2 rounded-md bg-orange-400"
+            onClick={handleClickPublishRota}
+          >
+            Publish Rota
+          </button>
+        )}
+        <div className=" w-[300px] flex justify-center gap-1 p-2 ">
+          <IoMdArrowDropleft
+            className="mx-2 text-2xl cursor-pointer"
+            onClick={() => handleChangeWeek("left")}
+          />
+          <p>
+            {startOfweek} - {endOfWeek}
+          </p>{" "}
+          <IoMdArrowDropright
+            className="mx-2 text-2xl cursor-pointer"
+            onClick={() => handleChangeWeek("right")}
+          />
+        </div>
+      </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="my-2">
@@ -267,19 +297,7 @@ const Rota = () => {
                   {weeks[selectedWeek].map((day, dayIndex) => (
                     <th key={day} className="px-4 py-2 border bg-gray-100">
                       <div className="flex justify-center items-center select-none">
-                        {dayIndex === 0 && (
-                          <FaArrowCircleLeft
-                            className="mx-2 text-2xl cursor-pointer"
-                            onClick={() => handleChangeWeek("left")}
-                          />
-                        )}
                         {getDayLabel(new Date(day))}
-                        {dayIndex === weeks[selectedWeek].length - 1 && (
-                          <FaArrowCircleRight
-                            className="mx-2 text-2xl cursor-pointer"
-                            onClick={() => handleChangeWeek("right")}
-                          />
-                        )}
                       </div>
                     </th>
                   ))}
@@ -322,15 +340,40 @@ const Rota = () => {
                                       className="cursor-pointer flex items-center justify-center w-full h-full"
                                     >
                                       <div
-                                        className={`flex text-center items-center justify-center p-1 rounded-md w-[100px] h-[60px] ${
+                                        className={`flex  text-center items-center justify-center p-1 rounded-md  w-[100px] h-[100px] ${
                                           person.schedule[dayIndex].startTime
                                             ? `bg-lightBlue`
-                                            : `bg-darkBlue`
-                                        } bg-lightBlue text-white`}
+                                            : `bg-darkBlue `
+                                        }  text-white`}
                                       >
-                                        {person.schedule[dayIndex].startTime
-                                          ? `${person.schedule[dayIndex].startTime} - ${person.schedule[dayIndex].endTime}`
-                                          : "Day Off"}
+                                        {person.schedule[dayIndex].startTime ? (
+                                          <div className="flex flex-col gap-2">
+                                            <p>
+                                              {`${person.schedule[dayIndex].startTime} - ${person.schedule[dayIndex].endTime}`}
+                                            </p>
+                                            <p className="  font-bold">
+                                              {`${
+                                                person.schedule[dayIndex].label
+                                                  ? person.schedule[dayIndex]
+                                                      .label
+                                                  : ""
+                                              }`}
+                                            </p>
+                                          </div>
+                                        ) : (
+                                          // `${
+                                          //     person.schedule[dayIndex]
+                                          //       .startTime
+                                          //   } - ${
+                                          //     person.schedule[dayIndex].endTime
+                                          //   } ${
+                                          //     person.schedule[dayIndex].label
+                                          //       ? person.schedule[dayIndex]
+                                          //           .label
+                                          //       : ""
+                                          //   } `
+                                          "Day Off"
+                                        )}
                                       </div>
                                     </div>
                                   )}
@@ -355,7 +398,6 @@ const Rota = () => {
           />
         </div>
       </DragDropContext>
-
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
@@ -378,6 +420,15 @@ const Rota = () => {
               type="time"
               value={editEndTime}
               onChange={(e) => setEditEndTime(e.target.value)}
+            />
+          </label>
+          <br />
+          <label className="text-center">
+            Label:
+            <input
+              type="text"
+              value={editLabel}
+              onChange={(e) => setEditLabel(e.target.value)}
             />
           </label>
           <br />
