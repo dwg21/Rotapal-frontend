@@ -7,6 +7,7 @@ import Forecast from "./components/Forecast/Forecast";
 import CreateVenue from "./components/Venue/CreateVenue";
 import Venues from "./components/Venue/Venues";
 import Navbar from "./components/Navbar/Navbar";
+import Requests from "./components/Requests/Requests";
 
 import EmployeeRota from "./components/Rota/EmployeeRota";
 
@@ -35,6 +36,7 @@ function App() {
           <Route path="/createvenue" element={<CreateVenue />} />
           <Route path="/venues" element={<Venues />} />
           <Route path="/notifcations" element={<Notifications />} />
+          <Route path="/requests" element={<Requests />} />
 
           <Route
             path="/rota/:venueId"

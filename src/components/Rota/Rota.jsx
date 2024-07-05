@@ -66,6 +66,7 @@ const getDayLabel = (date) => {
 
 const Rota = () => {
   const { selectedvenueID, setSelectedvenueID, selectedVenue } = useRota();
+  console.log(selectedvenueID);
   const { venueId } = useParams();
 
   useEffect(() => {
@@ -93,6 +94,8 @@ const Rota = () => {
     { id: "5-to-10", desc: "5 to 10", startTime: "17:00", endTime: "22:00" },
   ]);
 
+  const [venueName, setVenueName] = useState(null);
+
   const [editLabel, setEditLabel] = useState("");
 
   const calculateWeekStarting = useCallback(() => {
@@ -112,6 +115,7 @@ const Rota = () => {
         requestObject,
         { withCredentials: true }
       );
+      setVenueName(response.data.rota.name.split("-")[0]);
       setRota(response.data.rota.rotaData);
       setRotaPublished(response.data.rota.published);
       setRotaId(response.data.rota._id);
@@ -251,10 +255,11 @@ const Rota = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {selectedVenue && selectedVenue.name && (
+      {/* {selectedVenue && selectedVenue.name && (
         <p className="text-xl font-bold">{selectedVenue.employeeName}</p>
-      )}
-      <div className="flex items-center gap-3">
+      )} */}
+      <div className="flex items-center gap-6">
+        <p className="mr-4 font-semibold">{venueName && venueName}</p>
         {rotaPublished ? (
           <button className="border p-2 my-2 rounded-md bg-green-400">
             <div className="flex gap-2">

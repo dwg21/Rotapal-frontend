@@ -28,7 +28,7 @@ const Venues = () => {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { setSelectedVenue } = useRota();
+  const { setSelectedvenueID } = useRota();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +59,7 @@ const Venues = () => {
 
   //change index to dynamic data later
   const handleViewRota = (index) => {
+    setSelectedvenueID(venues[index]._id);
     navigate(`/rota/${venues[index]._id}`);
   };
 

@@ -15,6 +15,7 @@ const EmployeeRota = () => {
     : 0;
 
   const [rota, setRota] = useState([]);
+  const [rotaDetails, setRotaDetails] = useState({});
   const [selectedWeek, setSelectedWeek] = useState(initialSelectedWeek);
   const [error, setError] = useState(null);
   const [selectedColleague, setSelectedColleague] = useState("");
@@ -44,6 +45,8 @@ const EmployeeRota = () => {
           }
         );
         setRota(response.data.rota.rotaData);
+        setRotaDetails(response.data.rota);
+        console.log(rotaDetails);
         setError(null);
       } catch (err) {
         setError("Failed to fetch venues");
@@ -74,24 +77,30 @@ const EmployeeRota = () => {
     const swapRequest = {
       fromShiftId: myShiftId,
       toShiftId: colleagueShiftId,
-      rotaId: rota.id,
+      rotaId: rotaDetails._id,
+      venueId: rotaDetails.venue,
     };
 
     console.log(swapRequest);
 
-    // try {
-    //   await ServerApi.post(`/api/v1/rotas/request-swap`, swapRequest, {
-    //     withCredentials: true,
-    //   });
-    //   alert("Swap request sent for approval.");
-    //   setSelectedColleague("");
-    //   setColleagueShift("");
-    //   setMyShift("");
-    //   setColleagueShiftId("");
-    //   setMyShiftId("");
-    // } catch (error) {
-    //   console.error("Failed to request swap:", error);
-    // }
+    try {
+      const { data } = await ServerApi.post(
+        `/api/v1/rotas/rota/swapshifts`,
+        swapRequest,
+        {
+          withCredentials: true,
+        }
+      );
+      alert("Swap request sent for approval.");
+      setSelectedColleague("");
+      setColleagueShift("");
+      setMyShift("");
+      setColleagueShiftId("");
+      setMyShiftId("");
+      console.log(data);
+    } catch (error) {
+      console.error("Failed to request swap:", error);
+    }
   };
 
   let startOfweek = getDayLabel(new Date(weeks[selectedWeek][0]));
@@ -200,7 +209,7 @@ const EmployeeRota = () => {
               onChange={(e) => {
                 const [personIndex, dayIndex] = e.target.value.split("-");
                 setColleagueShift(e.target.value);
-                setColleagueShiftId(rota[personIndex].schedule[dayIndex]);
+                setColleagueShiftId(rota[personIndex].schedule[dayIndex]._id);
               }}
             >
               <option value="">Select a shift</option>
@@ -226,7 +235,7 @@ const EmployeeRota = () => {
             onChange={(e) => {
               const [personIndex, dayIndex] = e.target.value.split("-");
               setMyShift(e.target.value);
-              setMyShiftId(filteredShifts[personIndex].schedule[dayIndex]);
+              setMyShiftId(filteredShifts[personIndex].schedule[dayIndex]._id);
             }}
           >
             <option value="">Select a shift</option>
