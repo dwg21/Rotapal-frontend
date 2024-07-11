@@ -60,10 +60,9 @@ const Login = () => {
       const { data } = await ServerApi.post(registerUrl, registerUserJson, {
         withCredentials: true,
       });
-      console.log("worked");
       console.log(data);
-      setUser(data.user);
-
+      dispatch({ type: "LOGIN", payload: data.user });
+      navigate("/venues");
       setLoginUser({ name: "", email: "", password: "" });
     } catch (error) {
       console.log(error);

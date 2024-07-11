@@ -18,6 +18,7 @@ import ProtectedRoute from "./components/misc/ProtectedRoutes";
 import NotFound from "./components/misc/NotFound";
 
 import { userContext } from "./UserContext";
+import HolidayRequests from "./components/Holiday/HolidayRequests";
 function App() {
   const { state } = userContext();
   console.log(state.userData);
@@ -37,6 +38,7 @@ function App() {
           <Route path="/venues" element={<Venues />} />
           <Route path="/notifcations" element={<Notifications />} />
           <Route path="/requests" element={<Requests />} />
+          <Route path="/holidayrequests" element={<HolidayRequests />} />
 
           <Route
             path="/rota/:venueId"

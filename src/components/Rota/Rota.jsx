@@ -3,6 +3,7 @@ import Modal from "react-modal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useRota } from "../../RotaContext";
 import ShiftTemplates from "./ShiftTemplates";
+import RotaTemplates from "./RotaTemplates";
 import { ClipLoader } from "react-spinners";
 import { addWeeks, startOfWeek, addDays, format } from "date-fns";
 import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
@@ -10,58 +11,18 @@ import { TiTick } from "react-icons/ti";
 import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
 
+import {
+  generateWeeks,
+  calculateDuration,
+  getDayLabel,
+} from "../../Utils/utils";
+
 const customStyles = {
   content: {
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
   },
-};
-
-const sidebarStyles = {
-  content: {
-    top: "0",
-    right: "0",
-    bottom: "0",
-    left: "auto",
-    width: "300px",
-    padding: "0",
-    overflow: "auto",
-    transition: "transform 0.3s ease-in-out",
-  },
-  overlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-};
-
-// Generate weeks for the next 4 weeks starting from the Monday of the current week
-const generateWeeks = () => {
-  const weeks = [];
-  const startDate = startOfWeek(new Date(), { weekStartsOn: 1 });
-  for (let i = 0; i < 4; i++) {
-    const week = [];
-    for (let j = 0; j < 7; j++) {
-      week.push(format(addDays(addWeeks(startDate, i), j), "yyyy-MM-dd"));
-    }
-    weeks.push(week);
-  }
-  return weeks;
-};
-
-const calculateDuration = (startTime, endTime) => {
-  if (!startTime || !endTime) return 0;
-  const start = new Date(`01/01/2022 ${startTime}`);
-  const end = new Date(`01/01/2022 ${endTime}`);
-  return (end - start) / (1000 * 60 * 60); // Convert milliseconds to hours
-};
-
-const getDayLabel = (date) => {
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  return `${dayNames[date.getDay()]} ${day}/${
-    month < 10 ? "0" + month : month
-  }`;
 };
 
 const Rota = () => {
@@ -75,7 +36,6 @@ const Rota = () => {
     }
   }, [venueId, setSelectedvenueID]);
 
-  const weeks = useMemo(() => generateWeeks(), []);
   const [rota, setRota] = useState([]);
   const [rotaId, setRotaId] = useState(null);
   const [error, setError] = useState("");
@@ -84,19 +44,19 @@ const Rota = () => {
   const [editEndTime, setEditEndTime] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0);
+  const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
+
   const [rotaPublished, setRotaPublished] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [commonShifts, setCommonShifts] = useState([
-    { id: "day-off", desc: "Day Off", startTime: "", endTime: "" },
-    { id: "9-to-5", desc: "9 to 5", startTime: "09:00", endTime: "17:00" },
-    { id: "9-to-3", desc: "9 to 3", startTime: "09:00", endTime: "15:00" },
-    { id: "5-to-10", desc: "5 to 10", startTime: "17:00", endTime: "22:00" },
-  ]);
 
   const [venueName, setVenueName] = useState(null);
 
+  const [commonShifts, setCommonShifts] = useState([]);
+
   const [editLabel, setEditLabel] = useState("");
+
+  const [generateRotaVisible, setGenerateRotaVisible] = useState(false);
 
   const calculateWeekStarting = useCallback(() => {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -117,16 +77,41 @@ const Rota = () => {
       );
       setVenueName(response.data.rota.name.split("-")[0]);
       setRota(response.data.rota.rotaData);
+      console.log(response.data.rota);
       setRotaPublished(response.data.rota.published);
       setRotaId(response.data.rota._id);
+      setGenerateRotaVisible(true);
     } catch (err) {
+      console.log(err.response.data.message);
       setError("Failed to fetch venues");
+      if (err.response.data.message === "Rota not found") {
+        setRota([]);
+        setGenerateRotaVisible(false);
+      }
     }
   }, [selectedvenueID, calculateWeekStarting]);
 
   useEffect(() => {
     fetchRota();
   }, [fetchRota, selectedWeek, selectedvenueID]);
+
+  const fetchTemplates = useCallback(async () => {
+    try {
+      const response = await ServerApi.get(
+        `api/v1/venue/${selectedvenueID}/common-shifts`,
+        { withCredentials: true }
+      );
+      setCommonShifts(response.data.commonShifts);
+
+      console.log(response.data.commonShifts);
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const handleEditShift = (personIndex, dayIndex) => {
     const startTime = rota[personIndex].schedule[dayIndex]?.startTime || "";
@@ -172,8 +157,9 @@ const Rota = () => {
   };
 
   const handleChangeWeek = (direction) => {
-    if (direction === "right" && selectedWeek < weeks.length - 1) {
+    if (direction === "right") {
       setSelectedWeek((prev) => prev + 1);
+      console.log(selectedWeek);
     } else if (direction === "left" && selectedWeek > 0) {
       setSelectedWeek((prev) => prev - 1);
     }
@@ -217,6 +203,7 @@ const Rota = () => {
     if (!destination) return;
 
     const sourceId = source.droppableId.split("-");
+    console.log(source.droppableId);
     const destId = destination.droppableId.split("-");
 
     const updatedRota = [...rota];
@@ -226,11 +213,20 @@ const Rota = () => {
       const destPersonIndex = parseInt(destId[0], 10);
       const destDayIndex = parseInt(destId[1], 10);
 
+      const destShift = updatedRota[destPersonIndex].schedule[destDayIndex];
+      if (destShift.holidayBooked) return;
       updatedRota[destPersonIndex].schedule[destDayIndex] = {
         ...shift,
         duration: calculateDuration(shift.startTime, shift.endTime),
       };
-    } else {
+      updateRota(updatedRota);
+    } else if (source.droppableId === "commonRotas") {
+      //toDo add logic
+      const rota = commonRotas[source.index];
+      setRota(rota.rota);
+      updateRota(rota.rota);
+    }
+    {
       const sourcePersonIndex = parseInt(sourceId[0], 10);
       const sourceDayIndex = parseInt(sourceId[1], 10);
       const destPersonIndex = parseInt(destId[0], 10);
@@ -239,6 +235,11 @@ const Rota = () => {
       const sourceShift =
         updatedRota[sourcePersonIndex].schedule[sourceDayIndex];
       const destShift = updatedRota[destPersonIndex].schedule[destDayIndex];
+
+      //ensures you cant swap shifts with booked holidays
+      if (sourceShift.holidayBooked || destShift.holidayBooked) {
+        return;
+      }
 
       updatedRota[sourcePersonIndex].schedule[sourceDayIndex] = destShift;
       updatedRota[destPersonIndex].schedule[destDayIndex] = sourceShift;
@@ -252,6 +253,24 @@ const Rota = () => {
   let endOfWeek = getDayLabel(
     new Date(weeks[selectedWeek][weeks[selectedWeek].length - 1])
   );
+
+  const [commonRotas, setCommonRotas] = useState([]);
+
+  const fetchCommonRotas = useCallback(async () => {
+    try {
+      const response = await ServerApi.get(
+        `api/v1/venue/${selectedvenueID}/common-rotas`,
+        { withCredentials: true }
+      );
+      setCommonRotas(response.data.commonRotas);
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCommonRotas();
+  }, [fetchCommonRotas]);
 
   return (
     <div className="container mx-auto p-4">
@@ -345,11 +364,14 @@ const Rota = () => {
                                       className="cursor-pointer flex items-center justify-center w-full h-full"
                                     >
                                       <div
-                                        className={`flex  text-center items-center justify-center p-1 rounded-md  w-[100px] h-[100px] ${
+                                        className={`flex  text-center items-center justify-center p-1 rounded-md  w-[120px] h-[80px] ${
                                           person.schedule[dayIndex].startTime
                                             ? `bg-lightBlue`
                                             : `bg-darkBlue `
-                                        }  text-white`}
+                                        }  text-white ${
+                                          person.schedule[dayIndex]
+                                            .holidayBooked && `bg-orange-400`
+                                        }`}
                                       >
                                         {person.schedule[dayIndex].startTime ? (
                                           <div className="flex flex-col gap-2">
@@ -366,18 +388,12 @@ const Rota = () => {
                                             </p>
                                           </div>
                                         ) : (
-                                          // `${
-                                          //     person.schedule[dayIndex]
-                                          //       .startTime
-                                          //   } - ${
-                                          //     person.schedule[dayIndex].endTime
-                                          //   } ${
-                                          //     person.schedule[dayIndex].label
-                                          //       ? person.schedule[dayIndex]
-                                          //           .label
-                                          //       : ""
-                                          //   } `
-                                          "Day Off"
+                                          <p>
+                                            {person.schedule[dayIndex]
+                                              .holidayBooked
+                                              ? "Holiday Booked"
+                                              : "Day Off"}
+                                          </p>
                                         )}
                                       </div>
                                     </div>
@@ -396,11 +412,33 @@ const Rota = () => {
             </table>
           </div>
 
-          <ShiftTemplates
-            commonShifts={commonShifts}
-            setCommonShifts={setCommonShifts}
-            className="w-full"
-          />
+          {generateRotaVisible ? (
+            <div className=" w-full bg-white">
+              <ShiftTemplates
+                selectedvenueID={selectedvenueID}
+                className="w-full "
+                commonShifts={commonShifts}
+                setCommonShifts={setCommonShifts}
+              />
+
+              <RotaTemplates
+                rota={rota}
+                commonRotas={commonRotas}
+                setCommonRotas={setCommonRotas}
+                selectedvenueID={selectedvenueID}
+              />
+            </div>
+          ) : (
+            <div>
+              <p>
+                There is no rota for this week yet. Would you like to generate
+                one?
+              </p>
+              <button className="p-2 border bg-slate-600 text-white rounded-md">
+                Generate Rota
+              </button>
+            </div>
+          )}
         </div>
       </DragDropContext>
       <Modal
