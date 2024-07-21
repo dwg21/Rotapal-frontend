@@ -1,9 +1,36 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Droppable, Draggable } from "react-beautiful-dnd";
+import React, { useState } from "react";
+import { useDraggable } from "@dnd-kit/core";
 import { IoMdAdd, IoIosArrowDown } from "react-icons/io";
 import { IoTrashBin } from "react-icons/io5";
-
 import ServerApi from "../../serverApi/axios";
+
+const DraggableTemplate = ({ shift }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: shift.id,
+    data: {
+      droppableContainer: { id: "commonShifts" },
+      shift,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`p-2 border cursor-pointer mb-2 mr-2 ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <div className="flex gap-4">
+        {shift.desc}
+        <button onClick={() => shift.handleDeleteTemplate(shift.id)}>
+          <IoTrashBin />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
   // State to handle new custom template
@@ -37,9 +64,7 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
         { withCredentials: true }
       );
       setCommonShifts(response.data.commonShifts);
-
       setAddTemplateVisible(false);
-
       console.log(response);
     } catch (err) {
       console.log(err);
@@ -59,11 +84,11 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
   };
 
   return (
-    <div className=" p-4 m-1 border">
+    <div className="p-4 m-1 border">
       <div className="flex items-center justify-between">
-        <p className=" font-bold  text-xl">Shift Templates</p>
+        <p className="font-bold text-xl">Shift Templates</p>
         <IoIosArrowDown
-          className=" cursor-pointer  text-xl"
+          className="cursor-pointer text-xl"
           onClick={() => setDetailsVisible(!detailsVisible)}
         />
       </div>
@@ -71,48 +96,17 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
       {detailsVisible && (
         <div>
           <p>Drag and drop these shifts onto the rota.</p>
-          <Droppable droppableId="commonShifts" direction="horizontal">
-            {(provided) => (
-              <div
-                className="mb-4 flex space-x-4 my-4"
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-              >
-                {commonShifts.map((shift, index) => (
-                  <Draggable
-                    key={shift.id}
-                    draggableId={shift.id}
-                    index={index}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="p-2 border cursor-pointer mb-2 mr-2"
-                      >
-                        <div className="flex gap-4">
-                          {shift.desc}
-                          <button
-                            onClick={() => handleDeleteTemplate(shift.id)}
-                          >
-                            <IoTrashBin />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                <button
-                  onClick={() => setAddTemplateVisible(!addTemplateVisible)}
-                  className=""
-                >
-                  <IoMdAdd />
-                </button>
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+          <div className="mb-4 flex space-x-4 my-4">
+            {commonShifts.map((shift) => (
+              <DraggableTemplate
+                key={shift.id}
+                shift={{ ...shift, handleDeleteTemplate }}
+              />
+            ))}
+            <button onClick={() => setAddTemplateVisible(!addTemplateVisible)}>
+              <IoMdAdd />
+            </button>
+          </div>
           {/* Form to add a new custom shift template */}
           {addTemplateVisible && (
             <form onSubmit={handleAddNewTemplate} className="mb-4">

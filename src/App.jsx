@@ -19,6 +19,7 @@ import NotFound from "./components/misc/NotFound";
 
 import { userContext } from "./UserContext";
 import HolidayRequests from "./components/Holiday/HolidayRequests";
+import ArchivedRotas from "./components/Rota/ArchivedRotas";
 function App() {
   const { state } = userContext();
   console.log(state.userData);
@@ -31,6 +32,7 @@ function App() {
         <Routes>
           <Route path="/employeerota/:date" element={<EmployeeRota />} />
           <Route path="/employeerota" element={<EmployeeRota />} />
+          <Route path="/archivedrotas" element={<ArchivedRotas />} />
           <Route path="/staff" element={<Staff />} />
           <Route path="/" element={<Login />} />
           <Route path="/forecast" element={<Forecast />} />

@@ -1,8 +1,51 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Droppable, Draggable } from "react-beautiful-dnd";
+import React, { useState } from "react";
+import { useDraggable, useDroppable, DndContext } from "@dnd-kit/core";
 import { IoIosArrowDown, IoMdAdd } from "react-icons/io";
-import { IoAirplane, IoTrashBin } from "react-icons/io5";
+import { IoTrashBin } from "react-icons/io5";
 import ServerApi from "../../serverApi/axios";
+
+const DraggableRotaTemplate = ({ rota, index, handleDeleteTemplate }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: rota.id,
+    data: {
+      droppableContainer: { id: "commonRotas" },
+      rota,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`p-2 border cursor-pointer mb-2 mr-2 ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <div className="flex gap-4">
+        {rota.label}
+        <button onClick={() => handleDeleteTemplate(rota.id)}>
+          <IoTrashBin />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const DroppableRotaContainer = ({ children }) => {
+  const { isOver, setNodeRef } = useDroppable({
+    id: "commonRotas",
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`mb-4 flex space-x-4 my-4 ${isOver ? "bg-blue-100" : ""}`}
+    >
+      {children}
+    </div>
+  );
+};
 
 const RotaTemplates = ({
   rota,
@@ -14,7 +57,6 @@ const RotaTemplates = ({
   const [addTemplateVisible, setAddTemplateVisible] = useState(false);
   const [detailsVisible, setDetailsVisible] = useState(false);
 
-  // Function to handle adding a new rota template
   const handleAddNewTemplate = async (e) => {
     e.preventDefault();
     if (newRotaLabel.trim() === "") {
@@ -33,16 +75,10 @@ const RotaTemplates = ({
         { withCredentials: true }
       );
       setCommonRotas(response.data.commonRotas);
-
       setAddTemplateVisible(false);
-
-      console.log(response);
     } catch (err) {
       console.log(err);
     }
-
-    setCommonRotas((prev) => [...prev, newTemplate]);
-    setAddTemplateVisible(false);
   };
 
   const handleDeleteTemplate = async (id) => {
@@ -56,12 +92,13 @@ const RotaTemplates = ({
       console.log(err);
     }
   };
+
   return (
-    <div className=" p-4 m-1 border">
+    <div className="p-4 m-1 border">
       <div className="flex items-center justify-between">
-        <p className=" font-bold  text-xl">Rota Templates</p>
+        <p className="font-bold text-xl">Rota Templates</p>
         <IoIosArrowDown
-          className=" cursor-pointer  text-xl"
+          className="cursor-pointer text-xl"
           onClick={() => setDetailsVisible(!detailsVisible)}
         />
       </div>
@@ -69,49 +106,23 @@ const RotaTemplates = ({
       {detailsVisible && (
         <div>
           <p>Drag and drop these rotas onto the current rota.</p>
-          <Droppable droppableId="commonRotas" direction="horizontal">
-            {(provided) => (
-              <div
-                className="mb-4 flex space-x-4 my-4"
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-              >
-                {commonRotas &&
-                  commonRotas.map((rota, index) => (
-                    <Draggable
-                      key={rota.id}
-                      draggableId={rota.id}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="p-2 border cursor-pointer mb-2 mr-2"
-                        >
-                          <div className="flex gap-4">
-                            {rota.label}
-                            <button
-                              onClick={() => handleDeleteTemplate(rota.id)}
-                            >
-                              <IoTrashBin />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                <button
-                  onClick={() => setAddTemplateVisible(!addTemplateVisible)}
-                  className=""
-                >
-                  <IoMdAdd />
-                </button>
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+          <DroppableRotaContainer>
+            {commonRotas &&
+              commonRotas.map((rota, index) => (
+                <DraggableRotaTemplate
+                  key={rota.id}
+                  rota={rota}
+                  index={index}
+                  handleDeleteTemplate={handleDeleteTemplate}
+                />
+              ))}
+            <button
+              onClick={() => setAddTemplateVisible(!addTemplateVisible)}
+              className=""
+            >
+              <IoMdAdd />
+            </button>
+          </DroppableRotaContainer>
           {addTemplateVisible && (
             <form onSubmit={handleAddNewTemplate} className="mb-4">
               <h3 className="mb-2">Add Custom Rota Template</h3>

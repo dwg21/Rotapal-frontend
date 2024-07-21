@@ -1,67 +1,118 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import Modal from "react-modal";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from "@dnd-kit/core";
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
 import { useRota } from "../../RotaContext";
 import ShiftTemplates from "./ShiftTemplates";
 import RotaTemplates from "./RotaTemplates";
 import { ClipLoader } from "react-spinners";
-import { addWeeks, startOfWeek, addDays, format } from "date-fns";
-import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
-import { TiTick } from "react-icons/ti";
+import { addWeeks, startOfWeek, format } from "date-fns";
 import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
+import { motion, AnimatePresence } from "framer-motion";
 
+import ShiftModal from "./ShiftModal";
 import {
   generateWeeks,
   calculateDuration,
   getDayLabel,
 } from "../../Utils/utils";
+import Toolbar from "./Toolbar";
 
-const customStyles = {
-  content: {
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-  },
+const DroppableArea = ({ id, children }) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      initial={{ scale: 1 }}
+      animate={{ scale: isOver ? 1.1 : 1 }}
+      transition={{ duration: 0.3 }}
+      className={`w-full h-full transition-colors duration-300 ${
+        isOver ? "bg-blue-100" : "bg-white"
+      }`}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const DraggableItem = ({ id, children, isSpacePressed }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id,
+  });
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      initial={{ scale: 1 }}
+      animate={{
+        scale: isDragging && !isSpacePressed ? 1.1 : 1,
+        rotate: isDragging && !isSpacePressed ? 5 : 0,
+      }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className={`cursor-pointer flex items-center justify-center w-full h-full ${
+        isDragging && !isSpacePressed ? "opacity-50" : ""
+      }`}
+    >
+      {children}
+    </motion.div>
+  );
 };
 
 const Rota = () => {
   const { selectedvenueID, setSelectedvenueID, selectedVenue } = useRota();
-  console.log(selectedvenueID);
   const { venueId } = useParams();
-
-  useEffect(() => {
-    if (venueId) {
-      setSelectedvenueID(venueId);
-    }
-  }, [venueId, setSelectedvenueID]);
-
   const [rota, setRota] = useState([]);
   const [rotaId, setRotaId] = useState(null);
   const [error, setError] = useState("");
   const [editShift, setEditShift] = useState(null);
-  const [editStartTime, setEditStartTime] = useState("");
-  const [editEndTime, setEditEndTime] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0);
   const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
-
   const [rotaPublished, setRotaPublished] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
   const [venueName, setVenueName] = useState(null);
-
   const [commonShifts, setCommonShifts] = useState([]);
-
-  const [editLabel, setEditLabel] = useState("");
-
   const [generateRotaVisible, setGenerateRotaVisible] = useState(false);
+  const [activeId, setActiveId] = useState(null); // State for active draggable item
+  const [isSpacePressed, setIsSpacePressed] = useState(false); // State to track if space key is pressed
 
   const calculateWeekStarting = useCallback(() => {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
     return format(addWeeks(startOfCurrentWeek, selectedWeek), "yyyy-MM-dd");
   }, [selectedWeek]);
+
+  const handleGenerateRota = async () => {
+    const requestObject = {
+      venueId: selectedvenueID,
+      weekStarting: calculateWeekStarting(),
+    };
+
+    try {
+      const response = await ServerApi.post(
+        `http://localhost:5000/api/v1/rotas/rota/generateRota`,
+        requestObject,
+        { withCredentials: true }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const fetchRota = useCallback(async () => {
     const requestObject = {
@@ -87,6 +138,7 @@ const Rota = () => {
       if (err.response.data.message === "Rota not found") {
         setRota([]);
         setGenerateRotaVisible(false);
+        setRotaPublished(false);
       }
     }
   }, [selectedvenueID, calculateWeekStarting]);
@@ -107,7 +159,7 @@ const Rota = () => {
     } catch (err) {
       console.log(err);
     }
-  }, []);
+  }, [selectedvenueID]);
 
   useEffect(() => {
     fetchTemplates();
@@ -117,26 +169,31 @@ const Rota = () => {
     const startTime = rota[personIndex].schedule[dayIndex]?.startTime || "";
     const endTime = rota[personIndex].schedule[dayIndex]?.endTime || "";
     const label = rota[personIndex].schedule[dayIndex]?.label || "";
-    setEditShift({ personIndex, dayIndex });
-    setEditStartTime(startTime);
-    setEditEndTime(endTime);
-    setEditLabel(label);
+    setShift({
+      personIndex,
+      dayIndex,
+      startTime,
+      endTime,
+      label,
+    });
     setModalIsOpen(true);
   };
 
-  const handleSaveShift = async () => {
-    const updatedRota = rota.map((person, personIndex) => {
-      if (personIndex === editShift.personIndex) {
+  const handleSaveShift = async (updatedShift) => {
+    const { personIndex, dayIndex, startTime, endTime, label } = updatedShift;
+
+    const updatedRota = rota.map((person, pIndex) => {
+      if (pIndex === personIndex) {
         return {
           ...person,
-          schedule: person.schedule.map((shift, dayIndex) => {
-            if (dayIndex === editShift.dayIndex) {
+          schedule: person.schedule.map((shift, dIndex) => {
+            if (dIndex === dayIndex) {
               return {
                 ...shift,
-                startTime: editStartTime,
-                endTime: editEndTime,
-                label: editLabel,
-                duration: calculateDuration(editStartTime, editEndTime),
+                startTime,
+                endTime,
+                label,
+                duration: calculateDuration(startTime, endTime),
               };
             }
             return shift;
@@ -147,22 +204,9 @@ const Rota = () => {
     });
 
     setRota(updatedRota);
-    console.log(updatedRota);
     await updateRota(updatedRota);
     setModalIsOpen(false);
     setEditShift(null);
-    setEditStartTime("");
-    setEditEndTime("");
-    setEditLabel("");
-  };
-
-  const handleChangeWeek = (direction) => {
-    if (direction === "right") {
-      setSelectedWeek((prev) => prev + 1);
-      console.log(selectedWeek);
-    } else if (direction === "left" && selectedWeek > 0) {
-      setSelectedWeek((prev) => prev - 1);
-    }
   };
 
   const updateRota = async (updatedRota) => {
@@ -185,75 +229,6 @@ const Rota = () => {
     }
   };
 
-  const handleClickPublishRota = async () => {
-    try {
-      await ServerApi.post(
-        `/api/v1/rotas/${rotaId}/publish`,
-        { isPublished: true },
-        { withCredentials: true }
-      );
-      setRotaPublished(true);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const onDragEnd = (result) => {
-    const { source, destination } = result;
-    if (!destination) return;
-
-    const sourceId = source.droppableId.split("-");
-    console.log(source.droppableId);
-    const destId = destination.droppableId.split("-");
-
-    const updatedRota = [...rota];
-
-    if (source.droppableId === "commonShifts") {
-      const shift = commonShifts[source.index];
-      const destPersonIndex = parseInt(destId[0], 10);
-      const destDayIndex = parseInt(destId[1], 10);
-
-      const destShift = updatedRota[destPersonIndex].schedule[destDayIndex];
-      if (destShift.holidayBooked) return;
-      updatedRota[destPersonIndex].schedule[destDayIndex] = {
-        ...shift,
-        duration: calculateDuration(shift.startTime, shift.endTime),
-      };
-      updateRota(updatedRota);
-    } else if (source.droppableId === "commonRotas") {
-      //toDo add logic
-      const rota = commonRotas[source.index];
-      setRota(rota.rota);
-      updateRota(rota.rota);
-    }
-    {
-      const sourcePersonIndex = parseInt(sourceId[0], 10);
-      const sourceDayIndex = parseInt(sourceId[1], 10);
-      const destPersonIndex = parseInt(destId[0], 10);
-      const destDayIndex = parseInt(destId[1], 10);
-
-      const sourceShift =
-        updatedRota[sourcePersonIndex].schedule[sourceDayIndex];
-      const destShift = updatedRota[destPersonIndex].schedule[destDayIndex];
-
-      //ensures you cant swap shifts with booked holidays
-      if (sourceShift.holidayBooked || destShift.holidayBooked) {
-        return;
-      }
-
-      updatedRota[sourcePersonIndex].schedule[sourceDayIndex] = destShift;
-      updatedRota[destPersonIndex].schedule[destDayIndex] = sourceShift;
-    }
-
-    setRota(updatedRota);
-    updateRota(updatedRota);
-  };
-
-  let startOfweek = getDayLabel(new Date(weeks[selectedWeek][0]));
-  let endOfWeek = getDayLabel(
-    new Date(weeks[selectedWeek][weeks[selectedWeek].length - 1])
-  );
-
   const [commonRotas, setCommonRotas] = useState([]);
 
   const fetchCommonRotas = useCallback(async () => {
@@ -266,52 +241,193 @@ const Rota = () => {
     } catch (err) {
       console.log(err);
     }
-  }, []);
+  }, [selectedvenueID]);
 
   useEffect(() => {
     fetchCommonRotas();
   }, [fetchCommonRotas]);
 
+  const [shift, setShift] = useState({
+    personIndex: null,
+    dayIndex: null,
+    startTime: "",
+    endTime: "",
+    label: "",
+  });
+
+  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+  const onDragStart = (event) => {
+    const { active } = event;
+    setActiveId(active?.id);
+  };
+
+  const onDragEnd = (event) => {
+    const { active, over } = event;
+
+    console.log("Drag End Triggered");
+    console.log("Active:", active);
+    console.log("Over:", over);
+
+    if (!over || !active) {
+      console.log("Invalid active or over data");
+      return;
+    }
+
+    // Extract IDs
+    const sourceId = active.id.split("-");
+    const destId = over.id.split("-");
+
+    console.log("Source ID Split:", sourceId);
+    console.log("Destination ID Split:", destId);
+
+    // Parse indices
+    const sourcePersonIndex =
+      sourceId.length > 1 ? parseInt(sourceId[0], 10) : null;
+    const sourceDayIndex =
+      sourceId.length > 1 ? parseInt(sourceId[1], 10) : null;
+    const destPersonIndex = parseInt(destId[0], 10);
+    const destDayIndex = parseInt(destId[1], 10);
+
+    console.log("Parsed Indices - Source:", sourcePersonIndex, sourceDayIndex);
+    console.log("Parsed Indices - Destination:", destPersonIndex, destDayIndex);
+
+    // Initialize updatedRota
+    let updatedRota = [...rota];
+
+    if (active.data.current?.droppableContainer?.id === "commonShifts") {
+      console.log("Dragging from commonShifts");
+      const shift = commonShifts.find((shift) => shift.id === active.id);
+      if (!shift) {
+        console.log("Shift not found");
+        return;
+      }
+
+      if (isNaN(destPersonIndex) || isNaN(destDayIndex)) {
+        console.log("Invalid destination indices");
+        return;
+      }
+
+      const destSchedule = updatedRota[destPersonIndex]?.schedule;
+      if (!destSchedule) {
+        console.log("Destination schedule not found");
+        return;
+      }
+
+      const destShift = destSchedule[destDayIndex];
+      if (destShift?.holidayBooked) {
+        console.log("Destination shift has holiday booked");
+        return;
+      }
+
+      updatedRota[destPersonIndex].schedule[destDayIndex] = {
+        ...shift,
+        duration: calculateDuration(shift.startTime, shift.endTime),
+      };
+    } else if (active.data.current?.droppableContainer?.id === "commonRotas") {
+      console.log("Dragging from commonRotas");
+      const rotaTemplate = commonRotas.find((r) => r.id === active.id);
+      if (!rotaTemplate) {
+        console.log("Rota template not found");
+        return;
+      }
+
+      updatedRota = rotaTemplate.rota;
+      setRota(rotaTemplate.rota);
+      updateRota(rotaTemplate.rota);
+    } else {
+      console.log("Dragging within rota");
+
+      if (
+        sourcePersonIndex === null ||
+        sourceDayIndex === null ||
+        isNaN(sourcePersonIndex) ||
+        isNaN(sourceDayIndex) ||
+        isNaN(destPersonIndex) ||
+        isNaN(destDayIndex)
+      ) {
+        console.log("Invalid indices");
+        return;
+      }
+
+      // Ensure schedules are defined
+      const sourceSchedule = updatedRota[sourcePersonIndex]?.schedule;
+      const destSchedule = updatedRota[destPersonIndex]?.schedule;
+
+      if (!sourceSchedule || !destSchedule) {
+        console.log("Source or destination schedule not found");
+        return;
+      }
+
+      const sourceShift = sourceSchedule[sourceDayIndex];
+      const destShift = destSchedule[destDayIndex];
+
+      if (sourceShift?.holidayBooked || destShift?.holidayBooked) {
+        console.log("Source or destination shift has holiday booked");
+        return;
+      }
+
+      if (isSpacePressed) {
+        console.log("Space key pressed - copying shift");
+        updatedRota[destPersonIndex].schedule[destDayIndex] = {
+          ...sourceShift,
+          duration: calculateDuration(
+            sourceShift.startTime,
+            sourceShift.endTime
+          ),
+        };
+      } else {
+        console.log("Swapping shifts");
+        updatedRota[sourcePersonIndex].schedule[sourceDayIndex] = destShift;
+        updatedRota[destPersonIndex].schedule[destDayIndex] = sourceShift;
+      }
+    }
+
+    setRota(updatedRota);
+    updateRota(updatedRota);
+
+    console.log("Drag end completed");
+  };
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === " ") {
+        setIsSpacePressed(true);
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      if (event.key === " ") {
+        setIsSpacePressed(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
   return (
     <div className="container mx-auto p-4">
-      {/* {selectedVenue && selectedVenue.name && (
-        <p className="text-xl font-bold">{selectedVenue.employeeName}</p>
-      )} */}
-      <div className="flex items-center gap-6">
-        <p className="mr-4 font-semibold">{venueName && venueName}</p>
-        {rotaPublished ? (
-          <button className="border p-2 my-2 rounded-md bg-green-400">
-            <div className="flex gap-2">
-              <p>Rota is published</p>
-              <TiTick className="text-2xl" />
-            </div>
-          </button>
-        ) : (
-          <button
-            className="border p-2 my-2 rounded-md bg-orange-400"
-            onClick={handleClickPublishRota}
-          >
-            Publish Rota
-          </button>
-        )}
-        <div className=" w-[300px] flex justify-center gap-1 p-2 ">
-          <IoMdArrowDropleft
-            className="mx-2 text-2xl cursor-pointer"
-            onClick={() => handleChangeWeek("left")}
-          />
-          <p>
-            {startOfweek} - {endOfWeek}
-          </p>{" "}
-          <IoMdArrowDropright
-            className="mx-2 text-2xl cursor-pointer"
-            onClick={() => handleChangeWeek("right")}
-          />
-        </div>
-      </div>
+      <Toolbar
+        venueName={venueName}
+        selectedWeek={selectedWeek}
+        setSelectedWeek={setSelectedWeek}
+        weeks={weeks}
+        rotaPublished={rotaPublished}
+      />
 
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        modifiers={[restrictToWindowEdges]}
+      >
         <div className="my-2">
-          <div className="overflow-x-auto">
+          <div id="rota-content" className="overflow-x-auto">
             <table className="min-w-full bg-white">
               <thead>
                 <tr>
@@ -341,69 +457,44 @@ const Rota = () => {
                           handleEditShift(personIndex, dayIndex)
                         }
                       >
-                        <Droppable
-                          droppableId={`${personIndex}-${dayIndex}`}
-                          direction="horizontal"
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                              className="min-h-[4rem]"
+                        <DroppableArea id={`${personIndex}-${dayIndex}`}>
+                          {person.schedule[dayIndex] && (
+                            <DraggableItem
+                              id={`${personIndex}-${dayIndex}`}
+                              isSpacePressed={isSpacePressed}
                             >
-                              {person.schedule[dayIndex] && (
-                                <Draggable
-                                  draggableId={`${personIndex}-${dayIndex}`}
-                                  index={dayIndex}
-                                >
-                                  {(provided) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className="cursor-pointer flex items-center justify-center w-full h-full"
-                                    >
-                                      <div
-                                        className={`flex  text-center items-center justify-center p-1 rounded-md  w-[120px] h-[80px] ${
-                                          person.schedule[dayIndex].startTime
-                                            ? `bg-lightBlue`
-                                            : `bg-darkBlue `
-                                        }  text-white ${
-                                          person.schedule[dayIndex]
-                                            .holidayBooked && `bg-orange-400`
-                                        }`}
-                                      >
-                                        {person.schedule[dayIndex].startTime ? (
-                                          <div className="flex flex-col gap-2">
-                                            <p>
-                                              {`${person.schedule[dayIndex].startTime} - ${person.schedule[dayIndex].endTime}`}
-                                            </p>
-                                            <p className="  font-bold">
-                                              {`${
-                                                person.schedule[dayIndex].label
-                                                  ? person.schedule[dayIndex]
-                                                      .label
-                                                  : ""
-                                              }`}
-                                            </p>
-                                          </div>
-                                        ) : (
-                                          <p>
-                                            {person.schedule[dayIndex]
-                                              .holidayBooked
-                                              ? "Holiday Booked"
-                                              : "Day Off"}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              )}
-                              {provided.placeholder}
-                            </div>
+                              <div
+                                className={`flex text-center items-center justify-center p-1 rounded-md w-[120px] h-[80px] ${
+                                  person.schedule[dayIndex].startTime
+                                    ? `bg-lightBlue`
+                                    : `bg-darkBlue`
+                                } text-white ${
+                                  person.schedule[dayIndex].holidayBooked &&
+                                  `bg-orange-400`
+                                }`}
+                              >
+                                {person.schedule[dayIndex].startTime ? (
+                                  <div className="flex flex-col gap-2">
+                                    <p>{`${person.schedule[dayIndex].startTime} - ${person.schedule[dayIndex].endTime}`}</p>
+                                    <p className="font-bold">
+                                      {`${
+                                        person.schedule[dayIndex].label
+                                          ? person.schedule[dayIndex].label
+                                          : ""
+                                      }`}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p>
+                                    {person.schedule[dayIndex].holidayBooked
+                                      ? "Holiday Booked"
+                                      : "Day Off"}
+                                  </p>
+                                )}
+                              </div>
+                            </DraggableItem>
                           )}
-                        </Droppable>
+                        </DroppableArea>
                       </td>
                     ))}
                   </tr>
@@ -411,84 +502,82 @@ const Rota = () => {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {generateRotaVisible ? (
-            <div className=" w-full bg-white">
-              <ShiftTemplates
-                selectedvenueID={selectedvenueID}
-                className="w-full "
-                commonShifts={commonShifts}
-                setCommonShifts={setCommonShifts}
-              />
+        {generateRotaVisible ? (
+          <div className=" w-full bg-white">
+            <ShiftTemplates
+              selectedvenueID={selectedvenueID}
+              className="w-full "
+              commonShifts={commonShifts}
+              setCommonShifts={setCommonShifts}
+            />
 
-              <RotaTemplates
-                rota={rota}
-                commonRotas={commonRotas}
-                setCommonRotas={setCommonRotas}
-                selectedvenueID={selectedvenueID}
-              />
-            </div>
-          ) : (
-            <div>
-              <p>
-                There is no rota for this week yet. Would you like to generate
-                one?
-              </p>
-              <button className="p-2 border bg-slate-600 text-white rounded-md">
-                Generate Rota
-              </button>
+            <RotaTemplates
+              rota={rota}
+              commonRotas={commonRotas}
+              setCommonRotas={setCommonRotas}
+              selectedvenueID={selectedvenueID}
+            />
+          </div>
+        ) : (
+          <div>
+            <p>
+              There is no rota for this week yet. Would you like to generate
+              one?
+            </p>
+            <button className="p-2 border bg-slate-600 text-white rounded-md">
+              Generate Rota
+            </button>
+          </div>
+        )}
+
+        <DragOverlay>
+          {activeId && (
+            <div className="bg-lightBlue text-white p-1 rounded-md w-[120px] h-[80px] flex items-center justify-center">
+              {rota[parseInt(activeId.split("-")[0])]?.schedule[
+                parseInt(activeId.split("-")[1])
+              ]?.startTime ? (
+                <div className="flex flex-col gap-2">
+                  <p>{`${
+                    rota[parseInt(activeId.split("-")[0])]?.schedule[
+                      parseInt(activeId.split("-")[1])
+                    ]?.startTime
+                  } - ${
+                    rota[parseInt(activeId.split("-")[0])]?.schedule[
+                      parseInt(activeId.split("-")[1])
+                    ]?.endTime
+                  }`}</p>
+                  <p className="font-bold">
+                    {`${
+                      rota[parseInt(activeId.split("-")[0])]?.schedule[
+                        parseInt(activeId.split("-")[1])
+                      ]?.label || ""
+                    }`}
+                  </p>
+                </div>
+              ) : (
+                <p>
+                  {rota[parseInt(activeId.split("-")[0])]?.schedule[
+                    parseInt(activeId.split("-")[1])
+                  ]?.holidayBooked
+                    ? "Holiday Booked"
+                    : "Day Off"}
+                </p>
+              )}
             </div>
           )}
-        </div>
-      </DragDropContext>
-      <Modal
+        </DragOverlay>
+      </DndContext>
+
+      <ShiftModal
         isOpen={modalIsOpen}
         onRequestClose={() => setModalIsOpen(false)}
-        style={customStyles}
-      >
-        <div className="flex flex-col justify-center items-center">
-          <h2 className="text-center text-lg font-bold">EDIT SHIFT</h2>
-          <label className="text-center mt-4 mb-1">
-            Start Time:
-            <input
-              type="time"
-              value={editStartTime}
-              onChange={(e) => setEditStartTime(e.target.value)}
-            />
-          </label>
-          <br />
-          <label className="text-center">
-            End Time:
-            <input
-              type="time"
-              value={editEndTime}
-              onChange={(e) => setEditEndTime(e.target.value)}
-            />
-          </label>
-          <br />
-          <label className="text-center">
-            Label:
-            <input
-              type="text"
-              value={editLabel}
-              onChange={(e) => setEditLabel(e.target.value)}
-            />
-          </label>
-          <br />
-          <button
-            onClick={handleSaveShift}
-            className="bg-blue-500 text-white p-2 rounded w-[200px] my-3"
-          >
-            Save
-          </button>
-          <button
-            onClick={() => setModalIsOpen(false)}
-            className="bg-red-500 text-white p-2 rounded w-[200px]"
-          >
-            Cancel
-          </button>
-        </div>
-      </Modal>
+        onSave={handleSaveShift}
+        editShift={editShift}
+        shift={shift}
+        setShift={setShift}
+      />
 
       {loading && (
         <div className="flex justify-center items-center mt-4">
