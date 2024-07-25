@@ -3,11 +3,7 @@ import ServerApi from "../../serverApi/axios";
 import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import { TiTick } from "react-icons/ti";
 
-import {
-  generateWeeks,
-  calculateDuration,
-  getDayLabel,
-} from "../../Utils/utils";
+import { getDayLabel } from "../../Utils/utils";
 
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
@@ -18,6 +14,7 @@ const Toolbar = ({
   selectedWeek,
   weeks,
   rotaPublished,
+  dates,
 }) => {
   const handleClickPublishRota = async () => {
     try {

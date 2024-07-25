@@ -44,7 +44,7 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
   const handleAddNewTemplate = async (e) => {
     e.preventDefault();
     if (
-      newTemplateLabel.trim() === "" ||
+      // newTemplateLabel.trim() === "" ||
       newTemplateStartTime.trim() === "" ||
       newTemplateEndTime.trim() === ""
     ) {
@@ -52,9 +52,11 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
     }
     const newTemplate = {
       id: `${newTemplateLabel}-${Date.now()}`,
+      shiftData: {
+        startTime: newTemplateStartTime,
+        endTime: newTemplateEndTime,
+      },
       desc: newTemplateLabel,
-      startTime: newTemplateStartTime,
-      endTime: newTemplateEndTime,
     };
 
     try {
