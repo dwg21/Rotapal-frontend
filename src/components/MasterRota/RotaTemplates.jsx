@@ -63,10 +63,18 @@ const RotaTemplates = ({
       return;
     }
     const newTemplate = {
-      id: `${newRotaLabel}-${Date.now()}`,
+      id: `${newRotaLabel}-${Date.now()}`, // Optional: Change as needed
       label: newRotaLabel,
-      rota: rota, // Save the current rota here
+      rotaData: rota.map((person) => ({
+        employee: person.employee, // Use person.employee
+        schedule: person.schedule.map((shift) => ({
+          date: shift.date,
+          shiftData: shift.shiftData,
+        })),
+      })),
     };
+
+    console.log(newTemplate);
 
     try {
       const response = await ServerApi.post(

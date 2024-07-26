@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import Rota from "./components/Rota/Rota";
+
+import MasterRota from "./components/MasterRota/MasterRota";
 import Staff from "./components/Staff/Staff";
 import { Route, Routes } from "react-router-dom";
 import Login from "./components/User/Login";
@@ -9,7 +10,7 @@ import Venues from "./components/Venue/Venues";
 import Navbar from "./components/Navbar/Navbar";
 import Requests from "./components/Requests/Requests";
 
-import EmployeeRota from "./components/Rota/EmployeeRota";
+import EmployeeRota from "./components/EmployeeRota/EmployeeRota";
 
 import NavbarContent from "./components/Navbar/NavbarContent";
 import Notifications from "./components/Notifcation/Notifcations";
@@ -19,7 +20,7 @@ import NotFound from "./components/misc/NotFound";
 
 import { userContext } from "./UserContext";
 import HolidayRequests from "./components/Holiday/HolidayRequests";
-import ArchivedRotas from "./components/Rota/ArchivedRotas";
+import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 function App() {
   const { state } = userContext();
   console.log(state.userData);
@@ -46,7 +47,7 @@ function App() {
             path="/rota/:venueId"
             element={
               <ProtectedRoute
-                element={Rota}
+                element={MasterRota}
                 user={state.userData}
                 role="admin"
               />
@@ -56,7 +57,7 @@ function App() {
             path="/rota"
             element={
               <ProtectedRoute
-                element={Rota}
+                element={MasterRota}
                 user={state.userData}
                 role="admin"
               />

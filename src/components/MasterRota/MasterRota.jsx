@@ -1,24 +1,13 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
-  useDraggable,
-  useDroppable,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
 } from "@dnd-kit/core";
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { useRota } from "../../RotaContext";
 import ShiftTemplates from "./ShiftTemplates";
 import RotaTemplates from "./RotaTemplates";
@@ -26,55 +15,43 @@ import { ClipLoader } from "react-spinners";
 import { addWeeks, startOfWeek, format } from "date-fns";
 import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
-
 import ShiftModal from "./ShiftModal";
 import { generateWeeks } from "../../Utils/utils";
 import Toolbar from "./Toolbar";
 import RotaTable from "./RotaTable";
-
 import DroppableArea from "./DndComponents/DropppableArea";
 import DraggableItem from "./DndComponents/DraggableItem";
 
-const Rota = () => {
-  const { selectedvenueID, setSelectedvenueID, selectedVenue } = useRota();
-  const { venueId } = useParams();
+const MasterRota = () => {
+  const { selectedvenueID } = useRota();
   const [rota, setRota] = useState([]);
-  const [rotaId, setRotaId] = useState(null);
   const [error, setError] = useState("");
   const [editShift, setEditShift] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0);
-  const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
   const [rotaPublished, setRotaPublished] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [venueName, setVenueName] = useState(null);
   const [commonShifts, setCommonShifts] = useState([]);
   const [generateRotaVisible, setGenerateRotaVisible] = useState(false);
-  const [activeId, setActiveId] = useState(null); // State for active draggable item
-  const [isSpacePressed, setIsSpacePressed] = useState(false); // State to track if space key is pressed
+  const [activeId, setActiveId] = useState(null);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+  const [shift, setShift] = useState({
+    personIndex: null,
+    dayIndex: null,
+    startTime: "",
+    endTime: "",
+    label: "",
+  });
+  const [commonRotas, setCommonRotas] = useState([]);
+
+  const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
 
   const calculateWeekStarting = useCallback(() => {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
     return format(addWeeks(startOfCurrentWeek, selectedWeek), "yyyy-MM-dd");
   }, [selectedWeek]);
-
-  const handleGenerateRota = async () => {
-    const requestObject = {
-      venueId: selectedvenueID,
-      weekStarting: calculateWeekStarting(),
-    };
-
-    try {
-      const response = await ServerApi.post(
-        `http://localhost:5000/api/v1/rotas/rota/generateRota`,
-        requestObject,
-        { withCredentials: true }
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   const fetchRota = useCallback(async () => {
     const requestObject = {
@@ -88,11 +65,14 @@ const Rota = () => {
         requestObject,
         { withCredentials: true }
       );
-      setVenueName(response.data.rota.name.split("-")[0]);
-      setRota(response.data.rota.rotaData);
-      console.log(response.data.rota);
-      setRotaPublished(response.data.rota.published);
-      setRotaId(response.data.rota._id);
+      // setVenueName(response.data.rota.name.split("-")[0]);
+
+      // setRota(response.data.rota.rotaData);
+      setRota(response.data.rota);
+
+      // setRotaPublished(response.data.rota.published);
+      // setRotaId(response.data.rota._id);
+
       setGenerateRotaVisible(true);
     } catch (err) {
       console.log(err.response.data.message);
@@ -107,6 +87,7 @@ const Rota = () => {
 
   useEffect(() => {
     fetchRota();
+    console.log(rota);
   }, [fetchRota, selectedWeek, selectedvenueID]);
 
   const fetchTemplates = useCallback(async () => {
@@ -116,8 +97,6 @@ const Rota = () => {
         { withCredentials: true }
       );
       setCommonShifts(response.data.commonShifts);
-
-      console.log(response.data.commonShifts);
     } catch (err) {
       console.log(err);
     }
@@ -126,84 +105,6 @@ const Rota = () => {
   useEffect(() => {
     fetchTemplates();
   }, [fetchTemplates]);
-
-  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-
-  const handleEditShift = (personIndex, dayIndex, event) => {
-    console.log("Editing Shift");
-    const shiftData = rota[personIndex].schedule[dayIndex]?.shiftData || {};
-
-    // Get position of the clicked element
-    const rect = event.currentTarget.getBoundingClientRect();
-
-    // Calculate position for the modal
-    const position = {
-      top: rect.bottom + window.scrollY,
-      left: rect.right + window.scrollX,
-    };
-
-    setShift({
-      personIndex,
-      dayIndex,
-      ...shiftData, // Spread shiftData directly
-    });
-    setModalPosition(position);
-    setModalIsOpen(true);
-  };
-
-  const handleSaveShift = async (updatedShift) => {
-    const { personIndex, dayIndex, shiftData } = updatedShift;
-    console.log(shiftData);
-
-    const updatedRota = rota.map((person, pIndex) => {
-      if (pIndex === personIndex) {
-        console.log("hh");
-        return {
-          ...person,
-          schedule: person.schedule.map((shift, dIndex) => {
-            if (dIndex === dayIndex) {
-              console.log("nssj");
-              return {
-                ...shift,
-                shiftData: {
-                  ...shiftData,
-                },
-              };
-            }
-            return shift;
-          }),
-        };
-      }
-      return person;
-    });
-
-    setRota(updatedRota);
-    await updateRota(updatedRota);
-    setModalIsOpen(false);
-    setEditShift(null);
-  };
-
-  const updateRota = async (updatedRota) => {
-    console.log("updateRota called with:", updatedRota);
-    setLoading(true);
-    setSuccess(false);
-    try {
-      await ServerApi.post(
-        `/api/v1/rotas/${rotaId}`,
-        { newRota: updatedRota },
-        { withCredentials: true }
-      );
-      setSuccess(true);
-      console.log("Rota successfully updated on server.");
-    } catch (error) {
-      console.error("Failed to update rota on server:", error);
-      setError("Failed to update rota");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [commonRotas, setCommonRotas] = useState([]);
 
   const fetchCommonRotas = useCallback(async () => {
     try {
@@ -221,61 +122,110 @@ const Rota = () => {
     fetchCommonRotas();
   }, [fetchCommonRotas]);
 
-  const [shift, setShift] = useState({
-    personIndex: null,
-    dayIndex: null,
-    startTime: "",
-    endTime: "",
-    label: "",
-  });
+  const handleSaveShift = async (updatedShift) => {
+    const { personIndex, dayIndex, shiftData } = updatedShift;
+    const updatedRota = rotaData.map((person, pIndex) => {
+      if (pIndex === personIndex) {
+        return {
+          ...person,
+          schedule: person.schedule.map((shift, dIndex) => {
+            if (dIndex === dayIndex) {
+              return {
+                ...shift,
+                shiftData: { ...shiftData },
+              };
+            }
+            return shift;
+          }),
+        };
+      }
+      return person;
+    });
+
+    setRota(updatedRota);
+    await updateRota(updatedRota);
+    setModalIsOpen(false);
+    setEditShift(null);
+  };
+
+  const updateRota = async (updatedRota) => {
+    setLoading(true);
+    setSuccess(false);
+    try {
+      await ServerApi.post(
+        `/api/v1/rotas/${rota._id}`,
+        { newRota: updatedRota.rotaData },
+        { withCredentials: true }
+      );
+      setSuccess(true);
+    } catch (error) {
+      console.error("Failed to update rota on server:", error);
+      setError("Failed to update rota");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateRota = async () => {
+    const requestObject = {
+      venueId: selectedvenueID,
+      weekStarting: calculateWeekStarting(),
+    };
+
+    try {
+      await ServerApi.post(
+        `http://localhost:5000/api/v1/rotas/rota/generateRota`,
+        requestObject,
+        { withCredentials: true }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
   const onDragStart = (event) => {
-    const { active } = event;
-    setActiveId(active?.id);
+    setActiveId(event.active?.id);
   };
 
   const onDragEnd = (event) => {
-    const { active, over } = event;
+    console.log("Drag end event:", event);
 
+    const { active, over } = event;
     if (!over || !active) {
-      console.log("Invalid active or over data");
+      console.log("No active or over elements");
       return;
     }
 
-    const sourceId = active.id.split("-");
-    const destId = over.id.split("-");
+    const [sourcePersonIndex, sourceDayIndex] = active.id
+      .split("-")
+      .map(Number);
+    const [destPersonIndex, destDayIndex] = over.id.split("-").map(Number);
 
-    if (active.id === over.id) return;
+    console.log("Source:", { sourcePersonIndex, sourceDayIndex });
+    console.log("Destination:", { destPersonIndex, destDayIndex });
 
-    const sourcePersonIndex =
-      sourceId.length > 1 ? parseInt(sourceId[0], 10) : null;
-    const sourceDayIndex =
-      sourceId.length > 1 ? parseInt(sourceId[1], 10) : null;
-    const destPersonIndex = parseInt(destId[0], 10);
-    const destDayIndex = parseInt(destId[1], 10);
-
-    let updatedRota = [...rota];
+    let updatedRotaData = [...rota.rotaData];
 
     if (active.data.current?.droppableContainer?.id === "commonShifts") {
+      console.log("Handling commonShifts");
+
       const shift = commonShifts.find((shift) => shift.id === active.id);
       if (!shift) {
-        console.log("Shift not found");
+        console.log("No shift found for ID:", active.id);
         return;
       }
-
-      console.log("shit", shift);
 
       if (isNaN(destPersonIndex) || isNaN(destDayIndex)) {
         console.log("Invalid destination indices");
         return;
       }
 
-      const destEmployee = updatedRota[destPersonIndex];
+      const destEmployee = updatedRotaData[destPersonIndex];
       const destSchedule = destEmployee?.schedule;
       if (!destSchedule) {
-        console.log("Destination schedule not found");
+        console.log("No destination schedule found");
         return;
       }
 
@@ -285,38 +235,56 @@ const Rota = () => {
         return;
       }
 
-      // Directly update the shiftData
-      updatedRota[destPersonIndex].schedule[destDayIndex] = {
+      updatedRotaData[destPersonIndex].schedule[destDayIndex] = {
         ...destShift,
-        shiftData: {
-          ...shift.shiftData,
-        },
+        shiftData: { ...shift.shiftData },
       };
+      console.log("Updated rota with common shift:", updatedRotaData);
     } else if (active.data.current?.droppableContainer?.id === "commonRotas") {
-      const rotaTemplate = commonRotas.find((r) => r.id === active.id);
-      if (!rotaTemplate) return;
+      console.log("Handling commonRotas");
 
-      const updatedRota = rota.map((person) => {
+      const rotaTemplate = commonRotas.find((r) => r.id === active.id);
+      if (!rotaTemplate) {
+        console.log("No rota template found for ID:", active.id);
+        return;
+      }
+
+      console.log("Rota template found:", rotaTemplate);
+
+      updatedRotaData = rota.rotaData.map((person) => {
         const templatePerson = rotaTemplate.rotaData.find(
-          (p) => p.employee.toString() === person.employeeId.toString()
+          (p) => p.employee.toString() === person.employee.toString()
         );
 
-        if (!templatePerson) return person;
-
-        const updatedSchedule = person.schedule.map((shift) => {
-          const templateShift = templatePerson.schedule.find(
-            (tShift) => tShift.date === shift.date
+        if (!templatePerson) {
+          console.log(
+            "No template person found for employee ID:",
+            person.employee
           );
+          return person;
+        }
 
-          if (templateShift) {
-            return {
-              ...shift,
-              shiftData: {
-                ...templateShift.shiftData,
-              },
-            };
+        console.log("Template person found:", templatePerson);
+
+        const updatedSchedule = person.schedule.map((shift, index) => {
+          const templateShift = templatePerson.schedule[index];
+
+          if (!templateShift) {
+            console.log(
+              `No template shift found for index ${index} in person schedule`
+            );
+            return shift;
           }
-          return shift;
+
+          console.log(`Replacing shift at index ${index}`, {
+            oldShiftData: shift.shiftData,
+            newShiftData: templateShift.shiftData,
+          });
+
+          return {
+            ...shift,
+            shiftData: { ...templateShift.shiftData },
+          };
         });
 
         return {
@@ -325,28 +293,30 @@ const Rota = () => {
         };
       });
 
-      setRota(updatedRota);
-      updateRota(updatedRota);
+      console.log("Updated rota:", updatedRotaData);
+
+      setRota({ ...rota, rotaData: updatedRotaData });
+      updateRota({ ...rota, rotaData: updatedRotaData });
     } else {
+      console.log("Handling regular shift swap");
+
       if (
-        sourcePersonIndex === null ||
-        sourceDayIndex === null ||
         isNaN(sourcePersonIndex) ||
         isNaN(sourceDayIndex) ||
         isNaN(destPersonIndex) ||
         isNaN(destDayIndex)
       ) {
-        console.log("Invalid indices");
+        console.log("Invalid indices for source or destination");
         return;
       }
 
-      const sourceEmployee = updatedRota[sourcePersonIndex];
-      const destEmployee = updatedRota[destPersonIndex];
+      const sourceEmployee = updatedRotaData[sourcePersonIndex];
+      const destEmployee = updatedRotaData[destPersonIndex];
       const sourceSchedule = sourceEmployee?.schedule;
       const destSchedule = destEmployee?.schedule;
 
       if (!sourceSchedule || !destSchedule) {
-        console.log("Source or destination schedule not found");
+        console.log("No schedule found for source or destination");
         return;
       }
 
@@ -359,43 +329,37 @@ const Rota = () => {
       }
 
       if (isSpacePressed) {
-        updatedRota[destPersonIndex].schedule[destDayIndex] = {
+        console.log("Space is pressed, copying shift data to destination");
+        updatedRotaData[destPersonIndex].schedule[destDayIndex] = {
           ...destShift,
-          shiftData: {
-            ...sourceShift.shiftData, // Copy shift data
-          },
+          shiftData: { ...sourceShift.shiftData },
         };
       } else {
-        updatedRota[sourcePersonIndex].schedule[sourceDayIndex] = {
+        console.log("Swapping shift data between source and destination");
+        updatedRotaData[sourcePersonIndex].schedule[sourceDayIndex] = {
           ...sourceShift,
-          shiftData: {
-            ...destShift.shiftData, // Preserve destination shift data
-          },
+          shiftData: { ...destShift.shiftData },
         };
-        updatedRota[destPersonIndex].schedule[destDayIndex] = {
+        updatedRotaData[destPersonIndex].schedule[destDayIndex] = {
           ...destShift,
-          shiftData: {
-            ...sourceShift.shiftData, // Preserve source shift data
-          },
+          shiftData: { ...sourceShift.shiftData },
         };
       }
+
+      console.log("Updated rota after shift swap:", updatedRotaData);
     }
 
-    setRota(updatedRota);
-    updateRota(updatedRota);
+    setRota({ ...rota, rotaData: updatedRotaData });
+    updateRota({ ...rota, rotaData: updatedRotaData });
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === " ") {
-        setIsSpacePressed(true);
-      }
+      if (event.key === " ") setIsSpacePressed(true);
     };
 
     const handleKeyUp = (event) => {
-      if (event.key === " ") {
-        setIsSpacePressed(false);
-      }
+      if (event.key === " ") setIsSpacePressed(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -407,17 +371,35 @@ const Rota = () => {
     };
   }, []);
 
-  // Extract dates from rotaData and sort them
+  const getDragPreview = (id) => {
+    const [personIndex, dayIndex] = id.split("-").map(Number);
+    const shift = rota[personIndex]?.schedule[dayIndex] || {};
+    return (
+      <div className="bg-lightBlue text-white p-1 rounded-md w-[120px] h-[80px] flex items-center justify-center">
+        {shift.startTime ? (
+          <div className="flex flex-col gap-2">
+            <p>{`${shift.startTime} - ${shift.endTime}`}</p>
+            <p className="font-bold">{shift.label || ""}</p>
+          </div>
+        ) : (
+          <p>{shift.holidayBooked ? "Holiday Booked" : "Day Off"}</p>
+        )}
+      </div>
+    );
+  };
+
   const dates = Array.from(
     new Set(
-      rota.flatMap((person) => person.schedule.map((shift) => shift.date))
+      rota?.rotaData?.flatMap((person) =>
+        person.schedule.map((shift) => shift.date)
+      )
     )
   ).sort();
 
   return (
     <div className="container mx-auto p-4">
       <Toolbar
-        venueName={venueName}
+        venueName={rota?.name?.split("-")[0]}
         selectedWeek={selectedWeek}
         setSelectedWeek={setSelectedWeek}
         weeks={weeks}
@@ -435,25 +417,26 @@ const Rota = () => {
         <div className="my-2">
           <div id="rota-content" className="overflow-x-auto">
             <RotaTable
-              rota={rota}
+              rota={rota?.rotaData}
               dates={dates}
               DroppableArea={DroppableArea}
               DraggableItem={DraggableItem}
               isSpacePressed={isSpacePressed}
-              handleEditShift={handleEditShift}
+              setModalIsOpen={setModalIsOpen}
+              setModalPosition={setModalPosition}
+              setShift={setShift}
             />
           </div>
         </div>
 
         {generateRotaVisible ? (
-          <div className=" w-full bg-white">
+          <div className="w-full bg-white">
             <ShiftTemplates
               selectedvenueID={selectedvenueID}
-              className="w-full "
+              className="w-full"
               commonShifts={commonShifts}
               setCommonShifts={setCommonShifts}
             />
-
             <RotaTemplates
               rota={rota}
               commonRotas={commonRotas}
@@ -476,42 +459,7 @@ const Rota = () => {
           </div>
         )}
 
-        <DragOverlay>
-          {activeId && (
-            <div className="bg-lightBlue text-white p-1 rounded-md w-[120px] h-[80px] flex items-center justify-center">
-              {rota[parseInt(activeId.split("-")[0])]?.schedule[
-                parseInt(activeId.split("-")[1])
-              ]?.startTime ? (
-                <div className="flex flex-col gap-2">
-                  <p>{`${
-                    rota[parseInt(activeId.split("-")[0])]?.schedule[
-                      parseInt(activeId.split("-")[1])
-                    ]?.startTime
-                  } - ${
-                    rota[parseInt(activeId.split("-")[0])]?.schedule[
-                      parseInt(activeId.split("-")[1])
-                    ]?.endTime
-                  }`}</p>
-                  <p className="font-bold">
-                    {`${
-                      rota[parseInt(activeId.split("-")[0])]?.schedule[
-                        parseInt(activeId.split("-")[1])
-                      ]?.label || ""
-                    }`}
-                  </p>
-                </div>
-              ) : (
-                <p>
-                  {rota[parseInt(activeId.split("-")[0])]?.schedule[
-                    parseInt(activeId.split("-")[1])
-                  ]?.holidayBooked
-                    ? "Holiday Booked"
-                    : "Day Off"}
-                </p>
-              )}
-            </div>
-          )}
-        </DragOverlay>
+        <DragOverlay>{activeId && getDragPreview(activeId)}</DragOverlay>
       </DndContext>
 
       <ShiftModal
@@ -539,4 +487,4 @@ const Rota = () => {
   );
 };
 
-export default Rota;
+export default MasterRota;

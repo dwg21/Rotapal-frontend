@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { getDayLabel } from "../../Utils/utils";
 import { IoAddSharp } from "react-icons/io5";
 
@@ -8,8 +8,27 @@ const RotaTable = ({
   DroppableArea,
   DraggableItem,
   isSpacePressed,
-  handleEditShift,
+  setModalPosition,
+  setModalIsOpen,
+  setShift,
 }) => {
+  const handleEditShift = (personIndex, dayIndex, event) => {
+    const shiftData = rota[personIndex].schedule[dayIndex]?.shiftData || {};
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = {
+      top: rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX,
+    };
+
+    setShift({
+      personIndex,
+      dayIndex,
+      ...shiftData,
+    });
+    setModalPosition(position);
+    setModalIsOpen(true);
+  };
+
   return (
     <div>
       <table className="min-w-full bg-white">
@@ -26,8 +45,8 @@ const RotaTable = ({
           </tr>
         </thead>
         <tbody>
-          {rota.map((person, personIndex) => (
-            <tr key={person.id}>
+          {rota?.map((person, personIndex) => (
+            <tr key={person.employee}>
               <td className="border px-4 py-2 select-none">
                 {person.employeeName}
               </td>
