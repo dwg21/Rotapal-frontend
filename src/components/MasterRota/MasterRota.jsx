@@ -13,9 +13,7 @@ import ShiftTemplates from "./ShiftTemplates";
 import RotaTemplates from "./RotaTemplates";
 import { ClipLoader } from "react-spinners";
 import { addWeeks, startOfWeek, format } from "date-fns";
-import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
-import ShiftModal from "./ShiftModal";
 import { generateWeeks } from "../../Utils/utils";
 import Toolbar from "./Toolbar";
 import RotaTable from "./RotaTable";
@@ -26,24 +24,19 @@ const MasterRota = () => {
   const { selectedvenueID } = useRota();
   const [rota, setRota] = useState([]);
   const [error, setError] = useState("");
-  const [editShift, setEditShift] = useState(null);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0);
-  const [rotaPublished, setRotaPublished] = useState(null);
+
+  //Can combine these 2
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
   const [commonShifts, setCommonShifts] = useState([]);
+
+  //can elimante this by checking message or if rota is null
   const [generateRotaVisible, setGenerateRotaVisible] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-  const [shift, setShift] = useState({
-    personIndex: null,
-    dayIndex: null,
-    startTime: "",
-    endTime: "",
-    label: "",
-  });
+
   const [commonRotas, setCommonRotas] = useState([]);
 
   const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
@@ -65,14 +58,7 @@ const MasterRota = () => {
         requestObject,
         { withCredentials: true }
       );
-      // setVenueName(response.data.rota.name.split("-")[0]);
-
-      // setRota(response.data.rota.rotaData);
       setRota(response.data.rota);
-
-      // setRotaPublished(response.data.rota.published);
-      // setRotaId(response.data.rota._id);
-
       setGenerateRotaVisible(true);
     } catch (err) {
       console.log(err.response.data.message);
@@ -80,7 +66,6 @@ const MasterRota = () => {
       if (err.response.data.message === "Rota not found") {
         setRota([]);
         setGenerateRotaVisible(false);
-        setRotaPublished(false);
       }
     }
   }, [selectedvenueID, calculateWeekStarting]);
@@ -121,32 +106,6 @@ const MasterRota = () => {
   useEffect(() => {
     fetchCommonRotas();
   }, [fetchCommonRotas]);
-
-  const handleSaveShift = async (updatedShift) => {
-    const { personIndex, dayIndex, shiftData } = updatedShift;
-    const updatedRota = rotaData.map((person, pIndex) => {
-      if (pIndex === personIndex) {
-        return {
-          ...person,
-          schedule: person.schedule.map((shift, dIndex) => {
-            if (dIndex === dayIndex) {
-              return {
-                ...shift,
-                shiftData: { ...shiftData },
-              };
-            }
-            return shift;
-          }),
-        };
-      }
-      return person;
-    });
-
-    setRota(updatedRota);
-    await updateRota(updatedRota);
-    setModalIsOpen(false);
-    setEditShift(null);
-  };
 
   const updateRota = async (updatedRota) => {
     setLoading(true);
@@ -404,8 +363,8 @@ const MasterRota = () => {
         setSelectedWeek={setSelectedWeek}
         weeks={weeks}
         dates={dates}
-        rotaPublished={rotaPublished}
-        setRotaPublished={setRotaPublished}
+        rota={rota}
+        setRota={setRota}
       />
 
       <DndContext
@@ -418,13 +377,12 @@ const MasterRota = () => {
           <div id="rota-content" className="overflow-x-auto">
             <RotaTable
               rota={rota?.rotaData}
+              setRota={setRota}
               dates={dates}
               DroppableArea={DroppableArea}
               DraggableItem={DraggableItem}
               isSpacePressed={isSpacePressed}
-              setModalIsOpen={setModalIsOpen}
-              setModalPosition={setModalPosition}
-              setShift={setShift}
+              updateRota={updateRota}
             />
           </div>
         </div>
@@ -461,16 +419,6 @@ const MasterRota = () => {
 
         <DragOverlay>{activeId && getDragPreview(activeId)}</DragOverlay>
       </DndContext>
-
-      <ShiftModal
-        isOpen={modalIsOpen}
-        onRequestClose={() => setModalIsOpen(false)}
-        onSave={handleSaveShift}
-        editShift={editShift}
-        shift={shift}
-        setShift={setShift}
-        position={modalPosition}
-      />
 
       {loading && (
         <div className="flex justify-center items-center mt-4">

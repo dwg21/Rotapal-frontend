@@ -1,17 +1,64 @@
 import React, { useState } from "react";
 import { getDayLabel } from "../../Utils/utils";
 import { IoAddSharp } from "react-icons/io5";
+import ShiftModal from "./ShiftModal";
 
 const RotaTable = ({
   rota,
+  setRota,
   dates,
   DroppableArea,
   DraggableItem,
   isSpacePressed,
-  setModalPosition,
-  setModalIsOpen,
-  setShift,
+  updateRota,
 }) => {
+  const [shift, setShift] = useState({
+    personIndex: null,
+    dayIndex: null,
+    startTime: "",
+    endTime: "",
+    label: "",
+  });
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+
+  const [editShift, setEditShift] = useState(null);
+
+  const handleSaveShift = async (updatedShift) => {
+    const { personIndex, dayIndex, shiftData } = updatedShift;
+    const updatedRotaData = rota.map((person, pIndex) => {
+      if (pIndex === personIndex) {
+        return {
+          ...person,
+          schedule: person.schedule.map((shift, dIndex) => {
+            if (dIndex === dayIndex) {
+              return {
+                ...shift,
+                shiftData: { ...shiftData },
+              };
+            }
+            return shift;
+          }),
+        };
+      }
+      return person;
+    });
+
+    // Set the updated rota state
+    setRota({
+      ...rota,
+      rotaData: updatedRotaData,
+    });
+
+    await updateRota({
+      ...rota,
+      rotaData: updatedRotaData,
+    });
+    setModalIsOpen(false);
+    setEditShift(null);
+  };
+
   const handleEditShift = (personIndex, dayIndex, event) => {
     const shiftData = rota[personIndex].schedule[dayIndex]?.shiftData || {};
     const rect = event.currentTarget.getBoundingClientRect();
@@ -112,6 +159,16 @@ const RotaTable = ({
           ))}
         </tbody>
       </table>
+
+      <ShiftModal
+        isOpen={modalIsOpen}
+        onRequestClose={() => setModalIsOpen(false)}
+        onSave={handleSaveShift}
+        editShift={editShift}
+        shift={shift}
+        setShift={setShift}
+        position={modalPosition}
+      />
     </div>
   );
 };

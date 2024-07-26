@@ -13,17 +13,18 @@ const Toolbar = ({
   setSelectedWeek,
   selectedWeek,
   weeks,
-  rotaPublished,
-  dates,
+  rota,
+  setRota,
 }) => {
   const handleClickPublishRota = async () => {
     try {
-      await ServerApi.post(
-        `/api/v1/rotas/${rotaId}/publish`,
+      console.log("hhs");
+      const { data } = await ServerApi.post(
+        `/api/v1/rotas/${rota?._id}/publish`,
         { isPublished: true },
         { withCredentials: true }
       );
-      setRotaPublished(true);
+      setRota(data.rota);
     } catch (error) {
       console.error(error);
     }
@@ -46,7 +47,7 @@ const Toolbar = ({
   return (
     <div className="flex items-center gap-6">
       <p className="mr-4 font-semibold">{venueName && venueName}</p>
-      {rotaPublished ? (
+      {rota?.published ? (
         <button className="border p-2 my-2 rounded-md bg-green-400">
           <div className="flex gap-2">
             <p>Rota is published</p>
