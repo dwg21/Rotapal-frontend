@@ -15,25 +15,25 @@ import { ClipLoader } from "react-spinners";
 import { addWeeks, startOfWeek, format } from "date-fns";
 import ServerApi from "../../serverApi/axios";
 import { generateWeeks } from "../../Utils/utils";
-import Toolbar from "./Toolbar";
+import Toolbar from "../RotaMisc/Toolbar";
 import RotaTable from "./RotaTable";
 import DroppableArea from "./DndComponents/DropppableArea";
 import DraggableItem from "./DndComponents/DraggableItem";
 
 const MasterRota = () => {
   const { selectedvenueID } = useRota();
+
   const [rota, setRota] = useState([]);
   const [error, setError] = useState("");
   const [selectedWeek, setSelectedWeek] = useState(0);
 
-  //Can combine these 2
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState({
+    loading: false,
+    success: false,
+  });
 
   const [commonShifts, setCommonShifts] = useState([]);
 
-  //can elimante this by checking message or if rota is null
-  const [generateRotaVisible, setGenerateRotaVisible] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
 
@@ -59,13 +59,11 @@ const MasterRota = () => {
         { withCredentials: true }
       );
       setRota(response.data.rota);
-      setGenerateRotaVisible(true);
     } catch (err) {
       console.log(err.response.data.message);
       setError("Failed to fetch venues");
       if (err.response.data.message === "Rota not found") {
-        setRota([]);
-        setGenerateRotaVisible(false);
+        setRota(false);
       }
     }
   }, [selectedvenueID, calculateWeekStarting]);
@@ -108,20 +106,18 @@ const MasterRota = () => {
   }, [fetchCommonRotas]);
 
   const updateRota = async (updatedRota) => {
-    setLoading(true);
-    setSuccess(false);
+    setStatus((prev) => ({ ...prev, loading: true, success: false }));
     try {
       await ServerApi.post(
         `/api/v1/rotas/${rota._id}`,
         { newRota: updatedRota.rotaData },
         { withCredentials: true }
       );
-      setSuccess(true);
+      setStatus((prev) => ({ ...prev, loading: false, success: true }));
     } catch (error) {
       console.error("Failed to update rota on server:", error);
       setError("Failed to update rota");
-    } finally {
-      setLoading(false);
+      setStatus((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -387,7 +383,7 @@ const MasterRota = () => {
           </div>
         </div>
 
-        {generateRotaVisible ? (
+        {rota ? (
           <div className="w-full bg-white">
             <ShiftTemplates
               selectedvenueID={selectedvenueID}
@@ -420,12 +416,12 @@ const MasterRota = () => {
         <DragOverlay>{activeId && getDragPreview(activeId)}</DragOverlay>
       </DndContext>
 
-      {loading && (
+      {status.loading && (
         <div className="flex justify-center items-center mt-4">
-          <ClipLoader loading={loading} size={50} />
+          <ClipLoader loading={status.loading} size={50} />
         </div>
       )}
-      {success && (
+      {status.success && (
         <p className="text-green-500 text-center mt-4">
           Rota updated successfully!
         </p>

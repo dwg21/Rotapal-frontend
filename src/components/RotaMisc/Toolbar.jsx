@@ -45,7 +45,10 @@ const Toolbar = ({
   );
 
   return (
-    <div className="flex items-center gap-6">
+    <div
+      className="flex items-center gap-6 py-2 my-1  border-b w-full
+    "
+    >
       <p className="mr-4 font-semibold">{venueName && venueName}</p>
       {rota?.published ? (
         <button className="border p-2 my-2 rounded-md bg-green-400">
