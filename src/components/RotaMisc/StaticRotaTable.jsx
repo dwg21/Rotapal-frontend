@@ -35,13 +35,12 @@ const StaticRotaTable = ({ dates, rota }) => {
                 person.schedule[dayIndex]?.shiftData?.holidayBooked ||
                 person.schedule[dayIndex]?.shiftData?.label ? (
                   <div
-                    className={`my-2 mx-4 flex text-center items-center justify-center p-1 rounded-md w-[120px] h-[80px] ${
-                      person.schedule[dayIndex].shiftData?.startTime
-                        ? `bg-lightBlue`
-                        : `bg-darkBlue`
-                    } text-white ${
-                      person.schedule[dayIndex]?.shiftData?.holidayBooked &&
-                      `bg-orange-400`
+                    className={`my-2 mx-4 flex text-center items-center justify-center p-1 rounded-md w-[120px] h-[80px] text-white ${
+                      person.schedule[dayIndex]?.holidayBooked
+                        ? "bg-orange-400"
+                        : person.schedule[dayIndex].shiftData?.startTime
+                        ? "bg-lightBlue"
+                        : "bg-darkBlue"
                     }`}
                   >
                     {person.schedule[dayIndex]?.shiftData?.holidayBooked ? (

@@ -7,7 +7,6 @@ import { getDayLabel } from "../../Utils/utils";
 const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
   const { state } = userContext();
 
-  // Consolidated state into a single object
   const [swapDetails, setSwapDetails] = useState({
     selectedColleague: "",
     colleagueShift: "",
@@ -22,22 +21,26 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setSwapDetails((prev) => ({
-      ...prev,
-      [name]: value,
-      ...(name === "selectedColleague" && {
-        colleagueShift: "",
-        colleagueShiftId: "",
-      }),
-      ...(name === "colleagueShift" && {
-        colleagueShiftId:
-          rota[value.split("-")[0]].schedule[value.split("-")[1]]._id,
-      }),
-      ...(name === "myShift" && {
-        myShiftId:
-          filteredShifts[value.split("-")[0]].schedule[value.split("-")[1]]._id,
-      }),
-    }));
+    setSwapDetails((prev) => {
+      const newState = {
+        ...prev,
+        [name]: value,
+      };
+
+      if (name === "selectedColleague") {
+        newState.colleagueShift = "";
+        newState.colleagueShiftId = "";
+      } else if (name === "colleagueShift") {
+        const [colleagueIndex, shiftIndex] = value.split("-");
+        newState.colleagueShiftId =
+          rota?.rotaData[colleagueIndex].schedule[shiftIndex]._id;
+      } else if (name === "myShift") {
+        const [myIndex, myShiftIndex] = value.split("-");
+        newState.myShiftId = filteredShifts[myIndex].schedule[myShiftIndex]._id;
+      }
+
+      return newState;
+    });
   };
 
   const handleSubmitSwapRequest = async () => {
@@ -45,15 +48,15 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
     const swapRequest = {
       fromShiftId: myShiftId,
       toShiftId: colleagueShiftId,
-      rotaId: rotaDetails._id,
-      venueId: rotaDetails.venue,
+      rotaId: rota._id,
+      venueId: rota.venue,
     };
 
     console.log(swapRequest);
 
     try {
       const { data } = await ServerApi.post(
-        `/api/v1/rotas/rota/swapshifts`,
+        `/api/v1/swap/swapShiftRequest`,
         swapRequest,
         { withCredentials: true }
       );
@@ -74,7 +77,6 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
       myShiftId: "",
     });
   };
-
   return (
     <div className="my-4 p-4 border rounded bg-gray-100">
       <h3 className="text-lg font-bold">Request Shift Swap</h3>
@@ -88,7 +90,7 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
         >
           <option value="">Select a colleague</option>
           {rota?.rotaData?.map((person, index) => (
-            <option key={person.id} value={index}>
+            <option key={person._id} value={index}>
               {person.employeeName}
             </option>
           ))}
@@ -104,15 +106,15 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
             onChange={handleChange}
           >
             <option value="">Select a shift</option>
-            {rota[swapDetails.selectedColleague].schedule.map(
+            {rota?.rotaData[swapDetails.selectedColleague].schedule.map(
               (shift, dayIndex) => (
                 <option
                   key={`${swapDetails.selectedColleague}-${dayIndex}`}
                   value={`${swapDetails.selectedColleague}-${dayIndex}`}
                 >
                   {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
-                  {shift.startTime
-                    ? `${shift.startTime} - ${shift.endTime}`
+                  {shift.shiftData.startTime
+                    ? `${shift.shiftData.startTime} - ${shift.shiftData.endTime}`
                     : "Day Off"}
                 </option>
               )
@@ -136,8 +138,8 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
                 value={`${0}-${dayIndex}`}
               >
                 {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
-                {shift.startTime
-                  ? `${shift.startTime} - ${shift.endTime}`
+                {shift.shiftData.startTime
+                  ? `${shift.shiftData.startTime} - ${shift.shiftData.endTime}`
                   : "Day Off"}
               </option>
             ))}

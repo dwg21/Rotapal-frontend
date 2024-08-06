@@ -10,9 +10,8 @@ const DroppableArea = ({ id, children }) => {
       initial={{ scale: 1 }}
       animate={{ scale: isOver ? 1.1 : 1 }}
       transition={{ duration: 0.3 }}
-      className={`w-full h-full transition-colors duration-300 ${
-        isOver ? "bg-blue-100" : "bg-white"
-      }`}
+      className={`w-full h-full transition-colors duration-300 
+      `}
     >
       {children}
     </motion.div>

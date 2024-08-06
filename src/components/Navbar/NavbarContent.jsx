@@ -81,6 +81,11 @@ const NavbarContent = () => {
         text="Request Holiday"
         linkDestination="/holidayrequests"
       />
+      <SidebarItem
+        icon={<BookText size={20} />}
+        text="View Requests"
+        linkDestination="/employeerequests"
+      />
     </>
   );
 

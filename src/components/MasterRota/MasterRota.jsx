@@ -35,7 +35,7 @@ const MasterRota = () => {
   const [commonShifts, setCommonShifts] = useState([]);
 
   const [activeId, setActiveId] = useState(null);
-  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [isShiftPressed, setisShiftPressed] = useState(false);
 
   const [commonRotas, setCommonRotas] = useState([]);
 
@@ -283,7 +283,7 @@ const MasterRota = () => {
         return;
       }
 
-      if (isSpacePressed) {
+      if (isShiftPressed) {
         console.log("Space is pressed, copying shift data to destination");
         updatedRotaData[destPersonIndex].schedule[destDayIndex] = {
           ...destShift,
@@ -310,11 +310,11 @@ const MasterRota = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === " ") setIsSpacePressed(true);
+      if (event.key === "Shift") setisShiftPressed(true);
     };
 
     const handleKeyUp = (event) => {
-      if (event.key === " ") setIsSpacePressed(false);
+      if (event.key === "Shift") setisShiftPressed(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -328,16 +328,19 @@ const MasterRota = () => {
 
   const getDragPreview = (id) => {
     const [personIndex, dayIndex] = id.split("-").map(Number);
-    const shift = rota[personIndex]?.schedule[dayIndex] || {};
+    const employeeData = rota?.rotaData?.[personIndex];
+    const daySchedule = employeeData?.schedule?.[dayIndex] || {};
+    const shift = daySchedule.shiftData;
+
     return (
       <div className="bg-lightBlue text-white p-1 rounded-md w-[120px] h-[80px] flex items-center justify-center">
-        {shift.startTime ? (
+        {shift?.startTime ? (
           <div className="flex flex-col gap-2">
             <p>{`${shift.startTime} - ${shift.endTime}`}</p>
-            <p className="font-bold">{shift.label || ""}</p>
+            <p className="font-bold">{shift.label}</p>
           </div>
         ) : (
-          <p>{shift.holidayBooked ? "Holiday Booked" : "Day Off"}</p>
+          <p>{shift.holidayBooked ? "Holiday Booked" : shift.label}</p>
         )}
       </div>
     );
@@ -377,7 +380,7 @@ const MasterRota = () => {
               dates={dates}
               DroppableArea={DroppableArea}
               DraggableItem={DraggableItem}
-              isSpacePressed={isSpacePressed}
+              isShiftPressed={isShiftPressed}
               updateRota={updateRota}
             />
           </div>
