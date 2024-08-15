@@ -1,4 +1,4 @@
-import { MoreVertical, ChevronLast, ChevronFirst } from "lucide-react";
+import { ChevronLast, ChevronFirst } from "lucide-react";
 import { useContext, createContext, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
@@ -25,7 +25,7 @@ export default function Sidebar({ children }) {
   };
 
   return (
-    <aside className="h-screen sticky top-0 ">
+    <aside className="h-screen sticky top-0 hidden md:block ">
       <nav className="h-full flex flex-col bg-white border-r shadow-sm">
         <div
           className={`p-4 pb-2 flex justify-between items-center ${

@@ -1,0 +1,17 @@
+/* speech-bubble.css */
+.speech-bubble {
+  @apply bg-white text-black text-center p-4 rounded-lg relative shadow-lg;
+}
+
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white; /* Tailwind's gray-500 */
+  border-top: 10px solid white; /* Tailwind's gray-500 */
+  border-bottom: 10px solid transparent;
+  left: -10px; /* Position the tail to the left */
+  top: 0px; /* Adjust this to align the tail vertically */
+  width: 0;
+  height: 0;
+}

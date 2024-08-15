@@ -4,6 +4,7 @@ import ServerApi from "../../serverApi/axios";
 import { useRota } from "../../RotaContext";
 import "react-calendar/dist/Calendar.css"; // import calendar CSS
 import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
+import StaticRotaTable from "../RotaMisc/StaticRotaTable";
 
 const getDayLabel = (date) => {
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -104,6 +105,14 @@ const ArchivedRotas = () => {
     setSelectedRota(index);
   };
 
+  const dates = Array.from(
+    new Set(
+      archivedRotas[selectedRota]?.rotaData?.flatMap((person) =>
+        person.schedule.map((shift) => shift.date)
+      )
+    )
+  ).sort();
+
   return (
     <div className="p-4">
       {minDate && (
@@ -124,77 +133,7 @@ const ArchivedRotas = () => {
         }
       `}</style>
 
-      <div>
-        {archivedRotas[selectedRota] && (
-          <div className="my-2">
-            <div className="overflow-x-auto">
-              <div className=" w-[300px] flex justify-center gap-1 p-2 ">
-                <IoMdArrowDropleft
-                  className="mx-2 text-2xl cursor-pointer"
-                  onClick={() => handleChangeWeek("left")}
-                />
-                <p>{/* {startOfweek} - {endOfWeek} */}</p>
-                <IoMdArrowDropright
-                  className="mx-2 text-2xl cursor-pointer"
-                  onClick={() => handleChangeWeek("right")}
-                />
-              </div>
-              <table className="min-w-full bg-white">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border bg-gray-100">Staff</th>
-                    {archivedRotas[selectedRota] &&
-                      weeks[selectedRota].map((day, dayIndex) => (
-                        <th key={day} className="px-4 py-2 border bg-gray-100">
-                          <div className="flex justify-center items-center">
-                            {getDayLabel(new Date(day))}
-                          </div>
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                {!error ? (
-                  <tbody>
-                    {archivedRotas[selectedRota] &&
-                      archivedRotas[selectedRota].rotaData.map(
-                        (person, personIndex) => (
-                          <tr key={person.id}>
-                            <td className="border px-4 py-2">
-                              {person.employeeName}
-                            </td>
-                            {weeks[selectedRota].map((day, dayIndex) => (
-                              <td key={day} className="border px-4 py-2">
-                                <div className="min-h-[4rem]">
-                                  <div className="cursor-pointer flex items-center justify-center w-full h-full">
-                                    <div className="flex  text-center items-center justify-center p-1 rounded-md h-[80%] w-[80%]  bg-lightBlue text-white ">
-                                      {person.schedule[dayIndex].startTime
-                                        ? `${person.schedule[dayIndex].startTime} - ${person.schedule[dayIndex].endTime}`
-                                        : "Day Off"}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                            ))}
-                          </tr>
-                        )
-                      )}
-                  </tbody>
-                ) : (
-                  <></>
-                )}
-              </table>
-              {error && (
-                <>
-                  <p className="p-2 text-l ">
-                    This week's Rota is not yet published
-                  </p>
-                  <p>Please contact your venue admin for any questions</p>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      <StaticRotaTable rota={archivedRotas[selectedRota]} dates={dates} />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
+import "./shiftmodal.css";
+
 const ShiftModal = ({
   shift,
   setShift,
@@ -10,7 +12,6 @@ const ShiftModal = ({
   editShift,
   position,
 }) => {
-  // Effect to initialize shift when editShift is provided
   useEffect(() => {
     if (editShift) {
       setShift(editShift);
@@ -19,6 +20,7 @@ const ShiftModal = ({
 
   // Handle changes to shiftData properties
   const handleChange = (e) => {
+    console.log(e);
     const { name, value } = e.target;
     setShift((prev) => ({
       ...prev,
@@ -29,8 +31,8 @@ const ShiftModal = ({
     }));
   };
 
-  // Handle form submission
   const handleSubmit = () => {
+    console.log(shift);
     onSave(shift);
     onRequestClose();
   };
@@ -39,21 +41,21 @@ const ShiftModal = ({
 
   return (
     <div
-      className="fixed z-50"
+      className="absolute z-50"
       style={{
-        top: position.top,
-        left: position.left,
-        transform: "translate(-50%, 0)", // Adjust as needed
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        transform: "translate(-5%, -10%)", // Adjust as needed
       }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white p-4 border rounded shadow-lg relative"
+        className="speech-bubble bg-white p-4 border rounded shadow-lg"
       >
         <div className="absolute -top-2 -right-2 w-0 h-0 border-t-8 border-t-white border-r-8 border-r-transparent border-b-8 border-b-transparent border-l-8 border-l-transparent"></div>
-        <div className="flex flex-col justify-center items-center">
+        <div className="flex flex-col justify-center items-center gap-2">
           <h2 className="text-center text-lg font-bold">EDIT SHIFT</h2>
           <label className="text-center mt-4 mb-1">
             Start Time:
@@ -65,7 +67,6 @@ const ShiftModal = ({
               className="ml-2 p-1 border border-gray-300 rounded"
             />
           </label>
-          <br />
           <label className="text-center">
             End Time:
             <input
@@ -87,6 +88,48 @@ const ShiftModal = ({
               className="ml-2 p-1 border border-gray-300 rounded"
             />
           </label>
+
+          <label className="text-center">
+            Break
+            <select
+              type="time"
+              name="endTime"
+              onChange={handleChange}
+              className="ml-2 p-1 border border-gray-300 rounded"
+            >
+              <option value="none">None</option>
+              <option value="otherOption">30 Mins</option>
+              <option value="otherOption">1 hour</option>
+            </select>
+          </label>
+
+          <label className="text-center mt-4 mb-1">
+            Break Starting:
+            <input
+              type="time"
+              name="startTime"
+              value={shift.shiftData?.startTime || ""}
+              onChange={handleChange}
+              className="ml-2 p-1 border border-gray-300 rounded"
+            />
+          </label>
+
+          <label className="text-center">
+            No Specficed time
+            <input className="m-2" type="checkbox" />
+          </label>
+
+          <label className="text-center flex">
+            Message:
+            <textarea
+              type="multitext"
+              name="message"
+              value={shift.shiftData?.label || ""}
+              onChange={handleChange}
+              className="ml-2 p-1 border border-gray-300 rounded"
+            />
+          </label>
+
           <br />
           <button
             onClick={handleSubmit}

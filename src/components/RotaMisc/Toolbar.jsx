@@ -4,9 +4,9 @@ import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import { TiTick } from "react-icons/ti";
 
 import { getDayLabel } from "../../Utils/utils";
-
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
+import CustButton from "./Button";
 
 const Toolbar = ({
   venueName,
@@ -45,53 +45,48 @@ const Toolbar = ({
   );
 
   return (
-    <div
-      className="flex items-center gap-6 py-2 my-1  border-b w-full
-    "
-    >
-      <p className="mr-4 font-semibold">{venueName && venueName}</p>
-      {rota?.published ? (
-        <button className="border p-2 my-2 rounded-md bg-green-400">
-          <div className="flex gap-2">
-            <p>Rota is published</p>
-            <TiTick className="text-2xl" />
-          </div>
-        </button>
-      ) : (
-        <button
-          className="border p-2 my-2 rounded-md bg-orange-400"
-          onClick={handleClickPublishRota}
-        >
-          Publish Rota
-        </button>
-      )}
-      <div className=" w-[300px] flex justify-center gap-1 p-2 ">
-        <IoMdArrowDropleft
-          className="mx-2 text-2xl cursor-pointer"
-          onClick={() => handleChangeWeek("left")}
-        />
-        <p>
-          {startOfweek} - {endOfWeek}
+    <div>
+      <p className="text-md text-center font-semibold mr-4 md:text-base md:hidden ">
+        {venueName && venueName}
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-4 py-2 my-1 border-b w-full md:gap-6 md:flex-nowrap">
+        <p className="text-sm font-semibold mr-4 md:text-base hidden md:block">
+          {venueName && venueName}
         </p>
-        <IoMdArrowDropright
-          className="mx-2 text-2xl cursor-pointer"
-          onClick={() => handleChangeWeek("right")}
+        {rota?.published ? (
+          <button className="border p-2 my-2 rounded-md bg-green-400 text-xs md:text-sm">
+            <div className="flex items-center gap-2">
+              <p>Rota is published</p>
+              <TiTick className="text-xl md:text-2xl" />
+            </div>
+          </button>
+        ) : (
+          <button
+            className="border p-2 my-2 rounded-md bg-orange-400 text-xs md:text-sm"
+            onClick={handleClickPublishRota}
+          >
+            Publish Rota
+          </button>
+        )}
+        <div className="justify-center items-center w-full md:w-[300px] gap-1 p-2 hidden  md:flex">
+          <IoMdArrowDropleft
+            className="text-xl cursor-pointer md:text-2xl"
+            onClick={() => handleChangeWeek("left")}
+          />
+          <p className="text-sm md:text-base">
+            {startOfweek} - {endOfWeek}
+          </p>
+          <IoMdArrowDropright
+            className="text-xl cursor-pointer md:text-2xl"
+            onClick={() => handleChangeWeek("right")}
+          />
+        </div>
+        <CustButton
+          handleSubmit1={exportToPDF}
+          handleSubmit2={exportToPng}
+          className="text-xs md:text-sm"
         />
       </div>
-
-      <button
-        onClick={exportToPDF}
-        className="bg-blue-500 text-white p-2 rounded mt-4"
-      >
-        Export to PDF
-      </button>
-
-      <button
-        onClick={exportToPng}
-        className="bg-blue-500 text-white p-2 rounded mt-4"
-      >
-        Export to image
-      </button>
     </div>
   );
 };

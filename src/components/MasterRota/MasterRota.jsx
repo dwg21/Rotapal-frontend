@@ -19,6 +19,7 @@ import Toolbar from "../RotaMisc/Toolbar";
 import RotaTable from "./RotaTable";
 import DroppableArea from "./DndComponents/DropppableArea";
 import DraggableItem from "./DndComponents/DraggableItem";
+import RotaTableResponsive from "./RotaTableResponsive";
 
 const MasterRota = () => {
   const { selectedvenueID } = useRota();
@@ -336,11 +337,11 @@ const MasterRota = () => {
       <div className="bg-lightBlue text-white p-1 rounded-md w-[120px] h-[80px] flex items-center justify-center">
         {shift?.startTime ? (
           <div className="flex flex-col gap-2">
-            <p>{`${shift.startTime} - ${shift.endTime}`}</p>
+            <p>{`${shift?.startTime} - ${shift?.endTime}`}</p>
             <p className="font-bold">{shift.label}</p>
           </div>
         ) : (
-          <p>{shift.holidayBooked ? "Holiday Booked" : shift.label}</p>
+          <p>{shift?.holidayBooked ? "Holiday Booked" : shift?.label}</p>
         )}
       </div>
     );
@@ -374,32 +375,49 @@ const MasterRota = () => {
       >
         <div className="my-2">
           <div id="rota-content" className="overflow-x-auto">
-            <RotaTable
-              rota={rota?.rotaData}
-              setRota={setRota}
-              dates={dates}
-              DroppableArea={DroppableArea}
-              DraggableItem={DraggableItem}
-              isShiftPressed={isShiftPressed}
-              updateRota={updateRota}
-            />
+            {/* Render RotaTable on large screens and above */}
+            <div className="hidden lg:block">
+              <RotaTable
+                rota={rota?.rotaData}
+                setRota={setRota}
+                dates={dates}
+                DroppableArea={DroppableArea}
+                DraggableItem={DraggableItem}
+                isShiftPressed={isShiftPressed}
+                updateRota={updateRota}
+              />
+            </div>
+
+            {/* Render RotaTableResponsive on small and medium screens */}
+            <div className="block lg:hidden">
+              <RotaTableResponsive
+                rota={rota?.rotaData}
+                setRota={setRota}
+                dates={dates}
+                updateRota={updateRota}
+                selectedWeek={selectedWeek}
+                setSelectedWeek={setSelectedWeek}
+              />
+            </div>
           </div>
         </div>
 
         {rota ? (
           <div className="w-full bg-white">
-            <ShiftTemplates
-              selectedvenueID={selectedvenueID}
-              className="w-full"
-              commonShifts={commonShifts}
-              setCommonShifts={setCommonShifts}
-            />
-            <RotaTemplates
-              rota={rota}
-              commonRotas={commonRotas}
-              setCommonRotas={setCommonRotas}
-              selectedvenueID={selectedvenueID}
-            />
+            <div className="hidden lg:block">
+              <ShiftTemplates
+                selectedvenueID={selectedvenueID}
+                className="w-full"
+                commonShifts={commonShifts}
+                setCommonShifts={setCommonShifts}
+              />
+              <RotaTemplates
+                rota={rota}
+                commonRotas={commonRotas}
+                setCommonRotas={setCommonRotas}
+                selectedvenueID={selectedvenueID}
+              />
+            </div>
           </div>
         ) : (
           <div>

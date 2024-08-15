@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { getDayLabel } from "../../Utils/utils";
 import { IoAddSharp } from "react-icons/io5";
 import ShiftModal from "./ShiftModal";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 const RotaTable = ({
   rota,
@@ -15,15 +16,22 @@ const RotaTable = ({
   const [shift, setShift] = useState({
     personIndex: null,
     dayIndex: null,
-    startTime: "",
-    endTime: "",
-    label: "",
+    shiftData: {
+      startTime: "",
+      endTime: "",
+      label: "",
+      message: "",
+      break: {
+        duration: 0,
+        startTime: "",
+      },
+    },
   });
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-
   const [modalIsOpen, setModalIsOpen] = useState(false);
-
   const [editShift, setEditShift] = useState(null);
+
+  const [showCost, setShowCost] = useState(false); // Toggle visibility of staff costing information
 
   const handleSaveShift = async (updatedShift) => {
     const { personIndex, dayIndex, shiftData } = updatedShift;
@@ -76,6 +84,29 @@ const RotaTable = ({
     setModalIsOpen(true);
   };
 
+  const calculateStaffCost = (person) => {
+    const totalHours = person.schedule.reduce((sum, shift) => {
+      if (
+        shift.shiftData &&
+        shift.shiftData.startTime &&
+        shift.shiftData.endTime
+      ) {
+        const start = new Date(`1970-01-01T${shift.shiftData.startTime}`);
+        const end = new Date(`1970-01-01T${shift.shiftData.endTime}`);
+        const hoursWorked = (end - start) / (1000 * 60 * 60); // convert ms to hours
+        return sum + hoursWorked;
+      }
+      return sum;
+    }, 0);
+    return totalHours * person.hourlyWage;
+  };
+
+  const calculateTotalCost = () => {
+    return rota.reduce((sum, person) => {
+      return sum + calculateStaffCost(person);
+    }, 0);
+  };
+
   return (
     <div>
       <table className="min-w-full bg-white">
@@ -86,9 +117,21 @@ const RotaTable = ({
               <th key={day} className="px-4 py-2 border bg-gray-100">
                 <div className="flex justify-center items-center select-none">
                   {getDayLabel(new Date(day))}
+                  {getDayLabel(new Date(day))[0] === "S" &&
+                    getDayLabel(new Date(day))[1] === "u" && (
+                      <VisibilityIcon
+                        className="mx-2"
+                        onClick={() => setShowCost(!showCost)} // Wrap it in an arrow function                        className="mx-2"
+                      />
+                    )}
                 </div>
               </th>
             ))}
+            {showCost && (
+              <th className="px-4 py-2 border bg-gray-100 select-none">
+                Staff Costs
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -117,7 +160,7 @@ const RotaTable = ({
                         }
                       >
                         <div
-                          className={`my-2 mx-4 flex text-center items-center justify-center p-1 rounded-md w-[120px] h-[80px] text-white ${
+                          className={`my-2 mx-4 flex text-center items-center select-none justify-center p-1 rounded-md w-[120px] h-[80px] text-white ${
                             person.schedule[dayIndex]?.holidayBooked
                               ? "bg-orange-400"
                               : person.schedule[dayIndex].shiftData?.startTime
@@ -147,16 +190,33 @@ const RotaTable = ({
                         </div>
                       </DraggableItem>
                     ) : (
-                      <div className="w-[140px] h-[90px] flex justify-center items-center  hover:cursor-pointer ">
-                        <IoAddSharp className="text-3xl  hover:block text-center" />
+                      <div className="w-[140px] h-[90px] flex justify-center items-center hover:cursor-pointer">
+                        <IoAddSharp className="text-3xl hover:block text-center" />
                       </div>
                     )}
                   </DroppableArea>
                 </td>
               ))}
+              {showCost && (
+                <td className="border px-4 py-2 select-none text-right">
+                  £{calculateStaffCost(person).toFixed(2)}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
+        {showCost && (
+          <tfoot>
+            <tr>
+              <td
+                colSpan={dates.length + 2}
+                className="px-4 py-2 border bg-gray-100 text-right font-bold"
+              >
+                Total Weekly Cost: £{rota && calculateTotalCost().toFixed(2)}
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
 
       <ShiftModal

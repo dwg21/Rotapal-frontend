@@ -22,11 +22,13 @@ import { userContext } from "./UserContext";
 import HolidayRequests from "./components/Holiday/HolidayRequests";
 import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 import EmployeeRequests from "./components/Requests/EmployeeRequests";
+import TopNavbar from "./components/Navbar/TopNavbar";
 function App() {
   const { state } = userContext();
   console.log(state.userData);
   return (
     <>
+      <TopNavbar />
       <div className="flex bg-Zinc-50 ">
         <Navbar>
           <NavbarContent />
