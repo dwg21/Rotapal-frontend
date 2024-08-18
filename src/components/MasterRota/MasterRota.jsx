@@ -23,6 +23,7 @@ import RotaTableResponsive from "./RotaTableResponsive";
 
 const MasterRota = () => {
   const { selectedvenueID } = useRota();
+  const [showCost, setShowCost] = useState(false); // Toggle visibility of staff costing information
 
   const [rota, setRota] = useState([]);
   const [error, setError] = useState("");
@@ -365,6 +366,8 @@ const MasterRota = () => {
         dates={dates}
         rota={rota}
         setRota={setRota}
+        showCost={showCost}
+        setShowCost={setShowCost}
       />
 
       <DndContext
@@ -385,6 +388,8 @@ const MasterRota = () => {
                 DraggableItem={DraggableItem}
                 isShiftPressed={isShiftPressed}
                 updateRota={updateRota}
+                showCost={showCost}
+                setShowCost={setShowCost}
               />
             </div>
 

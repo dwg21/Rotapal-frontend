@@ -2,25 +2,16 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import "./shiftmodal.css";
-
 const ShiftModal = ({
   shift,
   setShift,
   isOpen,
   onRequestClose,
   onSave,
-  editShift,
   position,
 }) => {
-  useEffect(() => {
-    if (editShift) {
-      setShift(editShift);
-    }
-  }, [editShift, setShift]);
-
   // Handle changes to shiftData properties
   const handleChange = (e) => {
-    console.log(e);
     const { name, value } = e.target;
     setShift((prev) => ({
       ...prev,
@@ -32,7 +23,6 @@ const ShiftModal = ({
   };
 
   const handleSubmit = () => {
-    console.log(shift);
     onSave(shift);
     onRequestClose();
   };
@@ -92,14 +82,14 @@ const ShiftModal = ({
           <label className="text-center">
             Break
             <select
-              type="time"
-              name="endTime"
+              name="break_duration"
+              value={shift.shiftData?.break_duration}
               onChange={handleChange}
               className="ml-2 p-1 border border-gray-300 rounded"
             >
               <option value="none">None</option>
-              <option value="otherOption">30 Mins</option>
-              <option value="otherOption">1 hour</option>
+              <option value="30">30 Mins</option>
+              <option value="60">1 hour</option>
             </select>
           </label>
 
@@ -107,16 +97,11 @@ const ShiftModal = ({
             Break Starting:
             <input
               type="time"
-              name="startTime"
-              value={shift.shiftData?.startTime || ""}
+              name="break_startTime"
+              value={shift.shiftData?.break_startTime || ""}
               onChange={handleChange}
               className="ml-2 p-1 border border-gray-300 rounded"
             />
-          </label>
-
-          <label className="text-center">
-            No Specficed time
-            <input className="m-2" type="checkbox" />
           </label>
 
           <label className="text-center flex">
@@ -124,7 +109,7 @@ const ShiftModal = ({
             <textarea
               type="multitext"
               name="message"
-              value={shift.shiftData?.label || ""}
+              value={shift.shiftData?.message || ""}
               onChange={handleChange}
               className="ml-2 p-1 border border-gray-300 rounded"
             />

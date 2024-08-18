@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { IoChevronBack, IoChevronForward, IoAddSharp } from "react-icons/io5";
-
+import EditShiftResponsive from "../RotaMisc/EditShiftResponsive";
 const RotaTableResponsive = ({
   rota,
   setRota,
@@ -9,77 +9,11 @@ const RotaTableResponsive = ({
   selectedWeek,
   setSelectedWeek,
 }) => {
-  const [shift, setShift] = useState({
-    personIndex: null,
-    dayIndex: null,
-    shiftData: {
-      startTime: "",
-      endTime: "",
-      label: "",
-      message: "",
-      break: {
-        duration: 0,
-        startTime: "",
-      },
-    },
-  });
-  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-  const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editShift, setEditShift] = useState(null);
 
   const [showCost, setShowCost] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
   const [currentWeek, setCurrentWeek] = useState(0);
-
-  const handleSaveShift = async (updatedShift) => {
-    const { personIndex, dayIndex, shiftData } = updatedShift;
-    const updatedRotaData = rota.map((person, pIndex) => {
-      if (pIndex === personIndex) {
-        return {
-          ...person,
-          schedule: person.schedule.map((shift, dIndex) => {
-            if (dIndex === dayIndex) {
-              return {
-                ...shift,
-                shiftData: { ...shiftData },
-              };
-            }
-            return shift;
-          }),
-        };
-      }
-      return person;
-    });
-
-    setRota({
-      ...rota,
-      rotaData: updatedRotaData,
-    });
-
-    await updateRota({
-      ...rota,
-      rotaData: updatedRotaData,
-    });
-    setModalIsOpen(false);
-    setEditShift(null);
-  };
-
-  const handleEditShift = (personIndex, dayIndex, event) => {
-    const shiftData = rota[personIndex].schedule[dayIndex]?.shiftData || {};
-    const rect = event.currentTarget.getBoundingClientRect();
-    const position = {
-      top: rect.bottom + window.scrollY,
-      left: rect.right + window.scrollX,
-    };
-
-    setShift({
-      personIndex,
-      dayIndex,
-      ...shiftData,
-    });
-    setModalPosition(position);
-    setModalIsOpen(true);
-  };
 
   const calculateStaffCost = (person) => {
     const totalHours = person.schedule.reduce((sum, shift) => {
@@ -111,15 +45,6 @@ const RotaTableResponsive = ({
     } else if (direction === "left" && selectedWeek > 0) {
       setSelectedWeek((prev) => prev - 1);
     }
-  };
-
-  const handleWeekChange = (direction) => {
-    setCurrentWeek((prev) => {
-      const newIndex = prev + direction;
-      if (newIndex < 0) return Math.floor(dates.length / 7) - 1;
-      if (newIndex >= Math.floor(dates.length / 7)) return 0;
-      return newIndex;
-    });
   };
 
   const handleDaySelect = (dayIndex) => {
@@ -180,12 +105,14 @@ const RotaTableResponsive = ({
             person.schedule[selectedDay]?.shiftData?.label ? (
               <div className="my-2 mx-auto text-left items-center p-1 rounded-md w-full text-black">
                 <div className="flex flex-col items-left gap-4">
-                  <p className=" font-semibold">{person.employeeName}</p>
+                  <p className=" font-bold">{person.employeeName}</p>
                   {person.schedule[selectedDay]?.shiftData?.holidayBooked ? (
                     <p>Holiday Booked</p>
                   ) : person.schedule[selectedDay]?.shiftData?.label ===
                     "Day Off" ? (
-                    <p>Day Off</p>
+                    <>
+                      <p>Day Off</p>
+                    </>
                   ) : (
                     <div className="flex flex-col gap-2">
                       <p>
@@ -205,6 +132,14 @@ const RotaTableResponsive = ({
                     </div>
                   )}
                 </div>
+
+                <EditShiftResponsive
+                  personIndex={personIndex}
+                  dayIndex={selectedDay}
+                  rota={rota}
+                  updateRota={updateRota}
+                  setRota={setRota}
+                />
               </div>
             ) : (
               <div className="w-full h-[90px] flex justify-center items-center hover:cursor-pointer">

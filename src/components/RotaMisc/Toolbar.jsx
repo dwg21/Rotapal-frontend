@@ -7,6 +7,7 @@ import { getDayLabel } from "../../Utils/utils";
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
 import CustButton from "./Button";
+import FilterButton from "./FilterButton";
 
 const Toolbar = ({
   venueName,
@@ -15,6 +16,8 @@ const Toolbar = ({
   weeks,
   rota,
   setRota,
+  showCost,
+  setShowCost,
 }) => {
   const handleClickPublishRota = async () => {
     try {
@@ -86,6 +89,8 @@ const Toolbar = ({
           handleSubmit2={exportToPng}
           className="text-xs md:text-sm"
         />
+
+        <FilterButton setShowCost={setShowCost} showCost={showCost} />
       </div>
     </div>
   );

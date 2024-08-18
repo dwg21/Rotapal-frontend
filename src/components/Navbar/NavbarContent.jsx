@@ -3,6 +3,7 @@ import { userContext } from "../../UserContext";
 import {
   BookText,
   Home,
+  Settings2Icon,
   SquarePen,
   UserCircle,
   UsersRound,
@@ -60,6 +61,17 @@ const NavbarContent = () => {
         icon={<Home size={20} />}
         text="View Venues"
         linkDestination="/venues"
+      />
+      <SidebarItem
+        icon={<Settings2Icon size={20} />}
+        text="Settings"
+        linkDestination="/settings"
+      />
+
+      <SidebarItem
+        icon={<Settings2Icon size={20} />}
+        text="Register"
+        linkDestination="/register"
       />
     </>
   );

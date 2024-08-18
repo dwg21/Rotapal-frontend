@@ -12,6 +12,8 @@ const RotaTable = ({
   DraggableItem,
   isSpacePressed,
   updateRota,
+  showCost,
+  setShowCost,
 }) => {
   const [shift, setShift] = useState({
     personIndex: null,
@@ -21,17 +23,13 @@ const RotaTable = ({
       endTime: "",
       label: "",
       message: "",
-      break: {
-        duration: 0,
-        startTime: "",
-      },
+      break_duration: 0,
+      break_startTime: "",
     },
   });
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editShift, setEditShift] = useState(null);
-
-  const [showCost, setShowCost] = useState(false); // Toggle visibility of staff costing information
 
   const handleSaveShift = async (updatedShift) => {
     const { personIndex, dayIndex, shiftData } = updatedShift;
@@ -78,7 +76,14 @@ const RotaTable = ({
     setShift({
       personIndex,
       dayIndex,
-      ...shiftData,
+      shiftData: {
+        startTime: shiftData.startTime || "",
+        endTime: shiftData.endTime || "",
+        label: shiftData.label || "",
+        message: shiftData.message || "",
+        break_duration: shiftData.break_duration || 0,
+        break_startTime: shiftData.break_startTime || "",
+      },
     });
     setModalPosition(position);
     setModalIsOpen(true);
@@ -117,13 +122,6 @@ const RotaTable = ({
               <th key={day} className="px-4 py-2 border bg-gray-100">
                 <div className="flex justify-center items-center select-none">
                   {getDayLabel(new Date(day))}
-                  {getDayLabel(new Date(day))[0] === "S" &&
-                    getDayLabel(new Date(day))[1] === "u" && (
-                      <VisibilityIcon
-                        className="mx-2"
-                        onClick={() => setShowCost(!showCost)} // Wrap it in an arrow function                        className="mx-2"
-                      />
-                    )}
                 </div>
               </th>
             ))}

@@ -9,6 +9,7 @@ import CreateVenue from "./components/Venue/CreateVenue";
 import Venues from "./components/Venue/Venues";
 import Navbar from "./components/Navbar/Navbar";
 import Requests from "./components/Requests/Requests";
+import Settings from "./components/Settings/Settings";
 
 import EmployeeRota from "./components/EmployeeRota/EmployeeRota";
 
@@ -23,6 +24,7 @@ import HolidayRequests from "./components/Holiday/HolidayRequests";
 import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 import EmployeeRequests from "./components/Requests/EmployeeRequests";
 import TopNavbar from "./components/Navbar/TopNavbar";
+import Register from "./components/User/Register";
 function App() {
   const { state } = userContext();
   console.log(state.userData);
@@ -62,6 +64,28 @@ function App() {
             element={
               <ProtectedRoute
                 element={MasterRota}
+                user={state.userData}
+                role="admin"
+              />
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute
+                element={Settings}
+                user={state.userData}
+                role="admin"
+              />
+            }
+          />
+
+          <Route
+            path="/register"
+            element={
+              <ProtectedRoute
+                element={Register}
                 user={state.userData}
                 role="admin"
               />
