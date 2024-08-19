@@ -5,9 +5,8 @@ import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
 import ShiftSwap from "./ShiftSwap";
 import StaticRotaTable from "../RotaMisc/StaticRotaTable";
-import Toolbar from "../RotaMisc/Toolbar";
 import StaticResponsiveRotaTable from "../RotaMisc/StaticResponsiveRotaTable";
-
+import ShiftDetailsModal from "../RotaMisc/ShiftDetailsModal.jsx";
 const EmployeeRota = () => {
   const { weeks } = useRota();
   const { date } = useParams();
@@ -60,30 +59,18 @@ const EmployeeRota = () => {
 
   return (
     <div className="overflow-x-auto p-4 w-full">
-      <div className="hidden md:block">
-        <Toolbar
-          venueName={rota?.name?.split("-")[0]}
-          selectedWeek={selectedWeek}
-          setSelectedWeek={setSelectedWeek}
-          weeks={weeks}
-          dates={dates}
-          rota={rota}
-          setRota={setRota}
-        />
-      </div>
-
       <div className="hidden lg:block">
         <StaticRotaTable rota={rota} dates={dates} />
       </div>
       <div className="block lg:hidden">
         <StaticResponsiveRotaTable
           rota={rota?.rotaData}
-          // setRota={setRota}
           dates={dates}
           selectedWeek={selectedWeek}
           setSelectedWeek={setSelectedWeek}
         />
       </div>
+
       {rota?.rotaData ? (
         <>
           <div className="">

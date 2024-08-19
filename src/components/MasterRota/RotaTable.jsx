@@ -14,6 +14,7 @@ const RotaTable = ({
   updateRota,
   showCost,
   setShowCost,
+  showHours, // Add showHours prop
 }) => {
   const [shift, setShift] = useState({
     personIndex: null,
@@ -89,21 +90,20 @@ const RotaTable = ({
     setModalIsOpen(true);
   };
 
-  const calculateStaffCost = (person) => {
-    const totalHours = person.schedule.reduce((sum, shift) => {
-      if (
-        shift.shiftData &&
-        shift.shiftData.startTime &&
-        shift.shiftData.endTime
-      ) {
+  const calculateHoursWorked = (person) => {
+    return person.schedule.reduce((total, shift) => {
+      if (shift.shiftData?.startTime && shift.shiftData?.endTime) {
         const start = new Date(`1970-01-01T${shift.shiftData.startTime}`);
         const end = new Date(`1970-01-01T${shift.shiftData.endTime}`);
-        const hoursWorked = (end - start) / (1000 * 60 * 60); // convert ms to hours
-        return sum + hoursWorked;
+        const hoursWorked = (end - start) / (1000 * 60 * 60); // Convert ms to hours
+        return total + hoursWorked;
       }
-      return sum;
+      return total;
     }, 0);
-    return totalHours * person.hourlyWage;
+  };
+
+  const calculateStaffCost = (person) => {
+    return calculateHoursWorked(person) * person.hourlyWage;
   };
 
   const calculateTotalCost = () => {
@@ -125,6 +125,11 @@ const RotaTable = ({
                 </div>
               </th>
             ))}
+            {showHours && (
+              <th className="px-4 py-2 border bg-gray-100 select-none">
+                Hours Worked
+              </th>
+            )}
             {showCost && (
               <th className="px-4 py-2 border bg-gray-100 select-none">
                 Staff Costs
@@ -195,8 +200,13 @@ const RotaTable = ({
                   </DroppableArea>
                 </td>
               ))}
+              {showHours && (
+                <td className="border px-4 py-2 select-none text-center">
+                  {calculateHoursWorked(person).toFixed(0)}
+                </td>
+              )}
               {showCost && (
-                <td className="border px-4 py-2 select-none text-right">
+                <td className="border px-4 py-2 select-none text-center">
                   £{calculateStaffCost(person).toFixed(2)}
                 </td>
               )}
@@ -207,10 +217,10 @@ const RotaTable = ({
           <tfoot>
             <tr>
               <td
-                colSpan={dates.length + 2}
+                colSpan={dates.length + (showHours ? 2 : 1)}
                 className="px-4 py-2 border bg-gray-100 text-right font-bold"
               >
-                Total Weekly Cost: £{rota && calculateTotalCost().toFixed(2)}
+                Total Weekly Cost: £{calculateTotalCost().toFixed(2)}
               </td>
             </tr>
           </tfoot>

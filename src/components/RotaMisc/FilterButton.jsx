@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
-const FilterButton = ({ showCost, setShowCost }) => {
+const FilterButton = ({ showCost, setShowCost, showHours, setShowHours }) => {
   const [dropDownVisible, setDropDownVisible] = useState(false);
   const dropdownRef = useRef(null);
 
-  const handleCheckboxChange = () => {
-    setShowCost(!showCost); // Toggle the showCost state
+  const handleCheckboxChange = (setter) => {
+    setter((prev) => !prev);
+    console.log(showHours);
   };
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setDropDownVisible(false); // Close the dropdown if clicked outside
+      setDropDownVisible(false);
     }
   };
 
@@ -39,10 +40,19 @@ const FilterButton = ({ showCost, setShowCost }) => {
             <input
               type="checkbox"
               checked={showCost}
-              onChange={handleCheckboxChange}
+              onChange={() => handleCheckboxChange(setShowCost)}
               className="mr-2"
             />
             Staff Costs
+          </label>
+          <label className="flex items-center py-2 px-4 hover:bg-gray-100 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showHours}
+              onChange={() => handleCheckboxChange(setShowHours)}
+              className="mr-2"
+            />
+            Staff Hours
           </label>
           <button className="py-2 px-4 hover:bg-gray-100">Something</button>
         </div>

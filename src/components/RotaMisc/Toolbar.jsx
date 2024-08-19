@@ -18,6 +18,8 @@ const Toolbar = ({
   setRota,
   showCost,
   setShowCost,
+  showHours,
+  setShowHours,
 }) => {
   const handleClickPublishRota = async () => {
     try {
@@ -89,8 +91,12 @@ const Toolbar = ({
           handleSubmit2={exportToPng}
           className="text-xs md:text-sm"
         />
-
-        <FilterButton setShowCost={setShowCost} showCost={showCost} />
+        <FilterButton
+          showCost={showCost}
+          setShowCost={setShowCost}
+          showHours={showHours}
+          setShowHours={setShowHours}
+        />
       </div>
     </div>
   );

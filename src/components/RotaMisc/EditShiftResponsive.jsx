@@ -7,9 +7,10 @@ const EditShiftResponsive = ({
   rota,
   setRota,
   updateRota,
+  editSectionVisible,
+  setEditSectionVisible,
+  editButtonVisble,
 }) => {
-  const [editSectionVisible, setEditSectionVisible] = useState(false);
-
   const [shift, setShift] = useState({
     personIndex: null,
     dayIndex: null,
@@ -96,12 +97,14 @@ const EditShiftResponsive = ({
 
   return (
     <div className="p-2">
-      <button
-        onClick={() => handleOpenShift()}
-        className="flex justify-center items-center gap-2"
-      >
-        Edit <MdEdit />
-      </button>
+      {editButtonVisble && (
+        <button
+          onClick={() => handleOpenShift()}
+          className="flex justify-center items-center gap-2"
+        >
+          Edit <MdEdit />
+        </button>
+      )}
       {editSectionVisible && (
         <div>
           <div className="flex flex-col justify-center items-center gap-2">

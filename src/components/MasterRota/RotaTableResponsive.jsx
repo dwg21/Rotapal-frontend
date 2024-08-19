@@ -9,7 +9,7 @@ const RotaTableResponsive = ({
   selectedWeek,
   setSelectedWeek,
 }) => {
-  const [editShift, setEditShift] = useState(null);
+  const [editSectionVisible, setEditSectionVisible] = useState(false);
 
   const [showCost, setShowCost] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
@@ -139,12 +139,29 @@ const RotaTableResponsive = ({
                   rota={rota}
                   updateRota={updateRota}
                   setRota={setRota}
+                  setEditSectionVisible={setEditSectionVisible}
+                  editSectionVisible={editSectionVisible}
+                  editButtonVisble={true}
                 />
               </div>
             ) : (
-              <div className="w-full h-[90px] flex justify-center items-center hover:cursor-pointer">
-                <IoAddSharp className="text-3xl hover:block text-center" />
-              </div>
+              <>
+                <div className="w-full h-[90px] flex justify-center items-center hover:cursor-pointer">
+                  <button onClick={() => setEditSectionVisible(true)}>
+                    <IoAddSharp className="text-3xl hover:block text-center" />
+                  </button>
+                </div>
+                <EditShiftResponsive
+                  personIndex={personIndex}
+                  dayIndex={selectedDay}
+                  rota={rota}
+                  updateRota={updateRota}
+                  setRota={setRota}
+                  setEditSectionVisible={setEditSectionVisible}
+                  editSectionVisible={editSectionVisible}
+                  editButtonVisble={false}
+                />
+              </>
             )}
           </div>
         ))}

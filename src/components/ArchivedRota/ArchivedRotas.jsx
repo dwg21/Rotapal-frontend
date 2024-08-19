@@ -3,16 +3,13 @@ import Calendar from "react-calendar";
 import ServerApi from "../../serverApi/axios";
 import { useRota } from "../../RotaContext";
 import "react-calendar/dist/Calendar.css"; // import calendar CSS
-import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import StaticRotaTable from "../RotaMisc/StaticRotaTable";
+import VenueStatistics from "./VenueStatistics";
 
-const getDayLabel = (date) => {
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  return `${dayNames[date.getDay()]} ${day}/${
-    month < 10 ? "0" + month : month
-  }`;
+const normalizeDate = (date) => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
 };
 
 const ArchivedRotas = () => {
@@ -21,7 +18,6 @@ const ArchivedRotas = () => {
   const [minDate, setMinDate] = useState(null);
   const [selectedRota, setSelectedRota] = useState(0);
   const [error, setError] = useState(null);
-  const { weeks } = useRota();
 
   const fetchRota = useCallback(async () => {
     const requestObject = {
@@ -33,7 +29,6 @@ const ArchivedRotas = () => {
         requestObject,
         { withCredentials: true }
       );
-      console.log(response.data.rotas);
       setArchivedRotas(response.data.rotas);
 
       // Determine the earliest date from the rotas
@@ -53,12 +48,6 @@ const ArchivedRotas = () => {
     fetchRota();
   }, [fetchRota]);
 
-  const normalizeDate = (date) => {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
-  };
-
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const startOfWeek = normalizeDate(new Date(date));
@@ -75,7 +64,7 @@ const ArchivedRotas = () => {
       });
 
       return (
-        <div className="relative">
+        <div className="relative h-1.5">
           <div
             className={`absolute top-1 left-1/2 transform -translate-x-1/2 w-2.5 h-2.5 rounded-full ${
               hasRota ? "bg-green-500" : "bg-red-500"
@@ -92,17 +81,13 @@ const ArchivedRotas = () => {
       date.getDate() - (date.getDay() === 0 ? 6 : date.getDay() - 1)
     ); // Adjust to Monday
 
-    console.log("Clicked date:", date);
-    console.log("Start of week:", startOfWeek);
-
     const index = archivedRotas.findIndex((rota) => {
       const rotaStart = normalizeDate(new Date(rota.weekStarting));
-      console.log("Comparing with rota start:", rotaStart);
       return startOfWeek.getTime() === rotaStart.getTime();
     });
 
-    console.log("Selected rota index:", index);
     setSelectedRota(index);
+    console.log(archivedRotas[selectedRota]);
   };
 
   const dates = Array.from(
@@ -121,19 +106,13 @@ const ArchivedRotas = () => {
           tileContent={tileContent}
           showNeighboringMonth={false}
           minDate={minDate}
-          defaultView="month"
-          activeStartDate={minDate}
           onClickDay={handleDateClick}
         />
       )}
       <p>Selected Rota Index: {selectedRota}</p>
-      <style>{`
-        .react-calendar__tile {
-          position: relative;
-        }
-      `}</style>
-
       <StaticRotaTable rota={archivedRotas[selectedRota]} dates={dates} />
+
+      <VenueStatistics />
     </div>
   );
 };
