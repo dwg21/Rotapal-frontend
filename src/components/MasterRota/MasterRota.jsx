@@ -22,7 +22,7 @@ import DraggableItem from "./DndComponents/DraggableItem";
 import RotaTableResponsive from "./RotaTableResponsive";
 
 const MasterRota = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [showCost, setShowCost] = useState(false); // Toggle visibility of staff costing information
   const [showHours, setShowHours] = useState(false); //Toggle visibility of staff hours information
 
@@ -49,44 +49,51 @@ const MasterRota = () => {
     return format(addWeeks(startOfCurrentWeek, selectedWeek), "yyyy-MM-dd");
   }, [selectedWeek]);
 
+  const weekStarting = calculateWeekStarting();
+
   const fetchRota = useCallback(async () => {
     const requestObject = {
-      venueId: selectedvenueID,
+      venueId: selectedVenueId,
       weekStarting: calculateWeekStarting(),
     };
 
+    const weekStarting = calculateWeekStarting();
+    console.log(weekStarting);
+
     try {
-      const response = await ServerApi.post(
-        `http://localhost:5000/api/v1/rotas/rota`,
-        requestObject,
+      const response = await ServerApi.get(
+        `http://localhost:5000/api/v1/rotas/rota/${selectedVenueId}/${weekStarting}`,
         { withCredentials: true }
       );
+      console.log(response);
       setRota(response.data.rota);
     } catch (err) {
-      console.log(err.response.data.message);
-      setError("Failed to fetch venues");
-      if (err.response.data.message === "Rota not found") {
-        setRota(false);
-      }
+      console.log(err);
+      setRota(false);
+      // console.log(err.response.data.message);
+      // setError("Failed to fetch venues");
+      // if (err.response.data.message === "Rota not found") {
+      //   setRota(false);
+      // }
     }
-  }, [selectedvenueID, calculateWeekStarting]);
+  }, [selectedVenueId, calculateWeekStarting]);
 
   useEffect(() => {
     fetchRota();
     console.log(rota);
-  }, [fetchRota, selectedWeek, selectedvenueID]);
+  }, [fetchRota, selectedWeek, selectedVenueId]);
 
   const fetchTemplates = useCallback(async () => {
     try {
       const response = await ServerApi.get(
-        `api/v1/venue/${selectedvenueID}/common-shifts`,
+        `api/v1/venue/${selectedVenueId}/common-shifts`,
         { withCredentials: true }
       );
       setCommonShifts(response.data.commonShifts);
     } catch (err) {
       console.log(err);
     }
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   useEffect(() => {
     fetchTemplates();
@@ -95,14 +102,14 @@ const MasterRota = () => {
   const fetchCommonRotas = useCallback(async () => {
     try {
       const response = await ServerApi.get(
-        `api/v1/venue/${selectedvenueID}/common-rotas`,
+        `api/v1/venue/${selectedVenueId}/common-rotas`,
         { withCredentials: true }
       );
       setCommonRotas(response.data.commonRotas);
     } catch (err) {
       console.log(err);
     }
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   useEffect(() => {
     fetchCommonRotas();
@@ -125,17 +132,14 @@ const MasterRota = () => {
   };
 
   const handleGenerateRota = async () => {
-    const requestObject = {
-      venueId: selectedvenueID,
-      weekStarting: calculateWeekStarting(),
-    };
+    const weekStarting = calculateWeekStarting();
 
     try {
-      await ServerApi.post(
-        `http://localhost:5000/api/v1/rotas/rota/generateRota`,
-        requestObject,
+      const response = await ServerApi.put(
+        `http://localhost:5000/api/v1/rotas/rota/generateRota/${selectedVenueId}/${weekStarting}`,
         { withCredentials: true }
       );
+      setRota(response.data.newRota);
     } catch (err) {
       console.log(err);
     }
@@ -415,7 +419,7 @@ const MasterRota = () => {
           <div className="w-full bg-white">
             <div className="hidden lg:block">
               <ShiftTemplates
-                selectedvenueID={selectedvenueID}
+                selectedvenueID={selectedVenueId}
                 className="w-full"
                 commonShifts={commonShifts}
                 setCommonShifts={setCommonShifts}
@@ -424,7 +428,7 @@ const MasterRota = () => {
                 rota={rota}
                 commonRotas={commonRotas}
                 setCommonRotas={setCommonRotas}
-                selectedvenueID={selectedvenueID}
+                selectedvenueID={selectedVenueId}
               />
             </div>
           </div>

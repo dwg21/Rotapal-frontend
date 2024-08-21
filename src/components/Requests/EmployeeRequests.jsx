@@ -4,7 +4,7 @@ import { useRota } from "../../RotaContext";
 import SentEmployeeRequest from "./SentEmployeeRequest";
 
 const EmployeeRequests = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ const EmployeeRequests = () => {
     };
 
     fetchRequests();
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   const handleApprove = async (requestId) => {
     try {

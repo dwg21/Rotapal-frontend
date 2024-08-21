@@ -1,12 +1,10 @@
 import React, { useState, useContext } from "react";
 import { userContext } from "../../UserContext";
 import ServerApi from "../../serverApi/axios";
-
 import { getDayLabel } from "../../Utils/utils";
 
-const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
+const ShiftSwap = ({ rota, weeks = [], selectedWeek, rotaDetails }) => {
   const { state } = userContext();
-
   const [swapDetails, setSwapDetails] = useState({
     selectedColleague: "",
     colleagueShift: "",
@@ -33,10 +31,11 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
       } else if (name === "colleagueShift") {
         const [colleagueIndex, shiftIndex] = value.split("-");
         newState.colleagueShiftId =
-          rota?.rotaData[colleagueIndex].schedule[shiftIndex]._id;
+          rota?.rotaData[colleagueIndex]?.schedule[shiftIndex]?._id;
       } else if (name === "myShift") {
         const [myIndex, myShiftIndex] = value.split("-");
-        newState.myShiftId = filteredShifts[myIndex].schedule[myShiftIndex]._id;
+        newState.myShiftId =
+          filteredShifts[myIndex]?.schedule[myShiftIndex]?._id;
       }
 
       return newState;
@@ -77,6 +76,7 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
       myShiftId: "",
     });
   };
+
   return (
     <div className="my-4 p-4 border rounded bg-gray-100">
       <h3 className="text-lg font-bold">Request Shift Swap</h3>
@@ -104,21 +104,23 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
             name="colleagueShift"
             value={swapDetails.colleagueShift}
             onChange={handleChange}
+            disabled={!weeks[selectedWeek]} // Disable if weeks[selectedWeek] is undefined
           >
             <option value="">Select a shift</option>
-            {rota?.rotaData[swapDetails.selectedColleague].schedule.map(
-              (shift, dayIndex) => (
-                <option
-                  key={`${swapDetails.selectedColleague}-${dayIndex}`}
-                  value={`${swapDetails.selectedColleague}-${dayIndex}`}
-                >
-                  {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
-                  {shift.shiftData.startTime
-                    ? `${shift.shiftData.startTime} - ${shift.shiftData.endTime}`
-                    : "Day Off"}
-                </option>
-              )
-            )}
+            {weeks[selectedWeek] &&
+              rota?.rotaData[swapDetails.selectedColleague]?.schedule?.map(
+                (shift, dayIndex) => (
+                  <option
+                    key={`${swapDetails.selectedColleague}-${dayIndex}`}
+                    value={`${swapDetails.selectedColleague}-${dayIndex}`}
+                  >
+                    {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
+                    {shift.shiftData.startTime
+                      ? `${shift.shiftData.startTime} - ${shift.shiftData.endTime}`
+                      : "Day Off"}
+                  </option>
+                )
+              )}
           </select>
         </div>
       )}
@@ -129,9 +131,11 @@ const ShiftSwap = ({ rota, weeks, selectedWeek, rotaDetails }) => {
           name="myShift"
           value={swapDetails.myShift}
           onChange={handleChange}
+          disabled={!weeks[selectedWeek]} // Disable if weeks[selectedWeek] is undefined
         >
           <option value="">Select a shift</option>
-          {filteredShifts?.length > 0 &&
+          {weeks[selectedWeek] &&
+            filteredShifts?.length > 0 &&
             filteredShifts[0]?.schedule.map((shift, dayIndex) => (
               <option
                 key={`${state.userData.name}-${dayIndex}`}

@@ -3,18 +3,18 @@ import ServerApi from "../../serverApi/axios";
 import { useRota } from "../../RotaContext";
 
 const ShiftSwapRequests = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log(selectedvenueID);
+    console.log(selectedVenueId);
     // Fetch pending shift swap requests for the specified venue
     const fetchRequests = async () => {
       try {
         const response = await ServerApi.get(
-          `/api/v1/swap/pendingShiftSwapRequests?venueId=${selectedvenueID}`
+          `/api/v1/swap/pendingShiftSwapRequests?venueId=${selectedVenueId}`
         );
 
         setRequests(response.data);
@@ -27,7 +27,7 @@ const ShiftSwapRequests = () => {
     };
 
     fetchRequests();
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   const handleApprove = async (requestId) => {
     try {

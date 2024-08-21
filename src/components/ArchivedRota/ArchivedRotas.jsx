@@ -5,6 +5,7 @@ import { useRota } from "../../RotaContext";
 import "react-calendar/dist/Calendar.css"; // import calendar CSS
 import StaticRotaTable from "../RotaMisc/StaticRotaTable";
 import VenueStatistics from "./VenueStatistics";
+import StaticResponsiveRotaTable from "../RotaMisc/StaticResponsiveRotaTable";
 
 const normalizeDate = (date) => {
   const normalized = new Date(date);
@@ -13,36 +14,42 @@ const normalizeDate = (date) => {
 };
 
 const ArchivedRotas = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [archivedRotas, setArchivedRotas] = useState([]);
   const [minDate, setMinDate] = useState(null);
   const [selectedRota, setSelectedRota] = useState(0);
   const [error, setError] = useState(null);
 
   const fetchRota = useCallback(async () => {
-    const requestObject = {
-      venueId: selectedvenueID,
-    };
     try {
-      const response = await ServerApi.post(
-        `http://localhost:5000/api/v1/rotas/archivedRoas`,
-        requestObject,
+      const response = await ServerApi.get(
+        `http://localhost:5000/api/v1/rotas/archivedRoas/${selectedVenueId}`,
         { withCredentials: true }
       );
-      setArchivedRotas(response.data.rotas);
+      console.log(response);
+      let rotas = response.data.rotas;
+
+      // Sort the rotas by weekStarting in ascending order
+      rotas = rotas.sort(
+        (a, b) => new Date(a.weekStarting) - new Date(b.weekStarting)
+      );
+
+      setArchivedRotas(rotas);
+      console.log(rotas);
 
       // Determine the earliest date from the rotas
-      if (response.data.rotas.length > 0) {
-        const earliestDate = response.data.rotas.reduce((earliest, rota) => {
+      if (rotas.length > 0) {
+        const earliestDate = rotas.reduce((earliest, rota) => {
           const rotaStart = new Date(rota.weekStarting);
           return rotaStart < earliest ? rotaStart : earliest;
-        }, new Date(response.data.rotas[0].weekStarting));
+        }, new Date(rotas[0].weekStarting));
         setMinDate(earliestDate);
       }
     } catch (err) {
       console.log(err.response);
+      setError(err.response?.data?.message || "An error occurred");
     }
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   useEffect(() => {
     fetchRota();
@@ -99,7 +106,11 @@ const ArchivedRotas = () => {
   ).sort();
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-full flex flex-col justify-center items-center ">
+      <h1 className=" text-lg font-bold ">Archived Data and Statistics</h1>{" "}
+      <div className=" ">
+        <VenueStatistics />
+      </div>
       {minDate && (
         <Calendar
           className="react-calendar"
@@ -110,9 +121,17 @@ const ArchivedRotas = () => {
         />
       )}
       <p>Selected Rota Index: {selectedRota}</p>
-      <StaticRotaTable rota={archivedRotas[selectedRota]} dates={dates} />
-
-      <VenueStatistics />
+      <div className="hidden md:block">
+        <StaticRotaTable rota={archivedRotas[selectedRota]} dates={dates} />
+      </div>
+      <div className=" w-full md:hidden">
+        <StaticResponsiveRotaTable
+          rota={archivedRotas[selectedRota]?.rotaData}
+          dates={dates}
+          selectedWeek={selectedRota}
+          setSelectedWeek={setSelectedRota}
+        />
+      </div>
     </div>
   );
 };

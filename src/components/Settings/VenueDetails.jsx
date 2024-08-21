@@ -5,7 +5,7 @@ import { useRota } from "../../RotaContext";
 import { useForm } from "react-hook-form";
 
 const VenueDetails = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const navigate = useNavigate();
   const [venue, setVenue] = useState({
     name: "",
@@ -23,12 +23,12 @@ const VenueDetails = () => {
 
   // Fetch venue details when the component mounts
   useEffect(() => {
-    console.log("Venue ID:", selectedvenueID); // Log the venue ID
-    if (selectedvenueID) {
+    console.log("Venue ID:", selectedVenueId); // Log the venue ID
+    if (selectedVenueId) {
       const fetchVenue = async () => {
         try {
           const response = await ServerApi.get(
-            `/api/v1/venue/venues/${selectedvenueID}`
+            `/api/v1/venue/venues/${selectedVenueId}`
           );
           console.log(response);
           setVenue(response.data.venue);
@@ -44,13 +44,13 @@ const VenueDetails = () => {
       setError("Invalid venue ID");
       setLoading(false);
     }
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   // Handle form submission to update venue details
   const onSubmit = async (data) => {
     try {
       const response = await ServerApi.put(
-        `/api/v1/venue/venues/${selectedvenueID}`,
+        `/api/v1/venue/venues/${selectedVenueId}`,
         data
       );
       console.log("Venue updated successfully:", response.data);

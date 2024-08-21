@@ -4,10 +4,9 @@ import MasterRota from "./components/MasterRota/MasterRota";
 import Staff from "./components/Staff/Staff";
 import { Route, Routes } from "react-router-dom";
 import Login from "./components/User/Login";
-import Forecast from "./components/Forecast/Forecast";
 import CreateVenue from "./components/Venue/CreateVenue";
 import Venues from "./components/Venue/Venues";
-import Navbar from "./components/Navbar/Navbar";
+// import Navbar from "./components/Navbar/Navbar";
 import Requests from "./components/Requests/Requests";
 import Settings from "./components/Settings/Settings";
 
@@ -19,30 +18,40 @@ import ProtectedRoute from "./components/misc/ProtectedRoutes";
 
 import NotFound from "./components/misc/NotFound";
 
+import Navbar from "./components/Navbar2/Navbar";
+
 import { userContext } from "./UserContext";
 import HolidayRequests from "./components/Holiday/HolidayRequests";
 import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 import EmployeeRequests from "./components/Requests/EmployeeRequests";
 import TopNavbar from "./components/Navbar/TopNavbar";
 import Register from "./components/User/Register";
+
+import {
+  FaBell,
+  FaFacebookMessenger,
+  FaCaretDown,
+  FaPlus,
+} from "react-icons/fa"; // Importing icons from react-icons
+
 function App() {
   const { state } = userContext();
   console.log(state.userData);
   return (
     <>
-      <TopNavbar />
+      <Navbar />
       <div className="flex bg-Zinc-50 ">
-        <Navbar>
+        {/* <Navbar>
           <NavbarContent />
-        </Navbar>
+        </Navbar> */}
         <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/employeerota/:date" element={<EmployeeRota />} />
           <Route path="/employeerota" element={<EmployeeRota />} />
           <Route path="/employeerequests" element={<EmployeeRequests />} />
           <Route path="/archivedrotas" element={<ArchivedRotas />} />
           <Route path="/staff" element={<Staff />} />
-          <Route path="/" element={<Login />} />
-          <Route path="/forecast" element={<Forecast />} />
           <Route path="/createvenue" element={<CreateVenue />} />
           <Route path="/venues" element={<Venues />} />
           <Route path="/notifcations" element={<Notifications />} />
@@ -55,7 +64,7 @@ function App() {
               <ProtectedRoute
                 element={MasterRota}
                 user={state.userData}
-                role="admin"
+                acceptedRoles={["admin", "AccountOwner"]}
               />
             }
           />
@@ -65,7 +74,7 @@ function App() {
               <ProtectedRoute
                 element={MasterRota}
                 user={state.userData}
-                role="admin"
+                acceptedRoles={["admin", "AccountOwner"]}
               />
             }
           />
@@ -76,18 +85,7 @@ function App() {
               <ProtectedRoute
                 element={Settings}
                 user={state.userData}
-                role="admin"
-              />
-            }
-          />
-
-          <Route
-            path="/register"
-            element={
-              <ProtectedRoute
-                element={Register}
-                user={state.userData}
-                role="admin"
+                acceptedRoles={["admin", "AccountOwner"]}
               />
             }
           />

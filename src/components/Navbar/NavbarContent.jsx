@@ -1,25 +1,38 @@
 import React from "react";
 import { userContext } from "../../UserContext";
+import { Link } from "react-router-dom";
 import {
   BookText,
   Home,
-  Settings2Icon,
   SquarePen,
   UserCircle,
   UsersRound,
 } from "lucide-react";
 
-import { SidebarItem } from "./Navbar";
+const SidebarItem = ({ icon, text, linkDestination, onLinkClick }) => {
+  return (
+    <li className="flex items-center hover:bg-slate-200 h-full px-4 py-2">
+      <Link
+        to={linkDestination}
+        className="text-black flex items-center gap-2"
+        onClick={onLinkClick}
+      >
+        {text}
+      </Link>
+    </li>
+  );
+};
 
-const NavbarContent = () => {
+const NavbarContent = ({ onLinkClick }) => {
   const { state } = userContext();
 
-  if (!state.loggedIn) {
+  if (!state?.loggedIn) {
     return (
       <SidebarItem
         icon={<UserCircle size={20} />}
         text="Login / Register"
         linkDestination="/"
+        onLinkClick={onLinkClick}
       />
     );
   }
@@ -30,48 +43,37 @@ const NavbarContent = () => {
         icon={<BookText size={20} />}
         text="View Rota"
         linkDestination="/rota"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<BookText size={20} />}
-        text="View Archived Rotas"
+        text="Archived Rotas"
         linkDestination="/archivedrotas"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<BookText size={20} />}
-        text="View Requests"
+        text="Requests"
         linkDestination="/requests"
+        onLinkClick={onLinkClick}
       />
-
       <SidebarItem
         icon={<UsersRound size={20} />}
         text="Staff"
         linkDestination="/staff"
-      />
-      <SidebarItem
-        icon={<UserCircle size={20} />}
-        text="Forecast"
-        linkDestination="/forecast"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<SquarePen size={20} />}
         text="Create Venue"
         linkDestination="/createvenue"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<Home size={20} />}
-        text="View Venues"
+        text="Venues"
         linkDestination="/venues"
-      />
-      <SidebarItem
-        icon={<Settings2Icon size={20} />}
-        text="Settings"
-        linkDestination="/settings"
-      />
-
-      <SidebarItem
-        icon={<Settings2Icon size={20} />}
-        text="Register"
-        linkDestination="/register"
+        onLinkClick={onLinkClick}
       />
     </>
   );
@@ -82,26 +84,36 @@ const NavbarContent = () => {
         icon={<BookText size={20} />}
         text="View Employee Rota"
         linkDestination="/employeerota"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<Home size={20} />}
-        text="View Notifcations"
-        linkDestination="/notifcations"
+        text="View Notifications"
+        linkDestination="/notifications"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<BookText size={20} />}
         text="Request Holiday"
         linkDestination="/holidayrequests"
+        onLinkClick={onLinkClick}
       />
       <SidebarItem
         icon={<BookText size={20} />}
         text="View Requests"
         linkDestination="/employeerequests"
+        onLinkClick={onLinkClick}
       />
     </>
   );
 
-  return state.userData.role === "admin" ? adminItems : userItems;
+  return (
+    <ul className="flex flex-col md:flex-row gap-4 md:gap-6">
+      {state.userData.role === "admin" || state.userData.role === "AccountOwner"
+        ? adminItems
+        : userItems}
+    </ul>
+  );
 };
 
 export default NavbarContent;

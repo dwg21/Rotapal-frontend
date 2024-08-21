@@ -15,7 +15,7 @@ const formatDate = (dateString, scope) => {
 };
 
 const VenueStatistics = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [statisticsData, setStatisticsData] = useState([]);
   const [chartType, setChartType] = useState("line");
   const [scope, setScope] = useState("weeks");
@@ -24,7 +24,7 @@ const VenueStatistics = () => {
     const fetchStatistics = async () => {
       try {
         const response = await ServerApi.get(
-          `api/v1/venue/venues/${selectedvenueID}`
+          `api/v1/venue/venues/${selectedVenueId}`
         );
         setStatisticsData(response.data.venue.statistics);
       } catch (err) {
@@ -33,7 +33,7 @@ const VenueStatistics = () => {
     };
 
     fetchStatistics();
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   const generateChartData = (data, key, label) => {
     const aggregatedData = data.reduce((acc, item) => {
@@ -111,7 +111,7 @@ const VenueStatistics = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 max-w-[700px]">
       <div className="flex justify-between mb-4">
         <div>
           <label className="mr-2 font-bold">Scope:</label>
@@ -138,17 +138,17 @@ const VenueStatistics = () => {
         </div>
       </div>
 
-      <div className=" md:w-3/4  w-1/3 mx-auto">
+      <div className=" mx-auto">
         <h2 className="text-xl font-bold mb-2">Staff Costs</h2>
         {renderChart(statisticsData, "Staff Costs", "totalStaffCost")}
       </div>
 
-      <div className=" md:w-3/4   w-1/3 mx-auto">
+      <div className="  mx-auto">
         <h2 className="text-xl font-bold mb-2">Staff Hours</h2>
         {renderChart(statisticsData, "Staff Hours", "totalStaffHours")}
       </div>
 
-      <div className=" md:w-3/4   w-1/3 mx-auto">
+      <div className=" mx-auto">
         <h2 className="text-xl font-bold mb-2">Holiday Costs</h2>
         {renderChart(statisticsData, "Holiday Costs", "totalHolidayCost")}
       </div>

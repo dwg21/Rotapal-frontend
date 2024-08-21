@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MdEdit } from "react-icons/md";
+import { IoAddSharp } from "react-icons/io5";
 
 const EditShiftResponsive = ({
   personIndex,
@@ -7,9 +8,7 @@ const EditShiftResponsive = ({
   rota,
   setRota,
   updateRota,
-  editSectionVisible,
-  setEditSectionVisible,
-  editButtonVisble,
+  emptyShift,
 }) => {
   const [shift, setShift] = useState({
     personIndex: null,
@@ -23,6 +22,8 @@ const EditShiftResponsive = ({
       break_startTime: "",
     },
   });
+
+  const [editSectionVisible, setEditSectionVisible] = useState(false);
 
   const handleEditShift = () => {
     const shiftData = rota[personIndex].schedule[dayIndex]?.shiftData || {};
@@ -97,18 +98,26 @@ const EditShiftResponsive = ({
 
   return (
     <div className="p-2">
-      {editButtonVisble && (
+      {!emptyShift ? (
         <button
           onClick={() => handleOpenShift()}
           className="flex justify-center items-center gap-2"
         >
           Edit <MdEdit />
         </button>
+      ) : (
+        <div className="w-full h-[90px] flex justify-center items-center hover:cursor-pointer">
+          <button onClick={() => setEditSectionVisible(true)}>
+            <IoAddSharp className="text-3xl hover:block text-center" />
+          </button>
+        </div>
       )}
       {editSectionVisible && (
         <div>
           <div className="flex flex-col justify-center items-center gap-2">
-            <h2 className="text-center text-lg font-bold">EDIT SHIFT</h2>
+            <h2 className="text-center text-lg font-bold">
+              {emptyShift ? `ADD SHIFT` : `EDIT SHIFT`}
+            </h2>
             <label className="text-center mt-4 mb-1">
               Start Time:
               <input

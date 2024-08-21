@@ -3,7 +3,7 @@ import { useRota } from "../../RotaContext";
 import ServerApi from "../../serverApi/axios";
 
 const Staff = () => {
-  const { selectedvenueID } = useRota();
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [employees, setEmployees] = useState([]);
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [editedEmployee, setEditedEmployee] = useState({
@@ -15,7 +15,7 @@ const Staff = () => {
   const fetchEmployees = useCallback(async () => {
     try {
       const { data } = await ServerApi.get(
-        `api/v1/venue/${selectedvenueID}/employees`,
+        `api/v1/venue/${selectedVenueId}/employees`,
         { withCredentials: true }
       );
       setEmployees(data.employees.employees);
@@ -23,7 +23,7 @@ const Staff = () => {
     } catch (err) {
       console.log(err);
     }
-  }, [selectedvenueID]);
+  }, [selectedVenueId]);
 
   useEffect(() => {
     fetchEmployees();

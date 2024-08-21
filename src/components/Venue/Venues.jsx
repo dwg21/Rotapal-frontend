@@ -1,34 +1,13 @@
 import React, { useState, useEffect } from "react";
 import ServerApi from "../../serverApi/axios";
-const VenueUrl = "api/v1/venue/venues";
-import { useRota } from "../../RotaContext";
 import { useNavigate } from "react-router";
 
-//   const loginSubmit = async (e) => {
-//     e.preventDefault(); //stops reloading page
-//     const { email, password } = loginUser;
-//     const loginUserJson = { email, password };
-//     try {
-//       const { data } = await ServerApi.post(loginUrl, loginUserJson, {
-//         withCredentials: true,
-//       });
-//       console.log("worked");
-//       console.log(data.user);
-//       setUser(data.user);
-
-//       setLoginUser({ email: "", password: "" });
-//     } catch (error) {
-//       console.log(error);
-//       // setErrMsg(error.response.data.msg);x
-//       // console.log({ text: error.response.data.msg });
-//     }
-//   };
+const VenueUrl = "api/v1/venue/venues";
 
 const Venues = () => {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { setSelectedvenueID } = useRota();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,7 +17,6 @@ const Venues = () => {
           withCredentials: true,
         });
         setVenues(response.data.venues);
-        console.log(venues);
       } catch (err) {
         setError("Failed to fetch venues");
       } finally {
@@ -57,10 +35,10 @@ const Venues = () => {
     return <div className="text-center text-red-500">{error}</div>;
   }
 
-  //change index to dynamic data later
   const handleViewRota = (index) => {
-    setSelectedvenueID(venues[index]._id);
-    navigate(`/rota/${venues[index]._id}`);
+    const selectedVenueId = venues[index]._id;
+    localStorage.setItem("selectedVenueID", selectedVenueId); // Save to local storage
+    navigate(`/rota/${selectedVenueId}`);
   };
 
   return (
@@ -93,14 +71,6 @@ const Venues = () => {
               </div>
               <div>
                 <strong>Employees:</strong>
-                {/* <ul>
-                  {venue.employees.map((employee, index) => (
-                    <li key={index}>
-                      {employee.name} - ${employee.hourlyWage}/hr
-                    </li>
-                  ))}
-                </ul> */}
-
                 <button
                   className="my-2 border rounded-md "
                   onClick={() => handleViewRota(venueIndex)}

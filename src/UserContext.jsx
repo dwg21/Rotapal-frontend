@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
-const RotaContext = createContext();
 import ServerApi from "./serverApi/axios";
-
 // Define the initial state
 const initialState = {
   loggedIn: false,
@@ -19,6 +17,8 @@ const userReducer = (state, action) => {
       return state;
   }
 };
+
+const RotaContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
@@ -41,8 +41,17 @@ export const UserProvider = ({ children }) => {
     checkAuth();
   }, []); // Empty dependency array means this runs once on mount
 
+  const logout = async () => {
+    try {
+      await ServerApi.post("/api/v1/users/logout", { withCredentials: true });
+      dispatch({ type: "LOGOUT" });
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
-    <RotaContext.Provider value={{ state, dispatch }}>
+    <RotaContext.Provider value={{ state, dispatch, logout }}>
       {children}
     </RotaContext.Provider>
   );

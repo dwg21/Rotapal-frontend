@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import ServerApi from "../../serverApi/axios";
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,12 +19,63 @@ const Register = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
+    console.log(data);
     try {
+      // Transform data into the required format
+      const formattedData = {
+        user: {
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          phone: data.phone,
+          password: data.password,
+        },
+        venue: {
+          name: data.venue.name || "",
+          address: data.venue.address || "",
+          phone: data.venue.phone || "",
+          openingHours: {
+            monday: {
+              open: data.venue.openingHours.monday?.open || "",
+              close: data.venue.openingHours.monday?.close || "",
+            },
+            tuesday: {
+              open: data.venue.openingHours.tuesday?.open || "",
+              close: data.venue.openingHours.tuesday?.close || "",
+            },
+            wednesday: {
+              open: data.venue.openingHours.wednesday?.open || "",
+              close: data.venue.openingHours.wednesday?.close || "",
+            },
+            thursday: {
+              open: data.venue.openingHours.thursday?.open || "",
+              close: data.venue.openingHours.thursday?.close || "",
+            },
+            friday: {
+              open: data.venue.openingHours.friday?.open || "",
+              close: data.venue.openingHours.friday?.close || "",
+            },
+            saturday: {
+              open: data.venue.openingHours.saturday?.open || "",
+              close: data.venue.openingHours.saturday?.close || "",
+            },
+            sunday: {
+              open: data.venue.openingHours.sunday?.open || "",
+              close: data.venue.openingHours.sunday?.close || "",
+            },
+          },
+          employees: data.employees || [],
+        },
+      };
+
       // Send data to the server
-      const response = await ServerApi.post("/api/v1/register", data);
+      console.log(formattedData);
+      const response = await ServerApi.post(
+        "/api/v1/venue/registerAndCreateVenue",
+        formattedData
+      );
       console.log("Registration successful:", response.data);
       reset(); // Reset the form after successful submission
-      navigate("/welcome");
+      navigate("/venues");
     } catch (error) {
       console.error("Error during registration:", error);
     }
@@ -36,7 +88,7 @@ const Register = () => {
   const progressPercentage = (currentStep / 3) * 100;
 
   return (
-    <div className="p-6">
+    <div className="p-6 w-full">
       <h2 className="text-2xl font-bold mb-4">Register</h2>
       <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
         <div
@@ -211,64 +263,48 @@ const Register = () => {
             <p className="text-sm text-gray-500 mb-4">
               You can skip this section and add employee details later.
             </p>
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-center space-x-2">
-                  <input
-                    {...register(`employees.${index}.name`)}
-                    type="text"
-                    className="p-2 border border-gray-300 rounded-md"
-                    placeholder="Employee Name"
-                  />
-                  <input
-                    {...register(`employees.${index}.email`)}
-                    type="text"
-                    className="p-2 border border-gray-300 rounded-md"
-                    placeholder="Employee Email"
-                  />
-                  <input
-                    {...register(`employees.${index}.hourlyWage`)}
-                    type="number"
-                    className="p-2 border border-gray-300 rounded-md"
-                    placeholder="Hourly Wage"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-              <div className="flex items-center space-x-2">
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex items-center space-x-2">
                 <input
-                  {...register("newEmployee.name")}
+                  {...register(`employees.${index}.name`, {
+                    required: "Name is required",
+                  })}
                   type="text"
                   className="p-2 border border-gray-300 rounded-md"
                   placeholder="Employee Name"
                 />
                 <input
-                  {...register("newEmployee.email")}
+                  {...register(`employees.${index}.email`, {
+                    required: "Email is required",
+                  })}
                   type="text"
                   className="p-2 border border-gray-300 rounded-md"
                   placeholder="Employee Email"
                 />
                 <input
-                  {...register("newEmployee.hourlyWage")}
+                  {...register(`employees.${index}.hourlyWage`, {
+                    required: "Hourly wage is required",
+                  })}
                   type="number"
                   className="p-2 border border-gray-300 rounded-md"
                   placeholder="Hourly Wage"
                 />
                 <button
                   type="button"
-                  onClick={() => append({ name: "", email: "", hourlyWage: 0 })}
-                  className="text-blue-500 hover:text-blue-700"
+                  onClick={() => remove(index)}
+                  className="text-red-500 hover:text-red-700"
                 >
-                  Add
+                  Remove
                 </button>
               </div>
-            </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => append({ name: "", email: "", hourlyWage: 0 })}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              Add
+            </button>
           </div>
         )}
 
@@ -284,13 +320,15 @@ const Register = () => {
           )}
           {currentStep < 3 ? (
             <>
-              <button
-                type="button"
-                onClick={skipStep}
-                className="py-2 px-4 bg-gray-200 rounded-md"
-              >
-                Skip
-              </button>
+              {currentStep !== 1 && (
+                <button
+                  type="button"
+                  onClick={skipStep}
+                  className="py-2 px-4 bg-gray-200 rounded-md"
+                >
+                  Skip
+                </button>
+              )}
               <button
                 type="button"
                 onClick={nextStep}
