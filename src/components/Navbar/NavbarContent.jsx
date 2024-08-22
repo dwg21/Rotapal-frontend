@@ -1,5 +1,5 @@
 import React from "react";
-import { userContext } from "../../UserContext";
+import { userContext } from "../../Context/UserContext";
 import { Link } from "react-router-dom";
 import {
   BookText,
@@ -89,7 +89,7 @@ const NavbarContent = ({ onLinkClick }) => {
       <SidebarItem
         icon={<Home size={20} />}
         text="View Notifications"
-        linkDestination="/notifications"
+        linkDestination="/notifcations"
         onLinkClick={onLinkClick}
       />
       <SidebarItem

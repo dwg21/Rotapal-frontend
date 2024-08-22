@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { userContext } from "../../UserContext";
+import { userContext } from "../../Context/UserContext";
 const bgColor = "white";
 const modalColor = "bg-gray-900";
 import ServerApi from "../../serverApi/axios";

@@ -20,19 +20,12 @@ import NotFound from "./components/misc/NotFound";
 
 import Navbar from "./components/Navbar2/Navbar";
 
-import { userContext } from "./UserContext";
+import { userContext } from "./Context/UserContext";
 import HolidayRequests from "./components/Holiday/HolidayRequests";
 import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 import EmployeeRequests from "./components/Requests/EmployeeRequests";
 import TopNavbar from "./components/Navbar/TopNavbar";
 import Register from "./components/User/Register";
-
-import {
-  FaBell,
-  FaFacebookMessenger,
-  FaCaretDown,
-  FaPlus,
-} from "react-icons/fa"; // Importing icons from react-icons
 
 function App() {
   const { state } = userContext();

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useRota } from "../../RotaContext";
 import ServerApi from "../../serverApi/axios";
 
 const Staff = () => {
@@ -8,7 +7,6 @@ const Staff = () => {
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [editedEmployee, setEditedEmployee] = useState({
     name: "",
-    email: "",
     hourlyWage: "",
   });
 
@@ -46,7 +44,6 @@ const Staff = () => {
     setEditingEmployeeId(employee._id);
     setEditedEmployee({
       name: employee.name,
-      email: employee.email,
       hourlyWage: employee.hourlyWage,
     });
   };
@@ -142,17 +139,7 @@ const Staff = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                          {editingEmployeeId === employee._id ? (
-                            <input
-                              type="email"
-                              name="email"
-                              value={editedEmployee.email}
-                              onChange={handleEditChange}
-                              className="border px-2 py-1 rounded"
-                            />
-                          ) : (
-                            employee.email
-                          )}
+                          {employee.email}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                           {editingEmployeeId === employee._id ? (
@@ -187,13 +174,22 @@ const Staff = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(employee._id)}
-                            className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 focus:outline-none focus:text-blue-800"
-                          >
-                            Delete
-                          </button>
+                          {editingEmployeeId === employee._id ? (
+                            <button
+                              onClick={() => setEditingEmployeeId(null)}
+                              className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 focus:outline-none focus:text-blue-800"
+                            >
+                              Close
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(employee._id)}
+                              className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 focus:outline-none focus:text-blue-800"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                           Account Created

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { userContext } from "../../UserContext";
+import { userContext } from "../../Context/UserContext";
 import ServerApi from "../../serverApi/axios";
 import { getDayLabel } from "../../Utils/utils";
 

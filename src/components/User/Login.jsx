@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ServerApi from "../../serverApi/axios";
 import { useNavigate } from "react-router";
 
-import { userContext } from "../../UserContext";
+import { userContext } from "../../Context/UserContext";
 
 const loginUrl = "api/v1/auth/login";
 const registerUrl = "api/v1/auth/register";

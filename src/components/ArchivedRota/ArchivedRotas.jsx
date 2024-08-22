@@ -1,7 +1,6 @@
 import React, { useCallback, useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import ServerApi from "../../serverApi/axios";
-import { useRota } from "../../RotaContext";
 import "react-calendar/dist/Calendar.css"; // import calendar CSS
 import StaticRotaTable from "../RotaMisc/StaticRotaTable";
 import VenueStatistics from "./VenueStatistics";

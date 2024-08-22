@@ -58,6 +58,7 @@ const RotaTemplates = ({
   const [detailsVisible, setDetailsVisible] = useState(false);
 
   const handleAddNewTemplate = async (e) => {
+    console.log(rota);
     e.preventDefault();
     if (newRotaLabel.trim() === "") {
       return;
@@ -65,7 +66,7 @@ const RotaTemplates = ({
     const newTemplate = {
       id: `${newRotaLabel}-${Date.now()}`, // Optional: Change as needed
       label: newRotaLabel,
-      rotaData: rota.map((person) => ({
+      rotaData: rota?.rotaData.map((person) => ({
         employee: person.employee, // Use person.employee
         schedule: person.schedule.map((shift) => ({
           date: shift.date,

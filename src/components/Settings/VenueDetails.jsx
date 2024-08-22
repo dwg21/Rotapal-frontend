@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
-import { useRota } from "../../RotaContext";
 import { useForm } from "react-hook-form";
 
 const VenueDetails = () => {

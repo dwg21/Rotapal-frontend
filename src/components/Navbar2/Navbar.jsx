@@ -17,13 +17,13 @@ const Navbar = () => {
   return (
     <nav className="bg-white border-b-2 text-black">
       <div className="h-16 z-[3333] justify-between flex items-center px-2">
-        <div className="flex items-center">
+        <div className="flex items-center h-full">
           <h1 className="font-bold text-2xl text-darkBlue ml-2 mr-4">
             Rotapal
           </h1>
 
           {/* Navbar content hidden on medium and small screens */}
-          <div className="hidden md:flex">
+          <div className="hidden md:flex h-full">
             <NavbarContent />
           </div>
         </div>

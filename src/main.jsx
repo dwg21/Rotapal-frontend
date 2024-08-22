@@ -3,15 +3,15 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
-import { RotaProvider } from "./RotaContext.jsx";
-import { UserProvider } from "./UserContext.jsx";
+import { UserProvider } from "./Context/UserContext.jsx";
+import { NotificationsProvider } from "./Context/NotificationContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <UserProvider>
-      <RotaProvider>
+      <NotificationsProvider>
         <App />
-      </RotaProvider>
+      </NotificationsProvider>
     </UserProvider>
   </BrowserRouter>
 );

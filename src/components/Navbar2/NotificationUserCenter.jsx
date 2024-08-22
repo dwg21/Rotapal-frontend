@@ -1,28 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { FaBell, FaUserCircle } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { userContext } from "../../UserContext";
+import { userContext } from "../../Context/UserContext";
+import { useNotifications } from "../../Context/NotificationContext";
 import { Button } from "@mui/material";
+import ServerApi from "../../serverApi/axios";
 
 const NotificationUserCenter = () => {
   const { state, dispatch } = userContext();
+  const { setNotifications } = useNotifications(); // Access NotificationsContext
   const navigate = useNavigate();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
+  const { notifications, loading, error } = useNotifications();
 
   // Refs to detect clicks outside of the dropdowns
   const notificationRef = useRef(null);
   const userDropdownRef = useRef(null);
 
-  // Dummy static data for notifications and unread count
-  const notifications = [
-    { id: 1, title: "New Comment on your Post", date: "August 20, 2024" },
-    { id: 2, title: "Update Available", date: "August 19, 2024" },
-    { id: 3, title: "Password Changed", date: "August 18, 2024" },
-    { id: 4, title: "Aimee has requested Holiday", date: "August 17, 2024" },
-    { id: 5, title: "Weekly Report Ready", date: "August 16, 2024" },
-  ];
-  const unreadCount = 3; // Dummy unread count
+  // Calculate unread count based on your logic
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     // Close dropdowns when clicking outside
@@ -60,18 +58,19 @@ const NotificationUserCenter = () => {
 
   const handleLogout = async () => {
     try {
-      ServerApi.get("api/v1/auth/logout");
+      await ServerApi.get("api/v1/auth/logout");
       dispatch({ type: "LOGOUT" });
     } catch (err) {
       console.log(err);
     }
     setIsUserDropdownOpen(false);
     dispatch({ type: "LOGOUT" });
+    setNotifications([]);
     navigate("/");
   };
 
   return (
-    <div className="relative flex items-center h-full  justify-center space-x-4">
+    <div className="relative flex items-center h-full justify-center space-x-4">
       {/* Notifications Bell */}
       <div className="relative mr-3" ref={notificationRef}>
         <button
@@ -91,19 +90,28 @@ const NotificationUserCenter = () => {
               Notifications
             </div>
             <ul>
-              {notifications.map((notification) => (
-                <li
-                  key={notification.id}
-                  className="px-4 py-2 hover:bg-gray-100 border-b border-gray-200"
-                >
-                  <div className="font-semibold text-gray-700">
-                    {notification.title}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {notification.date}
-                  </div>
-                </li>
-              ))}
+              {loading ? (
+                <div className="text-center py-4">Loading...</div>
+              ) : error ? (
+                <div className="text-center text-red-500 py-4">{error}</div>
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-4">No notifications found.</div>
+              ) : (
+                notifications.map((notification) => (
+                  <li
+                    key={notification._id}
+                    className="px-4 py-2 hover:bg-gray-100 border-b border-gray-200"
+                  >
+                    <div className="font-semibold text-gray-700">
+                      {notification.title || "No Title"}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {notification.date ||
+                        new Date(notification.created).toLocaleDateString()}
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
             <div className="p-2 text-center text-sm text-blue-600 hover:underline cursor-pointer">
               View all notifications

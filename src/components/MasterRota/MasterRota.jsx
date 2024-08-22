@@ -8,7 +8,6 @@ import {
   DragOverlay,
 } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { useRota } from "../../RotaContext";
 import ShiftTemplates from "./ShiftTemplates";
 import RotaTemplates from "./RotaTemplates";
 import { ClipLoader } from "react-spinners";

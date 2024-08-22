@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import ServerApi from "../../serverApi/axios";
 
 const HolidayRequests = () => {
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
+  console.log(selectedVenueId);
   const [userId, setUserId] = useState("");
   const [date, setDate] = useState("");
   const [error, setError] = useState("");
@@ -21,6 +23,7 @@ const HolidayRequests = () => {
     try {
       const response = await ServerApi.post("/api/v1/holidays/book-holiday", {
         date,
+        venueId: selectedVenueId,
       });
       console.log("Holiday booked successfully:", response.data);
       // Optionally, reset form fields or show a success message

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
-import ServerApi from "./serverApi/axios";
+import ServerApi from "../serverApi/axios";
+
 // Define the initial state
 const initialState = {
   loggedIn: false,
@@ -18,7 +19,7 @@ const userReducer = (state, action) => {
   }
 };
 
-const RotaContext = createContext();
+const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
@@ -51,10 +52,10 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <RotaContext.Provider value={{ state, dispatch, logout }}>
+    <UserContext.Provider value={{ state, dispatch, logout }}>
       {children}
-    </RotaContext.Provider>
+    </UserContext.Provider>
   );
 };
 
-export const userContext = () => useContext(RotaContext);
+export const userContext = () => useContext(UserContext);

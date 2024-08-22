@@ -3,7 +3,6 @@ import ServerApi from "../../serverApi/axios";
 import { Line, Bar } from "react-chartjs-2";
 import Chart from "chart.js/auto";
 import { format } from "date-fns";
-import { useRota } from "../../RotaContext";
 
 const formatDate = (dateString, scope) => {
   if (scope === "months") {

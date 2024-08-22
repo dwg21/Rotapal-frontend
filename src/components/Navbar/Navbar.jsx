@@ -3,7 +3,7 @@ import { useContext, createContext, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const SidebarContext = createContext();
-import { userContext } from "../../UserContext";
+import { userContext } from "../../Context/UserContext";
 import ServerApi from "../../serverApi/axios";
 
 export default function Sidebar({ children }) {
@@ -82,7 +82,7 @@ export default function Sidebar({ children }) {
             </div>
             <button onClick={handleLogout}>Log out</button>
           </div>
-        </div>{" "}
+        </div>
       </nav>
     </aside>
   );

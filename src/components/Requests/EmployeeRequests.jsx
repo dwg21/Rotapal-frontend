@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import ServerApi from "../../serverApi/axios";
-import { useRota } from "../../RotaContext";
 import SentEmployeeRequest from "./SentEmployeeRequest";
 
 const EmployeeRequests = () => {
@@ -27,7 +26,7 @@ const EmployeeRequests = () => {
     };
 
     fetchRequests();
-  }, [selectedVenueId]);
+  }, [selectedvenueID]);
 
   const handleApprove = async (requestId) => {
     try {

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useRota } from "../../RotaContext";
+import React, { useState, useEffect, useMemo } from "react";
 import { addWeeks, startOfWeek, differenceInDays, format } from "date-fns";
 import { useParams } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
@@ -7,9 +6,9 @@ import ShiftSwap from "./ShiftSwap";
 import StaticRotaTable from "../RotaMisc/StaticRotaTable";
 import StaticResponsiveRotaTable from "../RotaMisc/StaticResponsiveRotaTable";
 import EmployeeToolbar from "../RotaMisc/EmployeeToolbar.jsx";
+import { generateWeeks } from "../../Utils/utils.js";
 
 const EmployeeRota = () => {
-  const { weeks } = useRota();
   const { date } = useParams();
   const initialSelectedWeek = date
     ? Math.ceil(differenceInDays(new Date(date), new Date()) / 7)
@@ -18,6 +17,8 @@ const EmployeeRota = () => {
   const [rota, setRota] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(initialSelectedWeek);
   const [error, setError] = useState(null);
+
+  const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
 
   const calculateWeekStarting = () => {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
