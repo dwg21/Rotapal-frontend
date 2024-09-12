@@ -12,6 +12,7 @@ export const NotificationsProvider = ({ children }) => {
   const { state: userState } = userContext(); // Corrected to use useContext
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [includeRead, setIncludeRead] = useState(false);
 
   console.log(userState);
 
@@ -20,7 +21,7 @@ export const NotificationsProvider = ({ children }) => {
       const [notificationsResponse, requestsResponse] = await Promise.all([
         ServerApi.get(
           "http://localhost:5000/api/v1/notifcations/getNotfications",
-          { withCredentials: true }
+          { params: { includeRead }, withCredentials: true }
         ),
         ServerApi.get(`/api/v1/swap/getEmployeeRequests`),
       ]);
@@ -94,11 +95,18 @@ export const NotificationsProvider = ({ children }) => {
       const interval = setInterval(fetchAllData, 30000); // Poll every 30 seconds
       return () => clearInterval(interval); // Cleanup on unmount
     }
-  }, [userState.loggedIn]);
+  }, [userState.loggedIn, includeRead]);
 
   return (
     <NotificationsContext.Provider
-      value={{ notifications, loading, error, setNotifications }}
+      value={{
+        notifications,
+        loading,
+        error,
+        setNotifications,
+        includeRead,
+        setIncludeRead,
+      }}
     >
       {children}
     </NotificationsContext.Provider>
