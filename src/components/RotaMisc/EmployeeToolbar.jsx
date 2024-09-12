@@ -2,11 +2,13 @@ import React from "react";
 import ServerApi from "../../serverApi/axios";
 import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import { TiTick } from "react-icons/ti";
-
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import ImageIcon from "@mui/icons-material/Image";
+import ArchiveIcon from "@mui/icons-material/Archive";
+import CustDropdownButton from "../misc/CustDropdownButton";
 import { getDayLabel } from "../../Utils/utils";
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
-import CustButton from "./Button";
 import FilterButton from "./FilterButton";
 
 const EmployeeToolbar = ({
@@ -31,6 +33,20 @@ const EmployeeToolbar = ({
     new Date(new Date(startOfWeek).getTime() + 6 * 24 * 60 * 60 * 1000) // Calculate the end of the current week
   );
 
+  const exportOptions = [
+    {
+      label: "PDF",
+      icon: <PictureAsPdfIcon className="mr-2 text-gray-500" />,
+      onClick: exportToPDF,
+    },
+    {
+      label: "Image",
+      icon: <ImageIcon className="mr-2 text-gray-500" />,
+      onClick: exportToPng,
+    },
+    { label: "Excel", icon: <ArchiveIcon className="mr-2 text-gray-500" /> },
+  ];
+
   return (
     <div>
       <p className="text-md text-center font-semibold mr-4 md:text-base md:hidden ">
@@ -54,11 +70,8 @@ const EmployeeToolbar = ({
             onClick={() => handleChangeWeek("right")}
           />
         </div>
-        <CustButton
-          handleSubmit1={exportToPDF}
-          handleSubmit2={exportToPng}
-          className="text-xs md:text-sm"
-        />
+        <CustDropdownButton title="Export" options={exportOptions} />
+
         <FilterButton
           showCost={showCost}
           setShowCost={setShowCost}

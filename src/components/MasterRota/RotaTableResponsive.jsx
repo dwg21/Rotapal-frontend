@@ -8,6 +8,7 @@ const RotaTableResponsive = ({
   updateRota,
   selectedWeek,
   setSelectedWeek,
+  archived,
 }) => {
   const [showCost, setShowCost] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
@@ -130,31 +131,29 @@ const RotaTableResponsive = ({
                     </div>
                   )}
                 </div>
-
-                <EditShiftResponsive
-                  personIndex={personIndex}
-                  dayIndex={selectedDay}
-                  rota={rota}
-                  updateRota={updateRota}
-                  setRota={setRota}
-                  emptyShift={false}
-                />
+                {!archived && (
+                  <EditShiftResponsive
+                    personIndex={personIndex}
+                    dayIndex={selectedDay}
+                    rota={rota}
+                    updateRota={updateRota}
+                    setRota={setRota}
+                    emptyShift={false}
+                  />
+                )}
               </div>
             ) : (
               <>
-                {/* <div className="w-full h-[90px] flex justify-center items-center hover:cursor-pointer">
-                  <button onClick={() => setEditSectionVisible(true)}>
-                    <IoAddSharp className="text-3xl hover:block text-center" />
-                  </button>
-                </div> */}
-                <EditShiftResponsive
-                  personIndex={personIndex}
-                  dayIndex={selectedDay}
-                  rota={rota}
-                  updateRota={updateRota}
-                  setRota={setRota}
-                  emptyShift={true}
-                />
+                {!archived && (
+                  <EditShiftResponsive
+                    personIndex={personIndex}
+                    dayIndex={selectedDay}
+                    rota={rota}
+                    updateRota={updateRota}
+                    setRota={setRota}
+                    emptyShift={true}
+                  />
+                )}
               </>
             )}
           </div>

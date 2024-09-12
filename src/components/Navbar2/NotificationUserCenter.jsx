@@ -15,6 +15,8 @@ const NotificationUserCenter = () => {
 
   const { notifications, loading, error } = useNotifications();
 
+  console.log(notifications);
+
   // Refs to detect clicks outside of the dropdowns
   const notificationRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -97,13 +99,13 @@ const NotificationUserCenter = () => {
               ) : notifications.length === 0 ? (
                 <div className="text-center py-4">No notifications found.</div>
               ) : (
-                notifications.map((notification) => (
+                notifications.slice(0, 5).map((notification) => (
                   <li
                     key={notification._id}
                     className="px-4 py-2 hover:bg-gray-100 border-b border-gray-200"
                   >
                     <div className="font-semibold text-gray-700">
-                      {notification.title || "No Title"}
+                      {notification?.message?.substring(0, 55) || "No Title"}
                     </div>
                     <div className="text-sm text-gray-500">
                       {notification.date ||
@@ -113,9 +115,11 @@ const NotificationUserCenter = () => {
                 ))
               )}
             </ul>
-            <div className="p-2 text-center text-sm text-blue-600 hover:underline cursor-pointer">
-              View all notifications
-            </div>
+            <Link to="./notifcations">
+              <div className="p-2 text-center text-sm text-blue-600 hover:underline cursor-pointer">
+                View all notifications
+              </div>
+            </Link>
           </div>
         )}
       </div>

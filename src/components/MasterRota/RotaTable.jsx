@@ -3,16 +3,17 @@ import { getDayLabel } from "../../Utils/utils";
 import { IoAddSharp } from "react-icons/io5";
 import ShiftModal from "./ShiftModal";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import DroppableArea from "./DndComponents/DropppableArea";
+import DraggableItem from "./DndComponents/DraggableItem";
 
 const RotaTable = ({
   rota,
   setRota,
   dates,
-  DroppableArea,
-  DraggableItem,
   isSpacePressed,
   updateRota,
   showCost,
+  archived,
   setShowCost,
   showHours, // Add showHours prop
 }) => {
@@ -112,12 +113,18 @@ const RotaTable = ({
     }, 0);
   };
 
+  console.log(rota);
+
   return (
     <div>
       <table className="min-w-full bg-white">
         <thead>
           <tr>
-            <th className="px-4 py-2 border bg-gray-100 select-none">Staff</th>
+            {rota && rota[0].employeeName && (
+              <th className="px-4 py-2 border bg-gray-100 select-none">
+                Staff
+              </th>
+            )}
             {dates.map((day, dayIndex) => (
               <th key={day} className="px-4 py-2 border bg-gray-100">
                 <div className="flex justify-center items-center select-none">
@@ -138,80 +145,82 @@ const RotaTable = ({
           </tr>
         </thead>
         <tbody>
-          {rota?.map((person, personIndex) => (
-            <tr key={person.employee}>
-              <td className="border px-4 py-2 select-none">
-                {person.employeeName}
-              </td>
-              {dates.map((day, dayIndex) => (
-                <td
-                  key={day}
-                  className="border h-full"
-                  onDoubleClick={(event) =>
-                    handleEditShift(personIndex, dayIndex, event)
-                  }
-                >
-                  <DroppableArea id={`${personIndex}-${dayIndex}`}>
-                    {person.schedule[dayIndex]?.shiftData?.startTime ||
-                    person.schedule[dayIndex]?.shiftData?.holidayBooked ||
-                    person.schedule[dayIndex]?.shiftData?.label ? (
-                      <DraggableItem
-                        id={`${personIndex}-${dayIndex}`}
-                        isSpacePressed={isSpacePressed}
-                        onDoubleClick={(event) =>
-                          handleEditShift(personIndex, dayIndex, event)
-                        }
-                      >
-                        <div
-                          className={`my-2 mx-4 flex text-center items-center select-none justify-center p-1 rounded-md w-[120px] h-[80px] text-white ${
-                            person.schedule[dayIndex]?.holidayBooked
-                              ? "bg-orange-400"
-                              : person.schedule[dayIndex].shiftData?.startTime
-                              ? "bg-lightBlue"
-                              : "bg-darkBlue"
-                          }`}
+          {rota &&
+            rota?.map((person, personIndex) => (
+              <tr key={person.employee}>
+                <td className="border px-4 py-2 select-none">
+                  {person.employeeName}
+                </td>
+                {dates.map((day, dayIndex) => (
+                  <td
+                    key={day}
+                    className="border h-full"
+                    onDoubleClick={(event) =>
+                      handleEditShift(personIndex, dayIndex, event)
+                    }
+                  >
+                    <DroppableArea id={`${personIndex}-${dayIndex}`}>
+                      {person.schedule[dayIndex]?.shiftData?.startTime ||
+                      person.schedule[dayIndex]?.shiftData?.holidayBooked ||
+                      person.schedule[dayIndex]?.shiftData?.label ? (
+                        <DraggableItem
+                          id={`${personIndex}-${dayIndex}`}
+                          isSpacePressed={isSpacePressed}
+                          onDoubleClick={(event) =>
+                            handleEditShift(personIndex, dayIndex, event)
+                          }
+                          isDraggable={archived}
                         >
-                          {person.schedule[dayIndex]?.shiftData
-                            ?.holidayBooked ? (
-                            <p>Holiday Booked</p>
-                          ) : person.schedule[dayIndex]?.shiftData?.label ===
-                            "Day Off" ? (
-                            <p>Day Off</p>
-                          ) : (
-                            <div className="flex flex-col gap-2">
-                              <p>
-                                {person.schedule[dayIndex]?.shiftData
-                                  ?.startTime &&
-                                  `${person.schedule[dayIndex].shiftData.startTime} - ${person.schedule[dayIndex].shiftData.endTime}`}
-                              </p>
-                              <p className="font-bold">
-                                {person.schedule[dayIndex]?.shiftData?.label ||
-                                  ""}
-                              </p>
-                            </div>
-                          )}
+                          <div
+                            className={`my-2 mx-4 flex text-center items-center select-none justify-center p-1 rounded-md w-[120px] h-[80px] text-white ${
+                              person.schedule[dayIndex]?.holidayBooked
+                                ? "bg-orange-400"
+                                : person.schedule[dayIndex].shiftData?.startTime
+                                ? "bg-lightBlue"
+                                : "bg-darkBlue"
+                            }`}
+                          >
+                            {person.schedule[dayIndex]?.shiftData
+                              ?.holidayBooked ? (
+                              <p>Holiday Booked</p>
+                            ) : person.schedule[dayIndex]?.shiftData?.label ===
+                              "Day Off" ? (
+                              <p>Day Off</p>
+                            ) : (
+                              <div className="flex flex-col gap-2">
+                                <p>
+                                  {person.schedule[dayIndex]?.shiftData
+                                    ?.startTime &&
+                                    `${person.schedule[dayIndex].shiftData.startTime} - ${person.schedule[dayIndex].shiftData.endTime}`}
+                                </p>
+                                <p className="font-bold">
+                                  {person.schedule[dayIndex]?.shiftData
+                                    ?.label || ""}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </DraggableItem>
+                      ) : (
+                        <div className="w-[140px] h-[90px] flex justify-center items-center hover:cursor-pointer">
+                          <IoAddSharp className="text-3xl hover:block text-center" />
                         </div>
-                      </DraggableItem>
-                    ) : (
-                      <div className="w-[140px] h-[90px] flex justify-center items-center hover:cursor-pointer">
-                        <IoAddSharp className="text-3xl hover:block text-center" />
-                      </div>
-                    )}
-                  </DroppableArea>
-                </td>
-              ))}
-              {showHours && (
-                <td className="border px-4 py-2 select-none text-center">
-                  {calculateHoursWorked(person).toFixed(0)}
-                </td>
-              )}
-              {showCost && (
-                <td className="border px-4 py-2 select-none text-center">
-                  £{calculateStaffCost(person).toFixed(2)}
-                </td>
-              )}
-            </tr>
-          ))}
+                      )}
+                    </DroppableArea>
+                  </td>
+                ))}
+                {showHours && (
+                  <td className="border px-4 py-2 select-none text-center ">
+                    {calculateHoursWorked(person).toFixed(0)}
+                  </td>
+                )}
+                {showCost && (
+                  <td className="border px-4 py-2 select-none text-center">
+                    £{calculateStaffCost(person).toFixed(2)}
+                  </td>
+                )}
+              </tr>
+            ))}
         </tbody>
         {showCost && (
           <tfoot>

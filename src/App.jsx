@@ -7,12 +7,11 @@ import Login from "./components/User/Login";
 import CreateVenue from "./components/Venue/CreateVenue";
 import Venues from "./components/Venue/Venues";
 // import Navbar from "./components/Navbar/Navbar";
-import Requests from "./components/Requests/Requests";
 import Settings from "./components/Settings/Settings";
 
 import EmployeeRota from "./components/EmployeeRota/EmployeeRota";
 
-import NavbarContent from "./components/Navbar/NavbarContent";
+import NavbarContent from "./components/Navbar2/NavbarContent";
 import Notifications from "./components/Notifcation/Notifcations";
 import ProtectedRoute from "./components/misc/ProtectedRoutes";
 
@@ -24,7 +23,6 @@ import { userContext } from "./Context/UserContext";
 import HolidayRequests from "./components/Holiday/HolidayRequests";
 import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 import EmployeeRequests from "./components/Requests/EmployeeRequests";
-import TopNavbar from "./components/Navbar/TopNavbar";
 import Register from "./components/User/Register";
 
 function App() {
@@ -48,7 +46,6 @@ function App() {
           <Route path="/createvenue" element={<CreateVenue />} />
           <Route path="/venues" element={<Venues />} />
           <Route path="/notifcations" element={<Notifications />} />
-          <Route path="/requests" element={<Requests />} />
           <Route path="/holidayrequests" element={<HolidayRequests />} />
 
           <Route

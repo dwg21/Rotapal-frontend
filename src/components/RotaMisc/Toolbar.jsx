@@ -2,18 +2,23 @@ import React from "react";
 import ServerApi from "../../serverApi/axios";
 import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
 import { TiTick } from "react-icons/ti";
+import { FaLock } from "react-icons/fa";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import ImageIcon from "@mui/icons-material/Image";
+import ArchiveIcon from "@mui/icons-material/Archive";
 
 import { getDayLabel } from "../../Utils/utils";
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
-import CustButton from "./Button";
+import CustDropdownButton from "../misc/CustDropdownButton";
 import FilterButton from "./FilterButton";
+import { addWeeks } from "date-fns";
 
 const Toolbar = ({
   venueName,
   setSelectedWeek,
   selectedWeek,
-  weeks,
+  weekStarting,
   rota,
   setRota,
   showCost,
@@ -21,6 +26,7 @@ const Toolbar = ({
   showHours,
   setShowHours,
 }) => {
+  console.log(rota);
   const handleClickPublishRota = async () => {
     try {
       console.log("hhs");
@@ -39,15 +45,32 @@ const Toolbar = ({
     if (direction === "right") {
       setSelectedWeek((prev) => prev + 1);
       console.log(selectedWeek);
-    } else if (direction === "left" && selectedWeek > 0) {
+    } else if (direction === "left") {
       setSelectedWeek((prev) => prev - 1);
     }
   };
 
-  let startOfweek = getDayLabel(new Date(weeks[selectedWeek][0]));
-  let endOfWeek = getDayLabel(
-    new Date(weeks[selectedWeek][weeks[selectedWeek].length - 1])
-  );
+  // let startOfweek = getDayLabel(new Date(weeks[selectedWeek][0]));
+
+  let startOfweek = getDayLabel(new Date(weekStarting));
+  let endOfWeek = getDayLabel(addWeeks(new Date(weekStarting), 1));
+
+  // let endOfWeek = getDayLabel(
+  //   new Date(weeks[selectedWeek][weeks[selectedWeek].length - 1])
+  // );
+  const exportOptions = [
+    {
+      label: "PDF",
+      icon: <PictureAsPdfIcon className="mr-2 text-gray-500" />,
+      onClick: exportToPDF,
+    },
+    {
+      label: "Image",
+      icon: <ImageIcon className="mr-2 text-gray-500" />,
+      onClick: exportToPng,
+    },
+    { label: "Excel", icon: <ArchiveIcon className="mr-2 text-gray-500" /> },
+  ];
 
   return (
     <div>
@@ -62,7 +85,7 @@ const Toolbar = ({
           <button className="border p-2 my-2 rounded-md bg-green-400 text-xs md:text-sm">
             <div className="flex items-center gap-2">
               <p>Rota is published</p>
-              <TiTick className="text-xl md:text-2xl" />
+              <FaLock className="text-lg md:text-xl" />
             </div>
           </button>
         ) : (
@@ -86,11 +109,8 @@ const Toolbar = ({
             onClick={() => handleChangeWeek("right")}
           />
         </div>
-        <CustButton
-          handleSubmit1={exportToPDF}
-          handleSubmit2={exportToPng}
-          className="text-xs md:text-sm"
-        />
+
+        <CustDropdownButton title="Export" options={exportOptions} />
         <FilterButton
           showCost={showCost}
           setShowCost={setShowCost}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   DndContext,
   MouseSensor,
@@ -11,13 +11,11 @@ import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import ShiftTemplates from "./ShiftTemplates";
 import RotaTemplates from "./RotaTemplates";
 import { ClipLoader } from "react-spinners";
-import { addWeeks, startOfWeek, format } from "date-fns";
+import { addWeeks, startOfWeek, format, subWeeks } from "date-fns";
 import ServerApi from "../../serverApi/axios";
-import { generateWeeks } from "../../Utils/utils";
 import Toolbar from "../RotaMisc/Toolbar";
 import RotaTable from "./RotaTable";
-import DroppableArea from "./DndComponents/DropppableArea";
-import DraggableItem from "./DndComponents/DraggableItem";
+
 import RotaTableResponsive from "./RotaTableResponsive";
 
 const MasterRota = () => {
@@ -41,21 +39,19 @@ const MasterRota = () => {
 
   const [commonRotas, setCommonRotas] = useState([]);
 
-  const weeks = useMemo(() => generateWeeks(4 + selectedWeek), [selectedWeek]);
-
   const calculateWeekStarting = useCallback(() => {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
-    return format(addWeeks(startOfCurrentWeek, selectedWeek), "yyyy-MM-dd");
+
+    // Use selectedWeek to determine whether to add or subtract weeks
+    const weekStartingDate =
+      selectedWeek >= 0
+        ? addWeeks(startOfCurrentWeek, selectedWeek)
+        : subWeeks(startOfCurrentWeek, Math.abs(selectedWeek));
+
+    return format(weekStartingDate, "yyyy-MM-dd");
   }, [selectedWeek]);
 
-  const weekStarting = calculateWeekStarting();
-
   const fetchRota = useCallback(async () => {
-    const requestObject = {
-      venueId: selectedVenueId,
-      weekStarting: calculateWeekStarting(),
-    };
-
     const weekStarting = calculateWeekStarting();
     console.log(weekStarting);
 
@@ -64,16 +60,17 @@ const MasterRota = () => {
         `http://localhost:5000/api/v1/rotas/rota/${selectedVenueId}/${weekStarting}`,
         { withCredentials: true }
       );
-      console.log(response);
-      setRota(response.data.rota);
+      if (response.data.success) {
+        setRota(response.data.rota);
+      } else {
+        console.log("hello");
+        setRota(response.data);
+      }
+
+      console.log(rota);
     } catch (err) {
       console.log(err);
       setRota(false);
-      // console.log(err.response.data.message);
-      // setError("Failed to fetch venues");
-      // if (err.response.data.message === "Rota not found") {
-      //   setRota(false);
-      // }
     }
   }, [selectedVenueId, calculateWeekStarting]);
 
@@ -147,6 +144,10 @@ const MasterRota = () => {
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
   const onDragStart = (event) => {
+    // console.log(rota.archived);
+    if (rota?.archived) {
+      return; // Prevent dragging if rota is archived
+    }
     setActiveId(event.active?.id);
   };
 
@@ -163,9 +164,6 @@ const MasterRota = () => {
       .split("-")
       .map(Number);
     const [destPersonIndex, destDayIndex] = over.id.split("-").map(Number);
-
-    console.log("Source:", { sourcePersonIndex, sourceDayIndex });
-    console.log("Destination:", { destPersonIndex, destDayIndex });
 
     let updatedRotaData = [...rota.rotaData];
 
@@ -338,12 +336,14 @@ const MasterRota = () => {
     const daySchedule = employeeData?.schedule?.[dayIndex] || {};
     const shift = daySchedule.shiftData;
 
+    console.log(id);
+
     return (
       <div className="bg-lightBlue text-white p-1 rounded-md w-[120px] h-[80px] flex items-center justify-center">
-        {shift?.startTime ? (
+        {!shift?.holidayBooked ? (
           <div className="flex flex-col gap-2">
-            <p>{`${shift?.startTime} - ${shift?.endTime}`}</p>
-            <p className="font-bold">{shift.label}</p>
+            <p>{shift ? `${shift?.startTime} - ${shift?.endTime}` : id}</p>
+            <p className="font-bold">{shift?.label}</p>
           </div>
         ) : (
           <p>{shift?.holidayBooked ? "Holiday Booked" : shift?.label}</p>
@@ -366,7 +366,7 @@ const MasterRota = () => {
         venueName={rota?.name?.split("-")[0]}
         selectedWeek={selectedWeek}
         setSelectedWeek={setSelectedWeek}
-        weeks={weeks}
+        weekStarting={calculateWeekStarting()}
         dates={dates}
         rota={rota}
         setRota={setRota}
@@ -390,13 +390,12 @@ const MasterRota = () => {
                 rota={rota?.rotaData}
                 setRota={setRota}
                 dates={dates}
-                DroppableArea={DroppableArea}
-                DraggableItem={DraggableItem}
                 isShiftPressed={isShiftPressed}
                 updateRota={updateRota}
                 showCost={showCost}
                 setShowCost={setShowCost}
                 showHours={showHours}
+                archived={rota?.archived}
               />
             </div>
 
@@ -409,12 +408,13 @@ const MasterRota = () => {
                 updateRota={updateRota}
                 selectedWeek={selectedWeek}
                 setSelectedWeek={setSelectedWeek}
+                archived={rota?.archived}
               />
             </div>
           </div>
         </div>
 
-        {rota ? (
+        {rota._id ? (
           <div className="w-full bg-white">
             <div className="hidden lg:block">
               <ShiftTemplates
@@ -433,16 +433,25 @@ const MasterRota = () => {
           </div>
         ) : (
           <div>
-            <p>
-              There is no rota for this week yet. Would you like to generate
-              one?
-            </p>
-            <button
-              onClick={handleGenerateRota}
-              className="p-2 border bg-slate-600 text-white rounded-md"
-            >
-              Generate Rota
-            </button>
+            {/* Todo check if datee is behind or after */}
+            {rota?.futureDate ? (
+              <>
+                <p>
+                  There is no rota for this week yet. Would you like to generate
+                  one?
+                </p>
+                <button
+                  onClick={handleGenerateRota}
+                  className="p-2 border bg-slate-600 text-white rounded-md"
+                >
+                  Generate Rota
+                </button>
+              </>
+            ) : (
+              <p className=" text-center font-medium text-xl">
+                No Rota Found for this week
+              </p>
+            )}
           </div>
         )}
 

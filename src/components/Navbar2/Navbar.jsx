@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { HiOutlineMenu, HiOutlineX } from "react-icons/hi"; // HiOutlineX for the close icon
-import NavbarContent from "../Navbar/NavbarContent";
+import NavbarContent from "./NavbarContent";
 import NotificationUserCenter from "./NotificationUserCenter";
 
 const Navbar = () => {

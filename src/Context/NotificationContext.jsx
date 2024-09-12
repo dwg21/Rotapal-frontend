@@ -1,4 +1,3 @@
-// NotificationContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import ServerApi from "../serverApi/axios";
 import { userContext } from "../Context/UserContext";
@@ -8,10 +7,13 @@ const NotificationsContext = createContext();
 
 // Create a provider component
 export const NotificationsProvider = ({ children }) => {
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [notifications, setNotifications] = useState([]);
-  const { state: userState } = userContext(); // Access the login state from UserContext
+  const { state: userState } = userContext(); // Corrected to use useContext
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  console.log(userState);
 
   const fetchNotificationsAndRequests = async () => {
     try {
@@ -44,11 +46,52 @@ export const NotificationsProvider = ({ children }) => {
     }
   };
 
+  const fetchRequests = async () => {
+    try {
+      const shiftSwapResponse = await ServerApi.get(
+        `/api/v1/swap/pendingShiftSwapRequests?venueId=${selectedVenueId}`
+      );
+
+      const holidayResponse = await ServerApi.get(
+        `/api/v1/holidays/getVenueHolidays/${selectedVenueId}`
+      );
+
+      const combinedRequests = [
+        ...shiftSwapResponse.data.map((request) => ({
+          ...request,
+          type: "shiftSwapRequest",
+        })),
+        ...holidayResponse.data.holidays.map((request) => ({
+          ...request,
+          type: "holiday",
+        })),
+      ];
+
+      setNotifications((prevNotifications) => [
+        ...prevNotifications,
+        ...combinedRequests,
+      ]);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAllData = async () => {
+    await fetchNotificationsAndRequests();
+    if (
+      userState.userData.role === "AccountOwner" ||
+      userState.userData.role === "Admin"
+    ) {
+      await fetchRequests();
+    }
+  };
+
   useEffect(() => {
     if (userState.loggedIn) {
-      // Check if the user is logged in
-      fetchNotificationsAndRequests(); // Fetch on mount
-      const interval = setInterval(fetchNotificationsAndRequests, 30000); // Poll every 30 seconds
+      fetchAllData(); // Fetch on mount
+      const interval = setInterval(fetchAllData, 30000); // Poll every 30 seconds
       return () => clearInterval(interval); // Cleanup on unmount
     }
   }, [userState.loggedIn]);

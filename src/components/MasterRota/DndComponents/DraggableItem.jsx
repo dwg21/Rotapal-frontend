@@ -1,11 +1,19 @@
-import { motion } from "framer-motion";
 import { useDraggable } from "@dnd-kit/core";
+import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 
-const DraggableItem = ({ id, children, isSpacePressed, onDoubleClick }) => {
+const DraggableItem = ({
+  id,
+  children,
+  isSpacePressed,
+  onDoubleClick,
+  isDraggable, // New prop to control whether the item is draggable
+}) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id,
+    disabled: isDraggable, // Disable dragging based on this prop
   });
+
   const [clickTimeout, setClickTimeout] = useState(null);
   const isDraggingRef = useRef(false);
 

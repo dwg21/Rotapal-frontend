@@ -110,8 +110,8 @@ const VenueStatistics = () => {
   };
 
   return (
-    <div className="p-4 space-y-4 max-w-[700px]">
-      <div className="flex justify-between mb-4">
+    <div className="p-4 space-y-4 max-w-[2700px] ">
+      <div className="flex justify-center items-center mb-4">
         <div>
           <label className="mr-2 font-bold">Scope:</label>
           <select
@@ -137,19 +137,21 @@ const VenueStatistics = () => {
         </div>
       </div>
 
-      <div className=" mx-auto">
-        <h2 className="text-xl font-bold mb-2">Staff Costs</h2>
-        {renderChart(statisticsData, "Staff Costs", "totalStaffCost")}
-      </div>
+      <div className=" flex flex-wrap">
+        <div className=" mx-auto">
+          <h2 className="text-xl font-bold mb-2">Staff Costs</h2>
+          {renderChart(statisticsData, "Staff Costs", "totalStaffCost")}
+        </div>
 
-      <div className="  mx-auto">
-        <h2 className="text-xl font-bold mb-2">Staff Hours</h2>
-        {renderChart(statisticsData, "Staff Hours", "totalStaffHours")}
-      </div>
+        <div className="  mx-auto">
+          <h2 className="text-xl font-bold mb-2">Staff Hours</h2>
+          {renderChart(statisticsData, "Staff Hours", "totalStaffHours")}
+        </div>
 
-      <div className=" mx-auto">
-        <h2 className="text-xl font-bold mb-2">Holiday Costs</h2>
-        {renderChart(statisticsData, "Holiday Costs", "totalHolidayCost")}
+        <div className=" mx-auto">
+          <h2 className="text-xl font-bold mb-2">Holiday Costs</h2>
+          {renderChart(statisticsData, "Holiday Costs", "totalHolidayCost")}
+        </div>
       </div>
     </div>
   );

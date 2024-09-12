@@ -9,12 +9,12 @@ import {
   UsersRound,
 } from "lucide-react";
 
-const SidebarItem = ({ icon, text, linkDestination, onLinkClick }) => {
+const NavbarItem = ({ icon, text, linkDestination, onLinkClick }) => {
   return (
     <li className="flex items-center hover:bg-slate-200 h-full px-4 py-2">
       <Link
         to={linkDestination}
-        className="text-black flex items-center gap-2"
+        className="text-black flex items-center"
         onClick={onLinkClick}
       >
         {text}
@@ -28,7 +28,7 @@ const NavbarContent = ({ onLinkClick }) => {
 
   if (!state?.loggedIn) {
     return (
-      <SidebarItem
+      <NavbarItem
         icon={<UserCircle size={20} />}
         text="Login / Register"
         linkDestination="/"
@@ -39,40 +39,40 @@ const NavbarContent = ({ onLinkClick }) => {
 
   const adminItems = (
     <>
-      <SidebarItem
+      <NavbarItem
         icon={<BookText size={20} />}
         text="View Rota"
         linkDestination="/rota"
         onLinkClick={onLinkClick}
       />
-      <SidebarItem
+      <NavbarItem
         icon={<BookText size={20} />}
         text="Archived Rotas"
         linkDestination="/archivedrotas"
         onLinkClick={onLinkClick}
       />
-      <SidebarItem
-        icon={<BookText size={20} />}
-        text="Requests"
-        linkDestination="/requests"
-        onLinkClick={onLinkClick}
-      />
-      <SidebarItem
+      <NavbarItem
         icon={<UsersRound size={20} />}
         text="Staff"
         linkDestination="/staff"
         onLinkClick={onLinkClick}
       />
-      <SidebarItem
+      <NavbarItem
         icon={<SquarePen size={20} />}
         text="Create Venue"
         linkDestination="/createvenue"
         onLinkClick={onLinkClick}
       />
-      <SidebarItem
+      <NavbarItem
         icon={<Home size={20} />}
         text="Venues"
         linkDestination="/venues"
+        onLinkClick={onLinkClick}
+      />
+      <NavbarItem
+        icon={<Home size={20} />}
+        text="View Notifications"
+        linkDestination="/notifcations"
         onLinkClick={onLinkClick}
       />
     </>
@@ -80,28 +80,22 @@ const NavbarContent = ({ onLinkClick }) => {
 
   const userItems = (
     <>
-      <SidebarItem
+      <NavbarItem
         icon={<BookText size={20} />}
         text="View Employee Rota"
         linkDestination="/employeerota"
         onLinkClick={onLinkClick}
       />
-      <SidebarItem
+      <NavbarItem
         icon={<Home size={20} />}
         text="View Notifications"
         linkDestination="/notifcations"
         onLinkClick={onLinkClick}
       />
-      <SidebarItem
+      <NavbarItem
         icon={<BookText size={20} />}
         text="Request Holiday"
         linkDestination="/holidayrequests"
-        onLinkClick={onLinkClick}
-      />
-      <SidebarItem
-        icon={<BookText size={20} />}
-        text="View Requests"
-        linkDestination="/employeerequests"
         onLinkClick={onLinkClick}
       />
     </>
