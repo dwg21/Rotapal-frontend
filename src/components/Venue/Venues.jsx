@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
-import { useNavigate } from "react-router";
-import { FaInfoCircle } from "react-icons/fa";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { InfoIcon, Eye, Edit, BarChart2, Clock } from "lucide-react";
 
 const VenueUrl = "api/v1/venue/venues";
 
@@ -9,7 +19,6 @@ const Venues = () => {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,7 +27,6 @@ const Venues = () => {
         const response = await ServerApi.get(VenueUrl, {
           withCredentials: true,
         });
-        console.log(response.data.venues);
         setVenues(response.data.venues);
       } catch (err) {
         setError("Failed to fetch venues");
@@ -30,78 +38,122 @@ const Venues = () => {
     fetchVenues();
   }, []);
 
+  const handleViewRota = (venueId) => {
+    localStorage.setItem("selectedVenueID", venueId);
+    navigate(`/rota/${venueId}`);
+  };
+
+  const handleEditRota = (venueId) => {
+    navigate(`/editvenue/${venueId}`);
+  };
+
   if (loading) {
-    return <div className="text-center">Loading...</div>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">My Rotas</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <Skeleton className="h-4 w-2/3" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
-
-  const handleViewRota = (index) => {
-    const selectedVenueId = venues[index]._id;
-    localStorage.setItem("selectedVenueID", selectedVenueId); // Save to local storage
-    navigate(`/rota/${selectedVenueId}`);
-  };
-
-  const handleEditRota = (index) => {
-    const selectedVenueId = venues[index]._id;
-    navigate(`/editvenue/${selectedVenueId}`);
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4 font-MainFont">My Rotas</h1>
-      <span>
-        <FaInfoCircle />
-        <p>
-          You can create a new Rota for a new Venue or for a sepearte section or
+      <h1 className="text-3xl font-bold mb-6">My Rotas</h1>
+      <Alert className="mb-6">
+        <InfoIcon className="h-4 w-4" />
+        <AlertTitle>Tip</AlertTitle>
+        <AlertDescription>
+          You can create a new Rota for a new Venue or for a separate section or
           team of one venue.
-        </p>
-      </span>
+        </AlertDescription>
+      </Alert>
       {venues.length === 0 ? (
-        <div className="text-center">No venues found</div>
+        <Alert>
+          <AlertTitle>No venues found</AlertTitle>
+          <AlertDescription>
+            You haven't added any venues yet. Start by creating a new venue to
+            manage your rotas.
+          </AlertDescription>
+        </Alert>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {venues.map((venue, venueIndex) => (
-            <div key={venue._id} className="bg-white shadow-md rounded-lg p-4">
-              <h2 className="text-xl font-bold">{venue.name}</h2>
-              <p>
-                <strong>Address:</strong> {venue.address}
-              </p>
-              <p>
-                <strong>Phone:</strong> {venue.phone}
-              </p>
-              <div>
-                <strong>Opening Hours:</strong>
-                <ul>
-                  {Object.keys(venue.openingHours).map((day) => (
-                    <li key={day}>
-                      {day.charAt(0).toUpperCase() + day.slice(1)}:{" "}
-                      {venue.openingHours[day].open} -{" "}
-                      {venue.openingHours[day].close}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <button
-                  className="my-2 border rounded-md "
-                  onClick={() => handleViewRota(venueIndex)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {venues.map((venue) => (
+            <Card key={venue._id}>
+              <CardHeader>
+                <CardTitle>{venue.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-2">
+                  <strong>Address:</strong> {venue.address}
+                </p>
+                <p className="text-sm text-gray-500 mb-4">
+                  <strong>Phone:</strong> {venue.phone}
+                </p>
+                <div>
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <Clock className="mr-2 h-4 w-4" /> Opening Hours
+                  </h3>
+                  <ul className="text-sm space-y-1">
+                    {Object.entries(venue.openingHours).map(([day, hours]) => (
+                      <li key={day} className="flex justify-between">
+                        <span>
+                          {day.charAt(0).toUpperCase() + day.slice(1)}
+                        </span>
+                        <span>
+                          {hours.open} - {hours.close}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-wrap justify-around gap-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewRota(venue._id)}
                 >
-                  <p className="p-2">View Rota</p>
-                </button>
-                <button
-                  onClick={() => handleEditRota(venueIndex)}
-                  className="my-2 border rounded-md flex"
+                  <Eye className="mr-2 h-4 w-4" /> View Rota
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditRota(venue._id)}
                 >
-                  <p className="p-2">Edit Rota Details</p>
-                </button>
-                <button className="my-2 border rounded-md flex">
-                  <p className="p-2">View Statistics</p>
-                </button>
-              </div>
-            </div>
+                  <Edit className="mr-2 h-4 w-4" /> Edit Details
+                </Button>
+                <Button variant="outline" size="sm">
+                  <BarChart2 className="mr-2 h-4 w-4" /> Statistics
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
