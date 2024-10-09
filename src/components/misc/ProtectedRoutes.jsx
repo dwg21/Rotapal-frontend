@@ -11,7 +11,7 @@ const ProtectedRoute = ({
   return user && acceptedRoles.includes(user.role) ? (
     <Element {...rest} />
   ) : (
-    <Navigate to="/login" />
+    <Navigate to="/" />
   );
 };
 

@@ -14,7 +14,8 @@ const EmployeeRota = () => {
     ? Math.ceil(differenceInDays(new Date(date), new Date()) / 7)
     : 0;
 
-  const [rota, setRota] = useState([]);
+  const [rotas, setRotas] = useState([]); // Ensure this is initialized as an empty array
+  const [selectedRota, setSelectedRota] = useState(0);
   const [selectedWeek, setSelectedWeek] = useState(initialSelectedWeek);
   const [error, setError] = useState(null);
 
@@ -29,7 +30,7 @@ const EmployeeRota = () => {
 
   useEffect(() => {
     const fetchRota = async () => {
-      const startOfWeek = calculateWeekStarting(); // Renamed variable
+      const startOfWeek = calculateWeekStarting();
 
       try {
         const response = await ServerApi.get(
@@ -38,13 +39,13 @@ const EmployeeRota = () => {
             withCredentials: true,
           }
         );
-        console.log(response);
-        setRota(response.data.rota);
+        console.log(response.data);
+        setRotas(response.data.rota || []); // Ensure rotas is always an array
         setError(null);
       } catch (err) {
         console.log(err);
         setError("Failed to fetch venues");
-        setRota([]);
+        setRotas([]);
       }
     };
 
@@ -53,56 +54,58 @@ const EmployeeRota = () => {
 
   const dates = Array.from(
     new Set(
-      rota?.rotaData?.flatMap((person) =>
+      rotas[selectedRota]?.rotaData?.flatMap((person) =>
         person.schedule.map((shift) => shift.date)
       )
     )
   ).sort();
 
+  const rotaNames = rotas.map((rota) => rota.name?.split("-")[0]);
+
   return (
     <div className="overflow-x-auto p-4 w-full">
-      <EmployeeToolbar
-        venueName={rota?.name?.split("-")[0]}
-        selectedWeek={selectedWeek}
-        setSelectedWeek={setSelectedWeek}
-        startOfWeek={startOfWeekDate} // Pass renamed variable as a prop
-        rota={rota}
-        setRota={setRota}
-      />
-      <div className="hidden lg:block">
-        <StaticRotaTable rota={rota} dates={dates} />
-      </div>
-      <div className="block lg:hidden">
-        <StaticResponsiveRotaTable
-          rota={rota?.rotaData}
-          dates={dates}
+      <>
+        <EmployeeToolbar
+          venueName={rotas[selectedRota]?.name?.split("-")[0]}
           selectedWeek={selectedWeek}
           setSelectedWeek={setSelectedWeek}
+          startOfWeek={startOfWeekDate}
+          setSelectedRota={setSelectedRota}
+          selectedRota={selectedRota}
+          rotaNames={rotaNames}
         />
-      </div>
-
-      {rota?.rotaData ? (
-        <>
-          <div className="">
-            {!rota.archived && (
+        <div className="hidden lg:block">
+          <StaticRotaTable rota={rotas[selectedRota]} dates={dates} />
+        </div>
+        <div className="block lg:hidden">
+          <StaticResponsiveRotaTable
+            rota={rotas[selectedRota]?.rotaData}
+            dates={dates}
+            selectedWeek={selectedWeek}
+            setSelectedWeek={setSelectedWeek}
+          />
+        </div>
+        {rotas[selectedRota]?.rotaData ? (
+          <div>
+            {!rotas[selectedRota].archived && (
               <ShiftSwap
-                rota={rota}
+                rota={rotas[selectedRota]}
                 weeks={weeks}
                 selectedWeek={selectedWeek}
               />
             )}
           </div>
-        </>
-      ) : (
-        <div>
-          <p className="text-center font-semibold text-md">
-            No Rota has been published for this week yet.
-          </p>
-          <p className="text-center italic">
-            Contact your rota admin for any questions
-          </p>
-        </div>
-      )}
+        ) : (
+          <div>
+            <p className="text-center font-semibold text-md">
+              No Rota has been published for this week yet.
+            </p>
+            <p className="text-center italic">
+              Contact your rota admin for any questions
+            </p>
+          </div>
+        )}
+      </>
     </div>
   );
 };

@@ -24,6 +24,7 @@ import HolidayRequests from "./components/Holiday/HolidayRequests";
 import ArchivedRotas from "./components/ArchivedRota/ArchivedRotas";
 import EmployeeRequests from "./components/Requests/EmployeeRequests";
 import Register from "./components/User/Register";
+import EditVenue from "./components/Venue/EditVenue";
 
 function App() {
   const { state } = userContext();
@@ -47,6 +48,7 @@ function App() {
           <Route path="/venues" element={<Venues />} />
           <Route path="/notifcations" element={<Notifications />} />
           <Route path="/holidayrequests" element={<HolidayRequests />} />
+          <Route path="/editVenue/:venueId" element={<EditVenue />} />
 
           <Route
             path="/rota/:venueId"

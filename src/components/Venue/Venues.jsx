@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ServerApi from "../../serverApi/axios";
 import { useNavigate } from "react-router";
+import { FaInfoCircle } from "react-icons/fa";
 
 const VenueUrl = "api/v1/venue/venues";
 
@@ -8,6 +9,7 @@ const Venues = () => {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +18,7 @@ const Venues = () => {
         const response = await ServerApi.get(VenueUrl, {
           withCredentials: true,
         });
+        console.log(response.data.venues);
         setVenues(response.data.venues);
       } catch (err) {
         setError("Failed to fetch venues");
@@ -41,9 +44,21 @@ const Venues = () => {
     navigate(`/rota/${selectedVenueId}`);
   };
 
+  const handleEditRota = (index) => {
+    const selectedVenueId = venues[index]._id;
+    navigate(`/editvenue/${selectedVenueId}`);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4 font-MainFont">My Venues</h1>
+      <h1 className="text-2xl font-bold mb-4 font-MainFont">My Rotas</h1>
+      <span>
+        <FaInfoCircle />
+        <p>
+          You can create a new Rota for a new Venue or for a sepearte section or
+          team of one venue.
+        </p>
+      </span>
       {venues.length === 0 ? (
         <div className="text-center">No venues found</div>
       ) : (
@@ -70,12 +85,20 @@ const Venues = () => {
                 </ul>
               </div>
               <div>
-                <strong>Employees:</strong>
                 <button
                   className="my-2 border rounded-md "
                   onClick={() => handleViewRota(venueIndex)}
                 >
-                  <p className="p-2">View / Edit Rota</p>
+                  <p className="p-2">View Rota</p>
+                </button>
+                <button
+                  onClick={() => handleEditRota(venueIndex)}
+                  className="my-2 border rounded-md flex"
+                >
+                  <p className="p-2">Edit Rota Details</p>
+                </button>
+                <button className="my-2 border rounded-md flex">
+                  <p className="p-2">View Statistics</p>
                 </button>
               </div>
             </div>

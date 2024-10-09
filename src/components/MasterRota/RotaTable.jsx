@@ -120,7 +120,7 @@ const RotaTable = ({
       <table className="min-w-full bg-white">
         <thead>
           <tr>
-            {rota && rota[0].employeeName && (
+            {rota && rota[0]?.employeeName && (
               <th className="px-4 py-2 border bg-gray-100 select-none">
                 Staff
               </th>
@@ -149,7 +149,7 @@ const RotaTable = ({
             rota?.map((person, personIndex) => (
               <tr key={person.employee}>
                 <td className="border px-4 py-2 select-none">
-                  {person.employeeName}
+                  {person?.employeeName}
                 </td>
                 {dates.map((day, dayIndex) => (
                   <td
@@ -229,7 +229,7 @@ const RotaTable = ({
                 colSpan={dates.length + (showHours ? 2 : 1)}
                 className="px-4 py-2 border bg-gray-100 text-right font-bold"
               >
-                Total Weekly Cost: £{calculateTotalCost().toFixed(2)}
+                Total Weekly Cost: £{rota && calculateTotalCost().toFixed(2)}
               </td>
             </tr>
           </tfoot>

@@ -13,6 +13,7 @@ const userReducer = (state, action) => {
     case "LOGIN":
       return { loggedIn: true, userData: action.payload };
     case "LOGOUT":
+      localStorage.removeItem("selectedVenueID");
       return { loggedIn: false, userData: null };
     default:
       return state;

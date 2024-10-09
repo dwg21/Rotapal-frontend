@@ -41,13 +41,13 @@ const NavbarContent = ({ onLinkClick }) => {
     <>
       <NavbarItem
         icon={<BookText size={20} />}
-        text="View Rota"
+        text="Master Rota"
         linkDestination="/rota"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
         icon={<BookText size={20} />}
-        text="Archived Rotas"
+        text="Statistics"
         linkDestination="/archivedrotas"
         onLinkClick={onLinkClick}
       />
@@ -65,7 +65,7 @@ const NavbarContent = ({ onLinkClick }) => {
       />
       <NavbarItem
         icon={<Home size={20} />}
-        text="Venues"
+        text="Rotas"
         linkDestination="/venues"
         onLinkClick={onLinkClick}
       />
@@ -82,7 +82,7 @@ const NavbarContent = ({ onLinkClick }) => {
     <>
       <NavbarItem
         icon={<BookText size={20} />}
-        text="View Employee Rota"
+        text="Employee Rota"
         linkDestination="/employeerota"
         onLinkClick={onLinkClick}
       />

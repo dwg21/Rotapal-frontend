@@ -33,44 +33,18 @@ const Register = () => {
           name: data.venue.name || "",
           address: data.venue.address || "",
           phone: data.venue.phone || "",
-          openingHours: {
-            monday: {
-              open: data.venue.openingHours.monday?.open || "",
-              close: data.venue.openingHours.monday?.close || "",
-            },
-            tuesday: {
-              open: data.venue.openingHours.tuesday?.open || "",
-              close: data.venue.openingHours.tuesday?.close || "",
-            },
-            wednesday: {
-              open: data.venue.openingHours.wednesday?.open || "",
-              close: data.venue.openingHours.wednesday?.close || "",
-            },
-            thursday: {
-              open: data.venue.openingHours.thursday?.open || "",
-              close: data.venue.openingHours.thursday?.close || "",
-            },
-            friday: {
-              open: data.venue.openingHours.friday?.open || "",
-              close: data.venue.openingHours.friday?.close || "",
-            },
-            saturday: {
-              open: data.venue.openingHours.saturday?.open || "",
-              close: data.venue.openingHours.saturday?.close || "",
-            },
-            sunday: {
-              open: data.venue.openingHours.sunday?.open || "",
-              close: data.venue.openingHours.sunday?.close || "",
-            },
-          },
           employees: data.employees || [],
         },
       };
 
       // Send data to the server
       console.log(formattedData);
+      // const response = await ServerApi.post(
+      //   "/api/v1/venue/registerAndCreateVenue",
+      //   formattedData
+      // );
       const response = await ServerApi.post(
-        "/api/v1/venue/registerAndCreateVenue",
+        "api/v1/auth/register",
         formattedData
       );
       console.log("Registration successful:", response.data);
@@ -186,10 +160,8 @@ const Register = () => {
 
         {currentStep === 2 && (
           <div>
-            <h3 className="text-xl font-semibold mb-2">Venue Details</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              You can skip this section and add venue details later.
-            </p>
+            <h3 className="text-xl font-semibold mb-2">Buisness Details</h3>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Name
@@ -220,49 +192,13 @@ const Register = () => {
                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Opening Hours
-              </label>
-              <div className="space-y-2">
-                {[
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ].map((day) => (
-                  <div key={day} className="flex items-center space-x-2">
-                    <span className="w-20">{day}</span>
-                    <input
-                      {...register(
-                        `venue.openingHours.${day.toLowerCase()}.open`
-                      )}
-                      type="time"
-                      className="p-2 border border-gray-300 rounded-md"
-                    />
-                    <input
-                      {...register(
-                        `venue.openingHours.${day.toLowerCase()}.close`
-                      )}
-                      type="time"
-                      className="p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
         {currentStep === 3 && (
           <div>
             <h3 className="text-xl font-semibold mb-2">Employee Details</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              You can skip this section and add employee details later.
-            </p>
+
             {fields.map((field, index) => (
               <div key={field.id} className="flex items-center space-x-2">
                 <input
@@ -320,15 +256,6 @@ const Register = () => {
           )}
           {currentStep < 3 ? (
             <>
-              {currentStep !== 1 && (
-                <button
-                  type="button"
-                  onClick={skipStep}
-                  className="py-2 px-4 bg-gray-200 rounded-md"
-                >
-                  Skip
-                </button>
-              )}
               <button
                 type="button"
                 onClick={nextStep}

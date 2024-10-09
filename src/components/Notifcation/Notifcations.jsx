@@ -30,12 +30,12 @@ const NotificationCard = ({
         <CustButton
           title="Approve"
           color="#4DEF89"
-          onClick={() => onApprove(notification._id)}
+          ButtonFunction={() => onApprove(notification._id)}
         />
         <CustButton
           title="Decline"
           color="#EF4D62"
-          onClick={() => onDecline(notification._id)}
+          ButtonFunction={() => onDecline(notification._id)}
         />
       </div>
     </div>

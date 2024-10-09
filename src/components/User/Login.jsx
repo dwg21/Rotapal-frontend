@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ServerApi from "../../serverApi/axios";
 import { useNavigate } from "react-router";
+import { Link } from "react-router-dom";
 
 import { userContext } from "../../Context/UserContext";
 
@@ -35,6 +36,7 @@ const Login = () => {
       dispatch({ type: "LOGIN", payload: data.user });
       navigate("/venues");
       setLoginUser({ email: "", password: "" });
+      console.log(data);
     } catch (error) {
       console.log(error);
       // setErrMsg(error.response.data.msg);x
@@ -98,7 +100,7 @@ const Login = () => {
               class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
               onChange={handleChange}
             />
-            {regsiterActive && (
+            {/* {regsiterActive && (
               <>
                 <label class="font-semibold text-sm text-gray-600 pb-1 block">
                   Name
@@ -110,7 +112,7 @@ const Login = () => {
                   class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
                 />
               </>
-            )}
+            )} */}
 
             <button
               type="button"
@@ -136,27 +138,30 @@ const Login = () => {
             <p className="  font-thin text-sm  text-blue-600 my-3 text-center">
               Dont have an account?
             </p>
-            <button
-              type="button"
-              class="transition duration-200 bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:shadow-sm focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block my-1"
-              onClick={handleClickRegister}
-            >
-              <span class="inline-block mr-2">Register</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                class="w-4 h-4 inline-block"
+
+            <Link to="/register">
+              <button
+                type="button"
+                class="transition duration-200 bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:shadow-sm focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block my-1"
+                // onClick={handleClickRegister}
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </button>
+                <span class="inline-block mr-2">Register</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  class="w-4 h-4 inline-block"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </button>
+            </Link>
           </div>
           <div class="py-5">
             <div class="grid grid-cols-2 gap-1">

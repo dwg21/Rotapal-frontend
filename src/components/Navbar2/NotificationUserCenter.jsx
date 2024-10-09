@@ -15,8 +15,6 @@ const NotificationUserCenter = () => {
 
   const { notifications, loading, error } = useNotifications();
 
-  console.log(notifications);
-
   // Refs to detect clicks outside of the dropdowns
   const notificationRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -60,7 +58,7 @@ const NotificationUserCenter = () => {
 
   const handleLogout = async () => {
     try {
-      await ServerApi.get("api/v1/auth/logout");
+      await ServerApi.post("api/v1/auth/logout");
       dispatch({ type: "LOGOUT" });
     } catch (err) {
       console.log(err);

@@ -10,6 +10,7 @@ import { getDayLabel } from "../../Utils/utils";
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
 import FilterButton from "./FilterButton";
+import RotaDropdown from "../EmployeeRota/RotaDropdown";
 
 const EmployeeToolbar = ({
   venueName,
@@ -19,6 +20,9 @@ const EmployeeToolbar = ({
   setShowCost,
   showHours,
   setShowHours,
+  rotaNames,
+  setSelectedRota,
+  selectedRota,
 }) => {
   const handleChangeWeek = (direction) => {
     if (direction === "right") {
@@ -49,13 +53,35 @@ const EmployeeToolbar = ({
 
   return (
     <div>
-      <p className="text-md text-center font-semibold mr-4 md:text-base md:hidden ">
-        {venueName && venueName}
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-4 py-2 my-1 border-b w-full md:gap-6 md:flex-nowrap">
-        <p className="text-sm font-semibold mr-4 md:text-base hidden md:block">
-          {venueName && venueName}
+      {/* {rotaNames.map((name, index) => (
+        <p
+          className="text-md text-center font-semibold mr-4 md:text-base md:hidden "
+          onClick={() => setSelectedRota(index)}
+        >
+          {name}
         </p>
+      ))} */}
+      {/* <div className="md:hidden">
+        <RotaDropdown
+          rotaNames={rotaNames}
+          setSelectedRota={setSelectedRota}
+          selectedRota={selectedRota}
+        />
+      </div> */}
+
+      {/* <p className="text-md text-center font-semibold mr-4 md:text-base md:hidden ">
+        {venueName && venueName}
+      </p> */}
+      <div className="flex flex-wrap items-center justify-center gap-4 py-2 my-1 border-b w-full md:gap-6 md:flex-nowrap">
+        {/* <p className="text-sm font-semibold mr-4 md:text-base hidden md:block">
+          {venueName && venueName}
+        </p> */}
+
+        <RotaDropdown
+          rotaNames={rotaNames}
+          setSelectedRota={setSelectedRota}
+          selectedRota={selectedRota}
+        />
 
         <div className="justify-center items-center w-full md:w-[300px] gap-1 p-2 hidden  md:flex">
           <IoMdArrowDropleft

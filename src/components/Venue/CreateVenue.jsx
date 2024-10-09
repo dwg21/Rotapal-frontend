@@ -1,15 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { userContext } from "../../Context/UserContext";
 import ServerApi from "../../serverApi/axios";
 import { useNavigate } from "react-router";
+import CustButton from "../misc/CustButton";
+import { em } from "polished";
 
 const CreateVenue = () => {
+  const selectedVenueId = localStorage.getItem("selectedVenueID");
+  const [employees, setEmployees] = useState([]);
   const { register, handleSubmit, reset, control } = useForm();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "employees",
   });
+
+  const fetchEmployees2 = useCallback(async () => {
+    try {
+      const { data } = await ServerApi.get(`api/v1/business/getEmployees`, {
+        withCredentials: true,
+      });
+      setEmployees(data.employees);
+      console.log(data.employees);
+    } catch (err) {
+      console.log(err.stack);
+    }
+  }, [selectedVenueId]);
+
+  useEffect(() => {
+    fetchEmployees2();
+  }, [fetchEmployees2]);
 
   const [employeeName, setEmployeeName] = useState("");
   const [employeeWage, setEmployeeWage] = useState("");
@@ -26,6 +46,7 @@ const CreateVenue = () => {
       console.error("Error creating venue:", error);
     }
   };
+
   const addEmployee = () => {
     append({
       name: employeeName,
@@ -36,7 +57,21 @@ const CreateVenue = () => {
     setEmployeeWage("");
     setEmployeeEmail("");
   };
+
+  // Add existing employee to the form
+  // Add existing employee to the form
+  const handleAddOldEmployee = (name, email, salary, event) => {
+    event.preventDefault(); // Prevent form submission
+    console.log(name, email, salary);
+    append({
+      name: name,
+      email: email,
+      hourlyWage: salary,
+    });
+  };
+
   const { state } = userContext();
+
   return (
     <div className="p-6">
       <h2 className=" font-bold text-2xl">Venues</h2>
@@ -44,7 +79,7 @@ const CreateVenue = () => {
         {state.loggedIn && <>Hello {state.userData.name}</>}
       </div>
       <div className="mx-auto  max-w-[900px] mt-10 p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6">Create New Venue</h2>
+        <h2 className="text-2xl font-bold mb-6">Create New Rota</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -113,6 +148,32 @@ const CreateVenue = () => {
             <label className="block text-sm font-medium text-gray-700">
               Staff
             </label>
+
+            {/* List of already registered staff */}
+
+            <div className="py-2">
+              {employees.map((employee) => (
+                <ul className="" key={employee._id}>
+                  <li className="my-4">
+                    {employee.name}{" "}
+                    <button
+                      className=" p-1 bg-slate-400 rounded-md px-3  py-2 "
+                      onClick={(event) =>
+                        handleAddOldEmployee(
+                          employee.name,
+                          employee.email,
+                          employee.hourlyWage,
+                          event
+                        )
+                      }
+                    >
+                      Add
+                    </button>
+                  </li>
+                </ul>
+              ))}
+            </div>
+
             <div className="space-y-2">
               {fields.map((field, index) => (
                 <div key={field.id} className="flex items-center space-x-2">
@@ -183,7 +244,7 @@ const CreateVenue = () => {
             type="submit"
             className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
-            Create Venue
+            Create Rota
           </button>
         </form>
       </div>
