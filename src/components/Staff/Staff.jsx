@@ -1,16 +1,40 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ServerApi from "../../serverApi/axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Staff = () => {
   const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [employees, setEmployees] = useState([]);
-  const [editingEmployeeId, setEditingEmployeeId] = useState(null);
-  const [editedEmployee, setEditedEmployee] = useState({
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [newEmployee, setNewEmployee] = useState({
     name: "",
-    hourlyWage: "",
+    wage: "",
+    email: "",
   });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [error, setError] = useState("");
 
-  // Fetch employees
   const fetchEmployees = useCallback(async () => {
     try {
       const { data } = await ServerApi.get(`api/v1/business/getEmployees`, {
@@ -18,7 +42,7 @@ const Staff = () => {
       });
       setEmployees(data.employees);
     } catch (err) {
-      console.log(err.stack);
+      setError("Failed to fetch employees. Please try again.");
     }
   }, [selectedVenueId]);
 
@@ -26,7 +50,6 @@ const Staff = () => {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  // Delete employee
   const handleDelete = async (employeeId) => {
     try {
       await ServerApi.delete(`api/v1/employee/${employeeId}`, {
@@ -36,57 +59,38 @@ const Staff = () => {
         prevEmployees.filter((employee) => employee._id !== employeeId)
       );
     } catch (err) {
-      console.log(err);
+      setError("Failed to delete employee. Please try again.");
     }
   };
 
-  // Edit employee
   const handleEdit = (employee) => {
-    setEditingEmployeeId(employee._id);
-    setEditedEmployee({
-      name: employee.name,
-      hourlyWage: employee.hourlyWage,
-    });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditedEmployee((prev) => ({ ...prev, [name]: value }));
+    setEditingEmployee(employee);
+    setIsEditDialogOpen(true);
   };
 
   const handleEditSubmit = async () => {
     try {
       await ServerApi.put(
-        `api/v1/employee/${editingEmployeeId}`,
-        editedEmployee,
+        `api/v1/employee/${editingEmployee._id}`,
+        editingEmployee,
         { withCredentials: true }
       );
       setEmployees((prevEmployees) =>
         prevEmployees.map((employee) =>
-          employee._id === editingEmployeeId
-            ? { ...employee, ...editedEmployee }
+          employee._id === editingEmployee._id
+            ? { ...employee, ...editingEmployee }
             : employee
         )
       );
-      setEditingEmployeeId(null);
+      setIsEditDialogOpen(false);
     } catch (err) {
-      console.log(err);
+      setError("Failed to update employee. Please try again.");
     }
   };
 
-  // For adding a new employee
-  const [newEmployee, setNewEmployee] = useState({
-    name: "",
-    wage: 0,
-    email: "",
-  });
-
   const handleNewEmployeeChange = (e) => {
     const { name, value } = e.target;
-    setNewEmployee((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewEmployee((prev) => ({ ...prev, [name]: value }));
   };
 
   const submitNewEmployee = async () => {
@@ -101,174 +105,175 @@ const Staff = () => {
         { withCredentials: true }
       );
       setEmployees((prev) => [...prev, data.employee]);
-      setNewEmployee({ name: "", wage: 0, email: "" });
+      setNewEmployee({ name: "", wage: "", email: "" });
+      setIsAddDialogOpen(false);
     } catch (err) {
-      console.error("Error adding new employee:", err);
+      setError("Failed to add new employee. Please try again.");
     }
   };
 
   return (
-    <div className="p-4">
-      <h1 className="p-2 text-2xl font-bold text-gray-900">
-        View/Edit Employees
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        Staff Management
       </h1>
-      <p className="p-2 mb-4 text-gray-700">
-        Manage your staff information. Only Admins can add, edit, or delete
-        staff.
-      </p>
 
-      <div className="flex flex-col">
-        <div className="overflow-x-auto w-full">
-          <div className="inline-block min-w-full align-middle">
-            <div className="border rounded-lg shadow overflow-hidden w-full">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
-                      Wage
-                    </th>
-                    <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">
-                      Edit
-                    </th>
-                    <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">
-                      Delete
-                    </th>
-                    <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">
-                      Account Status
-                    </th>
-                    <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">
-                      Role
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {employees.map((employee) => (
-                    <tr key={employee._id}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                        {editingEmployeeId === employee._id ? (
-                          <input
-                            type="text"
-                            name="name"
-                            value={editedEmployee.name}
-                            onChange={handleEditChange}
-                            className="border px-2 py-1 rounded"
-                          />
-                        ) : (
-                          employee.name
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-800">
-                        {employee.email}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-800">
-                        {editingEmployeeId === employee._id ? (
-                          <input
-                            type="number"
-                            name="hourlyWage"
-                            value={editedEmployee.hourlyWage}
-                            onChange={handleEditChange}
-                            className="border px-2 py-1 rounded"
-                          />
-                        ) : (
-                          employee.hourlyWage
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-end text-sm font-medium">
-                        {editingEmployeeId === employee._id ? (
-                          <button
-                            type="button"
-                            onClick={handleEditSubmit}
-                            className="text-green-600 hover:text-green-800"
-                          >
-                            Submit
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(employee)}
-                            className="text-green-600 hover:text-green-800"
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-end text-sm font-medium">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(employee._id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-end text-sm font-medium">
-                        Account Created
-                      </td>
-                      <td className="px-6 py-4 text-end text-sm font-medium">
-                        {employee.role ? employee.role : "Employee"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-        {/* Add New Employee Section */}
-        <h2 className="mt-8 text-xl font-bold text-gray-900">
-          Add New Employee
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitNewEmployee();
-          }}
-          className="mt-4 space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={newEmployee.name}
-              onChange={handleNewEmployeeChange}
-              className="border px-4 py-2 rounded w-full"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={newEmployee.email}
-              onChange={handleNewEmployeeChange}
-              className="border px-4 py-2 rounded w-full"
-              required
-            />
-            <input
-              type="number"
-              name="wage"
-              placeholder="Hourly Wage"
-              value={newEmployee.wage}
-              onChange={handleNewEmployeeChange}
-              className="border px-4 py-2 rounded w-full"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Add Employee
-          </button>
-        </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>Employee List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Wage</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {employees.map((employee) => (
+                <TableRow key={employee._id}>
+                  <TableCell>{employee.name}</TableCell>
+                  <TableCell>{employee.email}</TableCell>
+                  <TableCell>${employee.hourlyWage}/hr</TableCell>
+                  <TableCell>{employee.role || "Employee"}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(employee)}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" /> Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(employee._id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <div className="mt-6">
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>Add New Employee</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Employee</DialogTitle>
+            </DialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitNewEmployee();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={newEmployee.name}
+                  onChange={handleNewEmployeeChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={newEmployee.email}
+                  onChange={handleNewEmployeeChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="wage">Hourly Wage</Label>
+                <Input
+                  id="wage"
+                  name="wage"
+                  type="number"
+                  value={newEmployee.wage}
+                  onChange={handleNewEmployeeChange}
+                  required
+                />
+              </div>
+              <Button type="submit">Add Employee</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+          </DialogHeader>
+          {editingEmployee && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleEditSubmit();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editingEmployee.name}
+                  onChange={(e) =>
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      name: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-wage">Hourly Wage</Label>
+                <Input
+                  id="edit-wage"
+                  type="number"
+                  value={editingEmployee.hourlyWage}
+                  onChange={(e) =>
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      hourlyWage: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <Button type="submit">Update Employee</Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

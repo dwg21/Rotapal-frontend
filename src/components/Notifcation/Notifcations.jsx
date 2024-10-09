@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from "react";
-import ServerApi from "../../serverApi/axios";
+import React from "react";
 import { useNotifications } from "../../Context/NotificationContext";
-import CustButton from "../misc/CustButton";
+import ServerApi from "../../serverApi/axios";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const NotificationCard = ({
   notification,
@@ -9,90 +14,106 @@ const NotificationCard = ({
   onDecline,
   onMarkAsRead,
 }) => {
+  const { toast } = useToast();
+
   const handleStatusClick = async () => {
     try {
-      const test = await ServerApi.put(
+      await ServerApi.put(
         `http://localhost:5000/api/v1/notifcations/read/${notification._id}`
       );
-      console.log(test);
       onMarkAsRead(notification._id);
+      toast({
+        title: "Notification status updated",
+        description: `Marked as ${notification.isRead ? "unread" : "read"}.`,
+      });
     } catch (error) {
       console.error("Error marking notification as read:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update notification status.",
+      });
     }
   };
 
   const renderShiftSwapRequest = () => (
-    <div>
-      <p className="text-gray-700 mb-2">
-        {notification.message || "You have a new shift swap request."}
-      </p>
-      <div className="flex space-x-4 mt-2">
-        <CustButton
-          title="Approve"
-          color="#4DEF89"
-          ButtonFunction={() => onApprove(notification._id)}
-        />
-        <CustButton
-          title="Decline"
-          color="#EF4D62"
-          ButtonFunction={() => onDecline(notification._id)}
-        />
+    <>
+      <CardContent>
+        <p className="text-gray-700 mb-4">
+          {notification.message || "You have a new shift swap request."}
+        </p>
+      </CardContent>
+      <div className="flex justify-end space-x-4 px-6 pb-4">
+        <Button variant="outline" onClick={() => onDecline(notification._id)}>
+          <XCircle className="mr-2 h-4 w-4" /> Decline
+        </Button>
+        <Button onClick={() => onApprove(notification._id)}>
+          <CheckCircle className="mr-2 h-4 w-4" /> Approve
+        </Button>
       </div>
-    </div>
+    </>
   );
 
   const renderHolidayRequest = () => (
-    <div>
-      <p className="text-gray-700 mb-2">
-        {`${
-          notification?.user?.name || "A user"
-        } has requested annual leave on ${notification?.date || "a date"}.`}
-      </p>
-      <div className="flex space-x-4 mt-2">
-        <CustButton
-          title="Approve"
-          color="#4DEF89"
-          onClick={() => onApprove(notification._id)}
-        />
-        <CustButton
-          title="Decline"
-          color="#EF4D62"
-          onClick={() => onDecline(notification._id)}
-        />
+    <>
+      <CardContent>
+        <p className="text-gray-700 mb-4">
+          {`${
+            notification?.user?.name || "A user"
+          } has requested annual leave on ${notification?.date || "a date"}.`}
+        </p>
+      </CardContent>
+      <div className="flex justify-end space-x-4 px-6 pb-4">
+        <Button variant="outline" onClick={() => onDecline(notification._id)}>
+          <XCircle className="mr-2 h-4 w-4" /> Decline
+        </Button>
+        <Button onClick={() => onApprove(notification._id)}>
+          <CheckCircle className="mr-2 h-4 w-4" /> Approve
+        </Button>
       </div>
-    </div>
+    </>
   );
 
   const renderDefaultNotification = () => (
-    <div>
+    <CardContent>
       <p className="text-gray-700 mb-2">
         {notification.message || "You have a new notification."}
       </p>
       <p className="text-gray-500 text-sm mb-2">
         {notification.created || "No date provided"}
       </p>
-      <span
-        className={`text-sm cursor-pointer ${
-          notification.isRead ? "text-green-500" : "text-red-500"
-        }`}
+      <Badge
+        variant={notification.isRead ? "outline" : "secondary"}
+        className="cursor-pointer"
         onClick={handleStatusClick}
       >
         {notification.isRead ? "Read" : "Unread"}
-      </span>
-    </div>
+      </Badge>
+    </CardContent>
   );
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 mb-4">
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="text-lg">
+          {notification.type === "shiftSwapRequest" && "Shift Swap Request"}
+          {notification.type === "holiday" && "Holiday Request"}
+          {!["shiftSwapRequest", "holiday"].includes(notification.type) &&
+            "Notification"}
+        </CardTitle>
+      </CardHeader>
       {notification.type === "shiftSwapRequest"
         ? renderShiftSwapRequest()
         : notification.type === "holiday"
         ? renderHolidayRequest()
         : renderDefaultNotification()}
-    </div>
+    </Card>
   );
 };
+
 const Notifications = () => {
+  const { toast } = useToast();
+
   const {
     notifications,
     loading,
@@ -106,8 +127,17 @@ const Notifications = () => {
     try {
       await ServerApi.put(`/api/v1/swap/employeeApproveShiftSwap/${requestId}`);
       setNotifications(notifications.filter((n) => n._id !== requestId));
+      toast({
+        title: "Request Approved",
+        description: "The request has been successfully approved.",
+      });
     } catch (error) {
       console.error("Error approving shift swap:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to approve the request.",
+      });
     }
   };
 
@@ -115,8 +145,17 @@ const Notifications = () => {
     try {
       await ServerApi.put(`/api/v1/swap/declineShiftSwap/${requestId}`);
       setNotifications(notifications.filter((n) => n._id !== requestId));
+      toast({
+        title: "Request Declined",
+        description: "The request has been declined.",
+      });
     } catch (error) {
       console.error("Error declining shift swap:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to decline the request.",
+      });
     }
   };
 
@@ -128,27 +167,45 @@ const Notifications = () => {
     );
   };
 
-  if (loading) return <div className="text-center mt-8">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+
   if (error)
-    return <div className="text-center mt-8 text-red-500">{error}</div>;
+    return (
+      <div className="text-center mt-8 text-red-500">
+        <p>Error loading notifications</p>
+        <p className="text-sm">{error}</p>
+      </div>
+    );
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 flex flex-col p-4">
-      <div className="items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold mb-4">Notifications</h2>
-        <label className="inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            className="sr-only peer"
+    <div className="max-w-2xl mx-auto mt-8 p-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold">Notifications and Requests</h2>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="include-read"
             checked={includeRead}
-            onChange={() => setIncludeRead(!includeRead)}
+            onCheckedChange={setIncludeRead}
           />
-          <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-          <span className="ms-3 text-sm font-medium">Include Read</span>
-        </label>
+          <label
+            htmlFor="include-read"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Include Read
+          </label>
+        </div>
       </div>
       {notifications.length === 0 ? (
-        <p className="text-center text-gray-500">No notifications found.</p>
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-500">No notifications found.</p>
+          </CardContent>
+        </Card>
       ) : (
         notifications.map((notification) => (
           <NotificationCard
