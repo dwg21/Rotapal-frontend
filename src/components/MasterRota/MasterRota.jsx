@@ -19,7 +19,8 @@ import RotaTable from "./RotaTable";
 import RotaTableResponsive from "./RotaTableResponsive";
 
 const MasterRota = () => {
-  const selectedVenueId = localStorage.getItem("selectedVenueID");
+  const selectedVenueId = localStorage.getItem("selectedVenueID") || "default";
+  console.log("The selected venue is", selectedVenueId);
   const [showCost, setShowCost] = useState(false); // Toggle visibility of staff costing information
   const [showHours, setShowHours] = useState(false); //Toggle visibility of staff hours information
 

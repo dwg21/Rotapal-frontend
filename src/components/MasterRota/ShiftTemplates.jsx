@@ -1,50 +1,75 @@
 import React, { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { IoMdAdd, IoIosArrowDown } from "react-icons/io";
-import { IoTrashBin } from "react-icons/io5";
+import { Plus, ChevronDown, Trash2, GripVertical } from "lucide-react";
 import ServerApi from "../../serverApi/axios";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DraggableTemplate = ({ shift }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: shift.id,
-    data: {
-      droppableContainer: { id: "commonShifts" },
-      shift,
-    },
-  });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: shift.id,
+      data: {
+        droppableContainer: { id: "commonShifts" },
+        shift,
+      },
+    });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
 
   return (
     <div
       ref={setNodeRef}
+      style={style}
       {...attributes}
-      {...listeners}
-      className={`p-2 border cursor-pointer mb-2 mr-2 ${
+      className={`flex items-center w-[200px] justify-between p-2 mb-2 border rounded-md bg-white shadow-sm ${
         isDragging ? "opacity-50" : ""
       }`}
     >
-      <div className="flex gap-4">
-        {shift.desc}
-        <button onClick={() => shift.handleDeleteTemplate(shift.id)}>
-          <IoTrashBin />
-        </button>
+      <div className="flex items-center">
+        <GripVertical className="mr-2 h-4 w-4 cursor-move" {...listeners} />
+        <span>{shift.desc}</span>
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => shift.handleDeleteTemplate(shift.id)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
 
 const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
-  // State to handle new custom template
   const [newTemplateLabel, setNewTemplateLabel] = useState("");
   const [newTemplateStartTime, setNewTemplateStartTime] = useState("");
   const [newTemplateEndTime, setNewTemplateEndTime] = useState("");
-  const [addTemplateVisible, setAddTemplateVisible] = useState(false);
-  const [detailsVisible, setDetailsVisible] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Function to handle adding a new custom template to database
   const handleAddNewTemplate = async (e) => {
     e.preventDefault();
     if (
-      // newTemplateLabel.trim() === "" ||
       newTemplateStartTime.trim() === "" ||
       newTemplateEndTime.trim() === ""
     ) {
@@ -66,10 +91,12 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
         { withCredentials: true }
       );
       setCommonShifts(response.data.commonShifts);
-      setAddTemplateVisible(false);
-      console.log(response);
+      setIsDialogOpen(false);
+      setNewTemplateLabel("");
+      setNewTemplateStartTime("");
+      setNewTemplateEndTime("");
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
@@ -81,70 +108,88 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
       );
       setCommonShifts(response.data.commonShifts);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
   return (
-    <div className="p-4 m-1 border">
-      <div className="flex items-center justify-between">
-        <p className="font-bold text-xl">Shift Templates</p>
-        <IoIosArrowDown
-          className="cursor-pointer text-xl"
-          onClick={() => setDetailsVisible(!detailsVisible)}
-        />
-      </div>
-
-      {detailsVisible && (
-        <div>
-          <p>Drag and drop these shifts onto the rota.</p>
-          <div className="mb-4 flex space-x-4 my-4">
-            {commonShifts.map((shift) => (
-              <DraggableTemplate
-                key={shift.id}
-                shift={{ ...shift, handleDeleteTemplate }}
+    <Card>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Shift Templates</span>
+            <CollapsibleTrigger>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${
+                  isOpen ? "transform rotate-180" : ""
+                }`}
               />
-            ))}
-            <button onClick={() => setAddTemplateVisible(!addTemplateVisible)}>
-              <IoMdAdd />
-            </button>
-          </div>
-          {/* Form to add a new custom shift template */}
-          {addTemplateVisible && (
-            <form onSubmit={handleAddNewTemplate} className="mb-4">
-              <h3 className="mb-2">Add Custom Shift Template</h3>
-              <div className="flex space-x-2 mb-2">
-                <input
-                  type="text"
-                  value={newTemplateLabel}
-                  onChange={(e) => setNewTemplateLabel(e.target.value)}
-                  placeholder="Shift Label"
-                  className="border px-2 py-1"
-                />
-                <input
-                  type="time"
-                  value={newTemplateStartTime}
-                  onChange={(e) => setNewTemplateStartTime(e.target.value)}
-                  className="border px-2 py-1"
-                />
-                <input
-                  type="time"
-                  value={newTemplateEndTime}
-                  onChange={(e) => setNewTemplateEndTime(e.target.value)}
-                  className="border px-2 py-1"
-                />
+            </CollapsibleTrigger>
+          </CardTitle>
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent>
+            <p className="mb-4">Drag and drop these shifts onto the rota.</p>
+            <ScrollArea className="h-[200px] w-full rounded-md border p-4  ">
+              <div className="space-y-2">
+                {commonShifts.map((shift) => (
+                  <DraggableTemplate
+                    key={shift.id}
+                    shift={{ ...shift, handleDeleteTemplate }}
+                  />
+                ))}
               </div>
-              <button
-                type="submit"
-                className="px-4 py-2 border rounded bg-blue-500 text-white"
-              >
-                Add Template
-              </button>
-            </form>
-          )}
-        </div>
-      )}
-    </div>
+            </ScrollArea>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="mt-4">
+                  <Plus className="mr-2 h-4 w-4" /> Add Custom Template
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Custom Shift Template</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddNewTemplate} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="template-label">Shift Label</Label>
+                    <Input
+                      id="template-label"
+                      value={newTemplateLabel}
+                      onChange={(e) => setNewTemplateLabel(e.target.value)}
+                      placeholder="Enter shift label"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start-time">Start Time</Label>
+                      <Input
+                        id="start-time"
+                        type="time"
+                        value={newTemplateStartTime}
+                        onChange={(e) =>
+                          setNewTemplateStartTime(e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="end-time">End Time</Label>
+                      <Input
+                        id="end-time"
+                        type="time"
+                        value={newTemplateEndTime}
+                        onChange={(e) => setNewTemplateEndTime(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit">Add Template</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 };
 

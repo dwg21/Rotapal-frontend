@@ -49,6 +49,7 @@ function App() {
           <Route path="/notifcations" element={<Notifications />} />
           <Route path="/holidayrequests" element={<HolidayRequests />} />
           <Route path="/editVenue/:venueId" element={<EditVenue />} />
+          <Route path="/settings" element={<Settings />} />
 
           <Route
             path="/rota/:venueId"
@@ -65,17 +66,6 @@ function App() {
             element={
               <ProtectedRoute
                 element={MasterRota}
-                user={state.userData}
-                acceptedRoles={["admin", "AccountOwner"]}
-              />
-            }
-          />
-
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute
-                element={Settings}
                 user={state.userData}
                 acceptedRoles={["admin", "AccountOwner"]}
               />

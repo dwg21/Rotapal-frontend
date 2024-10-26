@@ -1,235 +1,123 @@
 import React, { useState } from "react";
-import ServerApi from "../../serverApi/axios";
-import { useNavigate } from "react-router";
-import { Link } from "react-router-dom";
-
+import { useNavigate, Link } from "react-router-dom";
 import { userContext } from "../../Context/UserContext";
+import ServerApi from "../../serverApi/axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginUrl = "api/v1/auth/login";
-const registerUrl = "api/v1/auth/register";
 
 const Login = () => {
-  const { state, dispatch } = userContext();
+  const { dispatch } = userContext();
   const navigate = useNavigate();
-
-  //contians login and register data
-  const [loginUser, setLoginUser] = useState({
-    email: "",
-    password: "",
-    name: "",
-  });
-
-  const [errMsg, setErrMsg] = useState(null);
+  const [user, setUser] = useState({ email: "", password: "" });
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
-    setLoginUser({ ...loginUser, [e.target.name]: e.target.value });
+    setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const loginSubmit = async (e) => {
-    e.preventDefault(); //stops reloading page
-    const { email, password } = loginUser;
-    const loginUserJson = { email, password };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const { data } = await ServerApi.post(loginUrl, loginUserJson, {
+      const { data } = await ServerApi.post(loginUrl, user, {
         withCredentials: true,
       });
       dispatch({ type: "LOGIN", payload: data.user });
       navigate("/venues");
-      setLoginUser({ email: "", password: "" });
-      console.log(data);
+      setUser({ email: "", password: "" });
     } catch (error) {
-      console.log(error);
-      // setErrMsg(error.response.data.msg);x
-      // console.log({ text: error.response.data.msg });
+      console.error(error);
+      setError(
+        error.response?.data?.msg || "An error occurred. Please try again."
+      );
     }
   };
 
-  const handleClickRegister = (e) => {
-    e.preventDefault();
-    if (regsiterActive === false) {
-      setRegsiterActive(true);
-    } else {
-      handleRegister(e);
-    }
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-
-    const { name, email, password } = loginUser;
-    const registerUserJson = { name, email, password };
-    try {
-      const { data } = await ServerApi.post(registerUrl, registerUserJson, {
-        withCredentials: true,
-      });
-      console.log(data);
-      dispatch({ type: "LOGIN", payload: data.user });
-      navigate("/venues");
-      setLoginUser({ name: "", email: "", password: "" });
-    } catch (error) {
-      console.log(error);
-      // setErrMsg(error.response.data.msg);x
-      // console.log({ text: error.response.data.msg });
-    }
-  };
-
-  const [regsiterActive, setRegsiterActive] = useState(false);
   return (
-    <div class="min-h-screen w-screen bg-gray-100 flex flex-col justify-center sm:py-12">
-      <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
-        <h1 class="font-bold text-center text-2xl mb-5">RotaPal</h1>
-        <div class="bg-white shadow w-full rounded-lg divide-y divide-gray-200">
-          <div class="px-5 py-7">
-            <label class="font-semibold text-sm text-gray-600 pb-1 block">
-              E-mail
-            </label>
-            <input
-              name="email"
-              value={loginUser.email}
-              type="text"
-              class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
-              onChange={handleChange}
-            />
-            <label class="font-semibold text-sm text-gray-600 pb-1 block">
-              Password
-            </label>
-            <input
-              name="password"
-              value={loginUser.password}
-              type="text"
-              class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
-              onChange={handleChange}
-            />
-            {/* {regsiterActive && (
-              <>
-                <label class="font-semibold text-sm text-gray-600 pb-1 block">
-                  Name
-                </label>
-                <input
-                  name="name"
-                  onChange={handleChange}
-                  type="text"
-                  class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
-                />
-              </>
-            )} */}
-
-            <button
-              type="button"
-              class="transition duration-200 bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:shadow-sm focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"
-              onClick={loginSubmit}
-            >
-              <span class="inline-block mr-2">Login</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                class="w-4 h-4 inline-block"
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 w-full">
+      <Card className=" max-w-[600px] min-w-[350px]">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            RotaPal
+          </CardTitle>
+          <CardDescription>Login to your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </button>
-            <p className="  font-thin text-sm  text-blue-600 my-3 text-center">
-              Dont have an account?
-            </p>
-
-            <Link to="/register">
-              <button
-                type="button"
-                class="transition duration-200 bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:shadow-sm focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block my-1"
-                // onClick={handleClickRegister}
+                Email
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                value={user.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-gray-700"
               >
-                <span class="inline-block mr-2">Register</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  class="w-4 h-4 inline-block"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </button>
-            </Link>
-          </div>
-          <div class="py-5">
-            <div class="grid grid-cols-2 gap-1">
-              <div class="text-center sm:text-left whitespace-nowrap">
-                <button class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 ring-inset">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    class="w-4 h-4 inline-block align-text-top"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span class="inline-block ml-1">Forgot Password</span>
-                </button>
-              </div>
-              <div class="text-center sm:text-right  whitespace-nowrap">
-                <button class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 ring-inset">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    class="w-4 h-4 inline-block align-text-bottom	"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <span class="inline-block ml-1">Help</span>
-                </button>
-              </div>
+                Password
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={user.password}
+                onChange={handleChange}
+                required
+              />
             </div>
+            <Button type="submit" className="w-full">
+              Login
+            </Button>
+          </form>
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">Don't have an account?</p>
+            <Button variant="link" asChild className="p-0">
+              <Link
+                to="/register"
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Register here
+              </Link>
+            </Button>
           </div>
-        </div>
-        <div class="py-5">
-          <div class="grid grid-cols-2 gap-1">
-            <div class="text-center sm:text-left whitespace-nowrap">
-              <button class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-200 focus:outline-none focus:bg-gray-300 focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 ring-inset">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  class="w-4 h-4 inline-block align-text-top"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-                <span class="inline-block ml-1">Back to your-app.com</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/forgot-password">Forgot password</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/help">Help</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
