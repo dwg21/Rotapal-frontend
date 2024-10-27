@@ -39,25 +39,86 @@ const formatDate = (dateString, scope) => {
 };
 
 const VenueStatistics = () => {
-  const selectedVenueId = localStorage.getItem("selectedVenueID");
-  const [statisticsData, setStatisticsData] = useState([]);
+  const [allVenuesData, setAllVenuesData] = useState({});
+  const [selectedVenueId, setSelectedVenueId] = useState("all");
   const [chartType, setChartType] = useState("line");
   const [scope, setScope] = useState("weeks");
 
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
-        const response = await ServerApi.get(
-          `api/v1/venue/venues/${selectedVenueId}`
-        );
-        setStatisticsData(response.data.venue.statistics);
+        const response = await ServerApi.get(`api/v1/business/getStatistics`);
+        setAllVenuesData(response.data.statistics);
       } catch (err) {
         console.error("Failed to fetch venue statistics", err);
       }
     };
 
     fetchStatistics();
-  }, [selectedVenueId]);
+  }, []);
+
+  const formatDate = (dateString, scope) => {
+    const date = new Date(dateString);
+    switch (scope) {
+      case "weeks":
+        return `Week ${date.getDate()}/${date.getMonth() + 1}`;
+      case "months":
+        return date.toLocaleString("default", {
+          month: "short",
+          year: "numeric",
+        });
+      case "years":
+        return date.getFullYear().toString();
+      default:
+        return dateString;
+    }
+  };
+
+  const getFilteredStatistics = () => {
+    if (selectedVenueId === "all") {
+      // Combine statistics from all venues
+      const allStatistics = [];
+
+      // Get all unique dates across all venues
+      const allDates = new Set();
+      Object.values(allVenuesData).forEach((venue) => {
+        venue.statistics.forEach((stat) => {
+          allDates.add(stat.weekStarting);
+        });
+      });
+
+      // For each date, sum up the statistics from all venues
+      Array.from(allDates)
+        .sort()
+        .forEach((date) => {
+          const combinedStat = {
+            weekStarting: date,
+            totalStaffHours: 0,
+            totalStaffCost: 0,
+            totalHolidayDays: 0,
+            totalHolidayCost: 0,
+          };
+
+          Object.values(allVenuesData).forEach((venue) => {
+            const venueStat = venue.statistics.find(
+              (s) => s.weekStarting === date
+            );
+            if (venueStat) {
+              combinedStat.totalStaffHours += venueStat.totalStaffHours;
+              combinedStat.totalStaffCost += venueStat.totalStaffCost;
+              combinedStat.totalHolidayDays += venueStat.totalHolidayDays;
+              combinedStat.totalHolidayCost += venueStat.totalHolidayCost;
+            }
+          });
+
+          allStatistics.push(combinedStat);
+        });
+
+      return allStatistics;
+    } else {
+      return allVenuesData[selectedVenueId]?.statistics || [];
+    }
+  };
 
   const generateChartData = (data, key) => {
     const aggregatedData = data.reduce((acc, item) => {
@@ -93,7 +154,7 @@ const VenueStatistics = () => {
   };
 
   const ChartCard = ({ title, icon: Icon, data, valuePrefix, valueSuffix }) => {
-    const chartData = generateChartData(statisticsData, data);
+    const chartData = generateChartData(getFilteredStatistics(), data);
     const CustomizedDot = (props) => {
       const { cx, cy } = props;
       return (
@@ -175,12 +236,35 @@ const VenueStatistics = () => {
     );
   };
 
+  const getVenueSelectionTitle = () => {
+    if (selectedVenueId === "all") {
+      return "All Venues";
+    }
+    return allVenuesData[selectedVenueId]?.venueName || "Select Venue";
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold">Venue Statistics</h1>
+        <h1 className="text-3xl font-bold">
+          {getVenueSelectionTitle()} Statistics
+        </h1>
 
         <div className="flex flex-col sm:flex-row gap-4">
+          <Select value={selectedVenueId} onValueChange={setSelectedVenueId}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select venue" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Venues</SelectItem>
+              {Object.entries(allVenuesData).map(([id, venue]) => (
+                <SelectItem key={id} value={id}>
+                  {venue.venueName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={scope} onValueChange={setScope}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select time scope" />

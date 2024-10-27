@@ -121,16 +121,20 @@ const Venues = () => {
                     <Clock className="mr-2 h-4 w-4" /> Opening Hours
                   </h3>
                   <ul className="text-sm space-y-1">
-                    {Object.entries(venue.openingHours).map(([day, hours]) => (
-                      <li key={day} className="flex justify-between">
-                        <span>
-                          {day.charAt(0).toUpperCase() + day.slice(1)}
-                        </span>
-                        <span>
-                          {hours.open} - {hours.close}
-                        </span>
-                      </li>
-                    ))}
+                    {Object.entries(venue.openingHours || {}).map(
+                      ([day, hours]) => (
+                        <li key={day} className="flex justify-between">
+                          <span>
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </span>
+                          <span>
+                            {hours.open
+                              ? `${hours.open} - ${hours.close}`
+                              : "Hours not available"}
+                          </span>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               </CardContent>

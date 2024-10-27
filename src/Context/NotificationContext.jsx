@@ -91,7 +91,7 @@ export const NotificationsProvider = ({ children }) => {
 
   useEffect(() => {
     if (userState.loggedIn) {
-      fetchAllData(); // Fetch on mount
+      //fetchAllData(); // Fetch on mount
       const interval = setInterval(fetchAllData, 30000); // Poll every 30 seconds
       return () => clearInterval(interval); // Cleanup on unmount
     }
