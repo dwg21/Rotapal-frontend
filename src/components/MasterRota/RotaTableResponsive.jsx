@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Calendar } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Calendar,
+  AlertCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,19 +18,19 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const RotaTableResponsive = ({
-  rota,
-  setRota,
+const StaticResponsiveRotaTable = ({
+  rota = [],
   dates = [],
   updateRota,
-  selectedWeek,
+  selectedWeek = 0,
   setSelectedWeek,
-  archived,
 }) => {
-  const [showCost, setShowCost] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
-  const [currentWeek, setCurrentWeek] = useState(0);
+  const [showCost, setShowCost] = useState(false);
+
+  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const calculateStaffCost = (person) => {
     const totalHours = person.schedule.reduce((sum, shift) => {
@@ -40,7 +46,7 @@ const RotaTableResponsive = ({
       }
       return sum;
     }, 0);
-    return totalHours * person.hourlyWage;
+    return totalHours * (person.hourlyWage || 0);
   };
 
   const calculateTotalCost = () => {
@@ -55,13 +61,8 @@ const RotaTableResponsive = ({
     }
   };
 
-  const handleDaySelect = (dayIndex) => {
-    setSelectedDay(dayIndex);
-  };
-
-  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
   const formatSelectedDate = (dateString) => {
+    if (!dateString) return "No date available";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
       weekday: "long",
@@ -70,21 +71,18 @@ const RotaTableResponsive = ({
     });
   };
 
-  const selectedDate =
-    Array.isArray(dates) && dates.length > 0 ? dates[selectedDay] : null;
-  const formattedDate = selectedDate
-    ? formatSelectedDate(selectedDate)
-    : "No date available";
+  const selectedDate = dates[selectedDay];
+  const formattedDate = formatSelectedDate(selectedDate);
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
+      <CardHeader className="space-y-0">
+        <div className="flex items-center justify-between mb-4">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            <span>Rota Schedule</span>
+            <span>Weekly Rota Schedule</span>
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center space-x-2">
             <Label htmlFor="show-cost">Show Costs</Label>
             <Switch
               id="show-cost"
@@ -93,13 +91,13 @@ const RotaTableResponsive = ({
             />
           </div>
         </div>
+        <div className="text-center font-medium text-lg text-primary">
+          {formattedDate}
+        </div>
       </CardHeader>
+
       <CardContent>
         <div className="space-y-6">
-          <div className="text-center font-medium text-lg text-primary">
-            {formattedDate}
-          </div>
-
           <div className="flex justify-between items-center">
             <Button
               variant="outline"
@@ -116,13 +114,9 @@ const RotaTableResponsive = ({
                   <Tooltip>
                     <TooltipTrigger>
                       <Button
-                        variant={
-                          selectedDay === index + currentWeek * 7
-                            ? "default"
-                            : "outline"
-                        }
+                        variant={selectedDay === index ? "default" : "outline"}
                         className="w-12 h-12 rounded-full"
-                        onClick={() => handleDaySelect(index + currentWeek * 7)}
+                        onClick={() => setSelectedDay(index)}
                       >
                         {day.charAt(0)}
                       </Button>
@@ -144,7 +138,16 @@ const RotaTableResponsive = ({
 
           <ScrollArea className="h-[500px] pr-4">
             <div className="space-y-4">
-              {rota?.map((person, personIndex) => (
+              {rota?.length === 0 && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No schedule data available for this period.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {rota?.map((person) => (
                 <Card key={person.employee} className="overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
@@ -184,12 +187,17 @@ const RotaTableResponsive = ({
                           </div>
                         )}
                       </div>
-                      {!archived && (
-                        <Button variant="ghost" size="sm">
-                          <Plus className="h-4 w-4 mr-1" />
-                          Edit Shift
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-secondary"
+                        onClick={() =>
+                          updateRota?.(person.employee, selectedDay)
+                        }
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Edit Shift
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -197,12 +205,12 @@ const RotaTableResponsive = ({
             </div>
           </ScrollArea>
 
-          {showCost && (
+          {showCost && rota?.length > 0 && (
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total Weekly Cost</span>
                 <span className="text-lg font-bold">
-                  £{rota && calculateTotalCost().toFixed(2)}
+                  £{calculateTotalCost().toFixed(2)}
                 </span>
               </div>
             </div>
@@ -213,4 +221,4 @@ const RotaTableResponsive = ({
   );
 };
 
-export default RotaTableResponsive;
+export default StaticResponsiveRotaTable;

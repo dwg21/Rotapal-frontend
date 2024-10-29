@@ -1,120 +1,223 @@
 import React, { useState } from "react";
-import { IoChevronBack, IoChevronForward, IoAddSharp } from "react-icons/io5";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Calendar,
+  AlertCircle,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const StaticResponsiveRotaTable = ({
-  rota,
-  dates,
+  rota = [],
+  dates = [],
   updateRota,
-  selectedWeek,
+  selectedWeek = 0,
   setSelectedWeek,
 }) => {
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [showCost, setShowCost] = useState(false);
+
+  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  const calculateStaffCost = (person) => {
+    const totalHours = person.schedule.reduce((sum, shift) => {
+      if (
+        shift.shiftData &&
+        shift.shiftData.startTime &&
+        shift.shiftData.endTime
+      ) {
+        const start = new Date(`1970-01-01T${shift.shiftData.startTime}`);
+        const end = new Date(`1970-01-01T${shift.shiftData.endTime}`);
+        const hoursWorked = (end - start) / (1000 * 60 * 60);
+        return sum + hoursWorked;
+      }
+      return sum;
+    }, 0);
+    return totalHours * (person.hourlyWage || 0);
+  };
+
+  const calculateTotalCost = () => {
+    return rota.reduce((sum, person) => sum + calculateStaffCost(person), 0);
+  };
+
   const handleChangeWeek = (direction) => {
     if (direction === "right") {
       setSelectedWeek((prev) => prev + 1);
-      console.log(selectedWeek);
     } else if (direction === "left" && selectedWeek > 0) {
       setSelectedWeek((prev) => prev - 1);
     }
   };
-  const [selectedDay, setSelectedDay] = useState(0);
-  const [currentWeek, setCurrentWeek] = useState(0);
-  const [showCost, setShowCost] = useState(false);
 
-  const daysOfWeek = ["M", "T", "W", "T", "F", "S", "S"];
-
-  // Format the date as "Monday, 12th August"
   const formatSelectedDate = (dateString) => {
+    if (!dateString) return "No date available";
     const date = new Date(dateString);
-    console.log(date);
-
-    const options = { weekday: "long", day: "numeric", month: "long" };
-    return date.toLocaleDateString("en-GB", options).replace(",", ""); // Format date and remove the comma
+    return date.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
   };
 
-  // Get selected date and formatted day of the week
   const selectedDate = dates[selectedDay];
-  const formattedDate = selectedDate ? formatSelectedDate(selectedDate) : "";
-
-  const handleDaySelect = (dayIndex) => {
-    setSelectedDay(dayIndex);
-  };
+  const formattedDate = formatSelectedDate(selectedDate);
 
   return (
-    <div className="w-full p-4">
-      {/* Display selected date and day of the week */}
-      <div className="text-center my-3 font-semibold text-lg">
-        {formattedDate}
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <IoChevronBack
-          onClick={() => handleChangeWeek("left")}
-          className="text-3xl cursor-pointer"
-        />
-        <div className="flex gap-2">
-          {daysOfWeek.map((day, index) => (
-            <div
-              key={index}
-              className={`w-10 h-10 flex items-center justify-center rounded-full cursor-pointer ${
-                selectedDay === index + currentWeek * 7
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
-              }`}
-              onClick={() => handleDaySelect(index + currentWeek * 7)}
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-        <IoChevronForward
-          onClick={() => handleChangeWeek("right")}
-          className="text-3xl cursor-pointer"
-        />
-      </div>
-
-      <div>
-        {rota?.map((person, personIndex) => (
-          <div key={person.employee} className="my-3 p-1 border-b-2">
-            {person.schedule[selectedDay]?.shiftData?.startTime ||
-            person.schedule[selectedDay]?.shiftData?.holidayBooked ||
-            person.schedule[selectedDay]?.shiftData?.label ? (
-              <div className="my-2 mx-auto text-left items-center p-1 rounded-md w-full text-black">
-                <div className="flex flex-col items-left gap-4">
-                  <p className=" font-semibold">{person.employeeName}</p>
-                  {person.schedule[selectedDay]?.shiftData?.holidayBooked ? (
-                    <p>Holiday Booked</p>
-                  ) : person.schedule[selectedDay]?.shiftData?.label ===
-                    "Day Off" ? (
-                    <p>Day Off</p>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <p>
-                        <div className="flex justify-between items-center mb-2">
-                          {showCost && (
-                            <span className="font-semibold">
-                              £{calculateStaffCost(person).toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        {person.schedule[selectedDay]?.shiftData?.startTime &&
-                          `${person.schedule[selectedDay].shiftData.startTime} - ${person.schedule[selectedDay].shiftData.endTime}`}
-                      </p>
-                      <p className="font-bold">
-                        {person.schedule[selectedDay]?.shiftData?.label || ""}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="w-full h-[90px] flex justify-center items-center hover:cursor-pointer">
-                <IoAddSharp className="text-3xl hover:block text-center" />
-              </div>
-            )}
+    <Card className="w-full">
+      <CardHeader className="space-y-0">
+        <div className="flex items-center justify-between mb-4">
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            <span>Weekly Rota Schedule</span>
+          </CardTitle>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="show-cost">Show Costs</Label>
+            <Switch
+              id="show-cost"
+              checked={showCost}
+              onCheckedChange={setShowCost}
+            />
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+        <div className="text-center font-medium text-lg text-primary">
+          {formattedDate}
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleChangeWeek("left")}
+              disabled={selectedWeek === 0}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="flex gap-2">
+              {daysOfWeek.map((day, index) => (
+                <TooltipProvider key={index}>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant={selectedDay === index ? "default" : "outline"}
+                        className="w-12 h-12 rounded-full"
+                        onClick={() => setSelectedDay(index)}
+                      >
+                        {day.charAt(0)}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{day}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleChangeWeek("right")}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="h-[500px] pr-4">
+            <div className="space-y-4">
+              {rota?.length === 0 && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No schedule data available for this period.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {rota?.map((person) => (
+                <Card key={person.employee} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-lg">
+                          {person.employeeName}
+                        </h3>
+                        {person.schedule[selectedDay]?.shiftData
+                          ?.holidayBooked ? (
+                          <Badge variant="secondary">Holiday Booked</Badge>
+                        ) : person.schedule[selectedDay]?.shiftData?.label ===
+                          "Day Off" ? (
+                          <Badge variant="secondary">Day Off</Badge>
+                        ) : (
+                          <div className="space-y-1">
+                            {showCost && (
+                              <p className="text-sm text-muted-foreground">
+                                Cost: £{calculateStaffCost(person).toFixed(2)}
+                              </p>
+                            )}
+                            {person.schedule[selectedDay]?.shiftData
+                              ?.startTime && (
+                              <p className="text-sm">
+                                {
+                                  person.schedule[selectedDay].shiftData
+                                    .startTime
+                                }{" "}
+                                -{" "}
+                                {person.schedule[selectedDay].shiftData.endTime}
+                              </p>
+                            )}
+                            {person.schedule[selectedDay]?.shiftData?.label && (
+                              <Badge>
+                                {person.schedule[selectedDay].shiftData.label}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-secondary"
+                        onClick={() =>
+                          updateRota?.(person.employee, selectedDay)
+                        }
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Edit Shift
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+
+          {showCost && rota?.length > 0 && (
+            <div className="pt-4 border-t">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Weekly Cost</span>
+                <span className="text-lg font-bold">
+                  £{calculateTotalCost().toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

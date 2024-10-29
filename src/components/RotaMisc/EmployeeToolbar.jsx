@@ -1,109 +1,106 @@
 import React from "react";
-import ServerApi from "../../serverApi/axios";
-import { IoMdArrowDropright, IoMdArrowDropleft } from "react-icons/io";
-import { TiTick } from "react-icons/ti";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import ImageIcon from "@mui/icons-material/Image";
-import ArchiveIcon from "@mui/icons-material/Archive";
-import CustDropdownButton from "../misc/CustDropdownButton";
-import { getDayLabel } from "../../Utils/utils";
-import exportToPDF from "../../Utils/exportToPdf";
-import exportToPng from "../../Utils/exportToPng";
-import FilterButton from "./FilterButton";
 import RotaDropdown from "../EmployeeRota/RotaDropdown";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
+import { Separator } from "@/components/ui/separator";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Image,
+  Table,
+  Eye,
+  EyeOff,
+  Clock,
+  DollarSign,
+} from "lucide-react";
+import { format, addDays } from "date-fns";
 
 const EmployeeToolbar = ({
-  venueName,
   setSelectedWeek,
-  startOfWeek, // Receive startOfWeek as a prop
-  showCost,
-  setShowCost,
-  showHours,
-  setShowHours,
+  startOfWeek,
   rotaNames,
   setSelectedRota,
   selectedRota,
 }) => {
   const handleChangeWeek = (direction) => {
-    if (direction === "right") {
-      setSelectedWeek((prev) => prev + 1);
-    } else if (direction === "left") {
-      setSelectedWeek((prev) => prev - 1);
-    }
+    setSelectedWeek((prev) => prev + (direction === "right" ? 1 : -1));
   };
 
-  const startOfweek = getDayLabel(new Date(startOfWeek));
-  const endOfWeek = getDayLabel(
-    new Date(new Date(startOfWeek).getTime() + 6 * 24 * 60 * 60 * 1000) // Calculate the end of the current week
-  );
+  const weekStart = new Date(startOfWeek);
+  const weekEnd = addDays(weekStart, 6);
 
-  const exportOptions = [
-    {
-      label: "PDF",
-      icon: <PictureAsPdfIcon className="mr-2 text-gray-500" />,
-      onClick: exportToPDF,
-    },
-    {
-      label: "Image",
-      icon: <ImageIcon className="mr-2 text-gray-500" />,
-      onClick: exportToPng,
-    },
-    { label: "Excel", icon: <ArchiveIcon className="mr-2 text-gray-500" /> },
-  ];
+  const dateRange = `${format(weekStart, "MMM d")} - ${format(
+    weekEnd,
+    "MMM d, yyyy"
+  )}`;
 
   return (
-    <div>
-      {/* {rotaNames.map((name, index) => (
-        <p
-          className="text-md text-center font-semibold mr-4 md:text-base md:hidden "
-          onClick={() => setSelectedRota(index)}
-        >
-          {name}
-        </p>
-      ))} */}
-      {/* <div className="md:hidden">
-        <RotaDropdown
-          rotaNames={rotaNames}
-          setSelectedRota={setSelectedRota}
-          selectedRota={selectedRota}
-        />
-      </div> */}
+    <div className="w-full border-b bg-white">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-wrap md:flex-nowrap items-center justify-between py-4 gap-4">
+          {/* Rota Selection */}
+          <div className="w-full md:w-auto">
+            <RotaDropdown
+              rotaNames={rotaNames}
+              setSelectedRota={setSelectedRota}
+              selectedRota={selectedRota}
+            />
+          </div>
 
-      {/* <p className="text-md text-center font-semibold mr-4 md:text-base md:hidden ">
-        {venueName && venueName}
-      </p> */}
-      <div className="flex flex-wrap items-center justify-center gap-4 py-2 my-1 border-b w-full md:gap-6 md:flex-nowrap">
-        {/* <p className="text-sm font-semibold mr-4 md:text-base hidden md:block">
-          {venueName && venueName}
-        </p> */}
+          {/* Week Navigation */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleChangeWeek("left")}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="text-sm font-medium">{dateRange}</div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleChangeWeek("right")}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-        <RotaDropdown
-          rotaNames={rotaNames}
-          setSelectedRota={setSelectedRota}
-          selectedRota={selectedRota}
-        />
-
-        <div className="justify-center items-center w-full md:w-[300px] gap-1 p-2 hidden  md:flex">
-          <IoMdArrowDropleft
-            className="text-xl cursor-pointer md:text-2xl"
-            onClick={() => handleChangeWeek("left")}
-          />
-          <p className="text-sm md:text-base">
-            {startOfweek} - {endOfWeek}
-          </p>
-          <IoMdArrowDropright
-            className="text-xl cursor-pointer md:text-2xl"
-            onClick={() => handleChangeWeek("right")}
-          />
+          {/* Export Options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">Export</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportToPDF()}>
+                <FileText className="mr-2 h-4 w-4" />
+                <span>PDF</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportToPng()}>
+                <Image className="mr-2 h-4 w-4" />
+                <span>Image</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Table className="mr-2 h-4 w-4" />
+                <span>Excel</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <CustDropdownButton title="Export" options={exportOptions} />
-
-        <FilterButton
-          showCost={showCost}
-          setShowCost={setShowCost}
-          showHours={showHours}
-          setShowHours={setShowHours}
-        />
       </div>
     </div>
   );

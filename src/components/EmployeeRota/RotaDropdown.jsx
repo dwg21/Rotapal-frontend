@@ -1,52 +1,51 @@
-import React, { useState, useEffect, useRef } from "react";
-import { MdOutlineKeyboardArrowDown } from "react-icons/md";
+import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
+import { Separator } from "@/components/ui/separator";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Image,
+  Table,
+  Eye,
+  EyeOff,
+  Clock,
+  DollarSign,
+} from "lucide-react";
+import { format, addDays } from "date-fns";
 
+// Improved RotaDropdown Component
 const RotaDropdown = ({ rotaNames, setSelectedRota, selectedRota }) => {
-  const [dropDownVisible, setDropDownVisible] = useState(false);
-  const dropdownRef = useRef(null);
-
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setDropDownVisible(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   return (
-    <div className="relative w-28" ref={dropdownRef}>
-      <button
-        onClick={() => setDropDownVisible(!dropDownVisible)}
-        className="flex justify-between items-center w-full py-1 px-4 border rounded"
-      >
-        <span>{rotaNames[selectedRota]}</span>
-        <MdOutlineKeyboardArrowDown className="text-xl" />
-      </button>
-
-      {dropDownVisible && (
-        <div className="absolute mt-1 w-full bg-white border rounded shadow z-10">
-          <ul className="py-2">
-            {rotaNames.map((name, index) => (
-              <li
-                key={index}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => {
-                  setSelectedRota(index);
-                  setDropDownVisible(false);
-                }}
-              >
-                {name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+    <Select
+      value={selectedRota.toString()}
+      onValueChange={(value) => setSelectedRota(parseInt(value))}
+    >
+      <SelectTrigger className="w-[180px]">
+        <SelectValue>{rotaNames[selectedRota]}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {rotaNames.map((name, index) => (
+          <SelectItem key={index} value={index.toString()}>
+            {name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
 
