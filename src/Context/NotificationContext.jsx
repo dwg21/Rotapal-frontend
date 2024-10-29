@@ -18,80 +18,98 @@ export const NotificationsProvider = ({ children }) => {
 
   const fetchNotificationsAndRequests = async () => {
     try {
-      const [notificationsResponse, requestsResponse] = await Promise.all([
-        ServerApi.get(
-          "http://localhost:5000/api/v1/notifcations/getNotfications",
-          { params: { includeRead }, withCredentials: true }
-        ),
-        ServerApi.get(`/api/v1/swap/getEmployeeRequests`),
-      ]);
-
-      const combinedNotifications = [
-        ...requestsResponse.data.incomingRequests.map((request) => ({
-          ...request,
-          type: "shiftSwapRequest",
-          created: new Date(request.created),
-        })),
-        ...notificationsResponse.data.notifications,
-      ];
-
-      combinedNotifications.sort(
-        (a, b) => new Date(b.created) - new Date(a.created)
-      );
-
-      setNotifications(combinedNotifications);
-    } catch (err) {
-      setError(err.message);
-    } finally {
+      const response = await ServerApi.get(`api/v1/business/getNotifications`);
       setLoading(false);
-    }
-  };
-
-  const fetchRequests = async () => {
-    try {
-      const shiftSwapResponse = await ServerApi.get(
-        `/api/v1/swap/pendingShiftSwapRequests?venueId=${selectedVenueId}`
-      );
-
-      const holidayResponse = await ServerApi.get(
-        `/api/v1/holidays/getVenueHolidays/${selectedVenueId}`
-      );
-
+      console.log(response.data);
       const combinedRequests = [
-        ...shiftSwapResponse.data.map((request) => ({
+        ...response.data.swapRequests.map((request) => ({
           ...request,
           type: "shiftSwapRequest",
         })),
-        ...holidayResponse.data.holidays.map((request) => ({
+        ...response.data.holidays.map((request) => ({
           ...request,
           type: "holiday",
         })),
       ];
 
-      setNotifications((prevNotifications) => [
-        ...prevNotifications,
-        ...combinedRequests,
-      ]);
-    } catch (error) {
-      setError(error.message);
-    } finally {
+      setNotifications((prevNotifications) => {
+        const existingIds = new Set(prevNotifications.map((item) => item.id));
+        const newNotifications = combinedRequests.filter(
+          (item) => !existingIds.has(item.id)
+        );
+        return [...prevNotifications, ...newNotifications];
+      });
+      console.log(notifications);
+    } catch (err) {
+      console.error("Failed to fetch venue notifications", err);
+    }
+  };
+
+  const fetchEmployeeData = async () => {
+    try {
+      const employeeNotificationsResponse = await ServerApi.get(
+        "http://localhost:5000/api/v1/notifications/getNotifications",
+        {
+          params: { includeRead },
+          withCredentials: true,
+        }
+      );
+
+      const employeeRequestsResponse = await ServerApi.get(
+        "/api/v1/swap/getEmployeeRequests"
+      );
+
       setLoading(false);
+
+      // Log to check structure
+      console.log(
+        "Employee Notifications:",
+        employeeNotificationsResponse.data
+      );
+      console.log("Employee Requests:", employeeRequestsResponse.data);
+
+      // Combine responses with types for easier identification
+      const combinedEmployeeData = [
+        ...employeeNotificationsResponse.data.notifications.map(
+          (notification) => ({
+            ...notification,
+            type: "notification",
+          })
+        ),
+        ...employeeRequestsResponse.data.sentRequests.map((request) => ({
+          ...request,
+          type: "employeeRequest",
+        })),
+      ];
+
+      console.log(combinedEmployeeData),
+        // Update state by filtering out existing notifications
+        setNotifications((prevNotifications) => {
+          const existingIds = new Set(prevNotifications.map((item) => item.id));
+          const newNotifications = combinedEmployeeData.filter(
+            (item) => !existingIds.has(item.id)
+          );
+          return [...prevNotifications, ...newNotifications];
+        });
+    } catch (error) {
+      console.error("Failed to fetch employee data", error);
     }
   };
 
   const fetchAllData = async () => {
-    await fetchNotificationsAndRequests();
     if (
       userState.userData.role === "AccountOwner" ||
       userState.userData.role === "Admin"
     ) {
-      await fetchRequests();
+      await fetchNotificationsAndRequests();
+    } else {
+      await fetchEmployeeData();
     }
   };
 
   useEffect(() => {
     if (userState.loggedIn) {
-      //fetchAllData(); // Fetch on mount
+      fetchAllData(); // Fetch on mount
       const interval = setInterval(fetchAllData, 30000); // Poll every 30 seconds
       return () => clearInterval(interval); // Cleanup on unmount
     }
