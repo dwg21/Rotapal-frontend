@@ -13,6 +13,7 @@ const NotificationCard = ({
   onApprove,
   onDecline,
   onMarkAsRead,
+  setNotifications,
 }) => {
   const { toast } = useToast();
 
@@ -32,6 +33,29 @@ const NotificationCard = ({
         variant: "destructive",
         title: "Error",
         description: "Failed to update notification status.",
+      });
+    }
+  };
+
+  const approveHoliday = async (holidayId) => {
+    try {
+      const { data } = await ServerApi.put(
+        `/api/v1/holidays/approveHoliday/${holidayId}`
+      );
+      // Use setNotifications from props to remove the holiday notification
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((n) => n._id !== notification._id)
+      );
+      toast({
+        title: "Holiday Approved",
+        description: "The holiday request has been approved .",
+      });
+    } catch (error) {
+      console.error("Error approving holiday:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to approve the holiday request.",
       });
     }
   };
@@ -67,7 +91,7 @@ const NotificationCard = ({
         <Button variant="outline" onClick={() => onDecline(notification._id)}>
           <XCircle className="mr-2 h-4 w-4" /> Decline
         </Button>
-        <Button onClick={() => onApprove(notification._id)}>
+        <Button onClick={() => approveHoliday(notification._id)}>
           <CheckCircle className="mr-2 h-4 w-4" /> Approve
         </Button>
       </div>
@@ -217,6 +241,7 @@ const Notifications = () => {
             onApprove={handleApprove}
             onDecline={handleDecline}
             onMarkAsRead={handleMarkAsRead}
+            setNotifications={setNotifications}
           />
         ))
       )}

@@ -1,56 +1,27 @@
-import React, { useCallback, useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import ServerApi from "../../serverApi/axios";
-import "react-calendar/dist/Calendar.css"; // import calendar CSS
-import StaticRotaTable from "../RotaMisc/StaticRotaTable";
+import React from "react";
 import VenueStatistics from "./VenueStatistics";
-import StaticResponsiveRotaTable from "../RotaMisc/StaticResponsiveRotaTable";
+import useArchivedRotas from "../../hooks/useArchivedRotas";
 
 const ArchivedRotas = () => {
   const selectedVenueId = localStorage.getItem("selectedVenueID");
-  const [archivedRotas, setArchivedRotas] = useState([]);
-  const [minDate, setMinDate] = useState(null);
-  const [error, setError] = useState(null);
+  // No need to destructure `sortBy` and `sortOrder` here, they are now handled inside the hook
+  const { archivedRotas, error, loading } = useArchivedRotas(selectedVenueId, {
+    sortBy: "weekStarting", // Optional override here
+    sortOrder: "asc", // Optional override here
+  });
 
-  const fetchRota = useCallback(async () => {
-    try {
-      const response = await ServerApi.get(
-        `http://localhost:5000/api/v1/rotas/archivedRoas/${selectedVenueId}`,
-        { withCredentials: true }
-      );
-      console.log(response);
-      let rotas = response.data.rotas;
+  if (loading) {
+    return <div>Loading archived rotas...</div>;
+  }
 
-      // Sort the rotas by weekStarting in ascending order
-      rotas = rotas.sort(
-        (a, b) => new Date(a.weekStarting) - new Date(b.weekStarting)
-      );
-
-      setArchivedRotas(rotas);
-      console.log(rotas);
-
-      // Determine the earliest date from the rotas
-      if (rotas.length > 0) {
-        const earliestDate = rotas.reduce((earliest, rota) => {
-          const rotaStart = new Date(rota.weekStarting);
-          return rotaStart < earliest ? rotaStart : earliest;
-        }, new Date(rotas[0].weekStarting));
-        setMinDate(earliestDate);
-      }
-    } catch (err) {
-      console.log(err.response);
-      setError(err.response?.data?.message || "An error occurred");
-    }
-  }, [selectedVenueId]);
-
-  useEffect(() => {
-    fetchRota();
-  }, [fetchRota]);
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
-    <div className="p-4 w-full flex flex-col justify-center items-center ">
-      <h1 className=" text-lg font-bold ">Archived Data and Statistics</h1>{" "}
-      <div className="  w-full">
+    <div className="p-4 w-full flex flex-col justify-center items-center">
+      <h1 className="text-lg font-bold">Archived Data and Statistics</h1>
+      <div className="w-full">
         <VenueStatistics />
       </div>
     </div>

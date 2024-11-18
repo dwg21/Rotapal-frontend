@@ -1,7 +1,10 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar } from "@/components/ui/calendar";
+import ServerApi from "@/serverApi/axios";
 import { Button } from "@/components/ui/button";
+import { Clock } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import {
   Card,
   CardHeader,
@@ -10,8 +13,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Check, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -27,6 +30,7 @@ const HolidayRequests = () => {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [holidayRequests, setHolidayRequests] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,8 +45,10 @@ const HolidayRequests = () => {
 
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
-      // Simulated API call - replace with your actual API
-      // await ServerApi.post("/api/v1/holidays/book-holiday", { date: formattedDate });
+      console.log(formattedDate);
+      await ServerApi.post("/api/v1/holidays/book-holiday", {
+        date: formattedDate,
+      });
       setSuccess(true);
       setDate(null);
       setIsCalendarOpen(false);
@@ -54,6 +60,26 @@ const HolidayRequests = () => {
       setIsLoading(false);
     }
   };
+
+  const fetchPendingHolidays = useCallback(async () => {
+    try {
+      const { data } = await ServerApi.get(`/api/v1/holidays/getUserHolidays`, {
+        withCredentials: true,
+      });
+      console.log(data.holidays);
+      setHolidayRequests(data.holidays);
+    } catch (err) {
+      setError("Failed to fetch employees. Please try again.");
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPendingHolidays();
+  }, [fetchPendingHolidays]);
+
+  // const sortedHolidays = [...holidayRequests].sort(
+  //   (a, b) => new Date(a.date) - new Date(b.date)
+  // );
 
   return (
     <div className="flex flex-col p-6 w-full min-h-screen bg-gray-50">
@@ -153,6 +179,39 @@ const HolidayRequests = () => {
             {isLoading ? "Submitting..." : "Request Holiday"}
           </Button>
         </CardFooter>
+      </Card>
+
+      <Card className="w-full max-w-md">
+        <CardHeader className="flex flex-row items-center space-x-2">
+          <Clock className="text-muted-foreground" />
+          <CardTitle className="text-lg">Pending Holiday Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {holidayRequests.length === 0 ? (
+            <div className="text-muted-foreground text-center py-4">
+              No pending holiday requests
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {holidayRequests.map((holiday) => (
+                <li
+                  key={holiday.id}
+                  className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
+                >
+                  <span className="font-medium">
+                    {format(parseISO(holiday.date), "MMMM d, yyyy")}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="text-yellow-600 border-yellow-600"
+                  >
+                    {holiday.status}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
       </Card>
     </div>
   );

@@ -1,73 +1,65 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { format, addWeeks, subDays } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
+  Lock,
+  Upload,
   FileText,
   Image,
   FileSpreadsheet,
 } from "lucide-react";
-import { format, addWeeks, subDays } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import ServerApi from "../../serverApi/axios";
+import { getDayLabel } from "../../Utils/utils";
+import exportToPDF from "../../Utils/exportToPdf";
+import exportToPng from "../../Utils/exportToPng";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Card, CardContent } from "@/components/ui/card";
-import { getDayLabel } from "../../Utils/utils";
-import exportToPDF from "../../Utils/exportToPdf";
-import exportToPng from "../../Utils/exportToPng";
 
-// Improved RotaDropdown Component
-const RotaDropdown = ({ rotaNames, setSelectedRota, selectedRota }) => {
-  return (
-    <Select
-      value={selectedRota.toString()}
-      onValueChange={(value) => setSelectedRota(parseInt(value))}
-    >
-      <SelectTrigger className="w-[180px]">
-        <SelectValue>{rotaNames[selectedRota]}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {rotaNames.map((name, index) => (
-          <SelectItem key={index} value={index.toString()}>
-            {name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-};
-
-const EmployeeToolbar = ({
+const Toolbar = ({
   venueName,
   setSelectedWeek,
   selectedWeek,
-  startOfWeek,
+  weekStarting,
+  rota,
+  setRota,
   showCost,
   setShowCost,
   showHours,
   setShowHours,
-  rotaNames,
-  setSelectedRota,
-  selectedRota,
 }) => {
+  const navigate = useNavigate();
+
+  const handleClickPublishRota = async () => {
+    try {
+      const { data } = await ServerApi.post(
+        `/api/v1/rotas/${rota?._id}/publish`,
+        { isPublished: true },
+        { withCredentials: true }
+      );
+      setRota(data.rota);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleChangeWeek = (direction) => {
     setSelectedWeek((prev) => prev + (direction === "right" ? 1 : -1));
   };
 
-  const weekStart = getDayLabel(new Date(startOfWeek));
-  const weekEnd = getDayLabel(subDays(addWeeks(new Date(startOfWeek), 1), 1));
-
+  const startOfWeek = getDayLabel(new Date(weekStarting));
+  const endOfWeek = getDayLabel(
+    subDays(addWeeks(new Date(weekStarting), 1), 1)
+  );
   const exportOptions = [
     {
       label: "PDF",
@@ -89,18 +81,28 @@ const EmployeeToolbar = ({
   return (
     <Card className="w-full">
       <CardContent className="p-4">
-        <div className="flex flex-wrap flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex  flex-wrap flex-col md:flex-row items-center justify-between gap-4">
           <h2 className="text-xl font-semibold">{venueName}</h2>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            {/* Rota Selection */}
-            <RotaDropdown
-              rotaNames={rotaNames}
-              setSelectedRota={setSelectedRota}
-              selectedRota={selectedRota}
-            />
+            <Button
+              variant={rota?.published ? "secondary" : "default"}
+              onClick={handleClickPublishRota}
+              disabled={rota?.published}
+            >
+              {rota?.published ? (
+                <>
+                  <Lock className="mr-2 h-4 w-4" />
+                  Published
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Publish Rota
+                </>
+              )}
+            </Button>
 
-            {/* Week Navigation */}
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -110,7 +112,7 @@ const EmployeeToolbar = ({
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm">
-                {weekStart} - {weekEnd}
+                {startOfWeek} - {endOfWeek}
               </span>
               <Button
                 variant="outline"
@@ -121,7 +123,6 @@ const EmployeeToolbar = ({
               </Button>
             </div>
 
-            {/* Export Options */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">Export</Button>
@@ -136,7 +137,6 @@ const EmployeeToolbar = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* View Toggles */}
             <div className="flex items-center gap-2">
               <Toggle
                 pressed={showCost}
@@ -160,4 +160,4 @@ const EmployeeToolbar = ({
   );
 };
 
-export default EmployeeToolbar;
+export default Toolbar;
