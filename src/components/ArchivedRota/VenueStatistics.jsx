@@ -29,6 +29,8 @@ import {
   Palmtree,
 } from "lucide-react";
 
+import useStatistics from "../../hooks/useStatistics";
+
 const formatDate = (dateString, scope) => {
   if (scope === "months") {
     return format(new Date(dateString), "MMM yyyy");
@@ -39,23 +41,13 @@ const formatDate = (dateString, scope) => {
 };
 
 const VenueStatistics = () => {
-  const [allVenuesData, setAllVenuesData] = useState({});
   const [selectedVenueId, setSelectedVenueId] = useState("all");
   const [chartType, setChartType] = useState("line");
   const [scope, setScope] = useState("weeks");
 
-  useEffect(() => {
-    const fetchStatistics = async () => {
-      try {
-        const response = await ServerApi.get(`api/v1/business/getStatistics`);
-        setAllVenuesData(response.data.statistics);
-      } catch (err) {
-        console.error("Failed to fetch venue statistics", err);
-      }
-    };
+  const { businessData, loading, error } = useStatistics();
 
-    fetchStatistics();
-  }, []);
+  console.log(businessData);
 
   const formatDate = (dateString, scope) => {
     const date = new Date(dateString);
@@ -81,7 +73,7 @@ const VenueStatistics = () => {
 
       // Get all unique dates across all venues
       const allDates = new Set();
-      Object.values(allVenuesData).forEach((venue) => {
+      Object.values(businessData).forEach((venue) => {
         venue.statistics.forEach((stat) => {
           allDates.add(stat.weekStarting);
         });
@@ -99,7 +91,7 @@ const VenueStatistics = () => {
             totalHolidayCost: 0,
           };
 
-          Object.values(allVenuesData).forEach((venue) => {
+          Object.values(businessData).forEach((venue) => {
             const venueStat = venue.statistics.find(
               (s) => s.weekStarting === date
             );
@@ -116,7 +108,7 @@ const VenueStatistics = () => {
 
       return allStatistics;
     } else {
-      return allVenuesData[selectedVenueId]?.statistics || [];
+      return businessData[selectedVenueId]?.statistics || [];
     }
   };
 
@@ -240,8 +232,12 @@ const VenueStatistics = () => {
     if (selectedVenueId === "all") {
       return "All Venues";
     }
-    return allVenuesData[selectedVenueId]?.venueName || "Select Venue";
+    return businessData[selectedVenueId]?.venueName || "Select Venue";
   };
+
+  if (loading) return <h1 message="Loading venue statistics..." />;
+  if (error)
+    return <h1 message="Failed to fetch statistics. Please try again." />;
 
   return (
     <div className="p-6 space-y-6">
@@ -257,7 +253,7 @@ const VenueStatistics = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Venues</SelectItem>
-              {Object.entries(allVenuesData).map(([id, venue]) => (
+              {Object.entries(businessData).map(([id, venue]) => (
                 <SelectItem key={id} value={id}>
                   {venue.venueName}
                 </SelectItem>
