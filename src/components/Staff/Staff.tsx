@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import type { ChangeEvent } from "react";
 import ServerApi from "../../serverApi/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +23,24 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, Pencil, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+interface Employee {
+  _id: string;
+  name: string;
+  email: string;
+  hourlyWage: string;
+  role?: string;
+}
+
+interface newEmployee {
+  name: string;
+  email: string;
+  wage: string;
+}
+
 const Staff = () => {
   const selectedVenueId = localStorage.getItem("selectedVenueID");
-  const [employees, setEmployees] = useState([]);
-  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [newEmployee, setNewEmployee] = useState({
     name: "",
     wage: "",
@@ -50,7 +65,7 @@ const Staff = () => {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  const handleDelete = async (employeeId) => {
+  const handleDelete = async (employeeId: string) => {
     try {
       await ServerApi.delete(`api/v1/employee/${employeeId}`, {
         withCredentials: true,
@@ -63,7 +78,7 @@ const Staff = () => {
     }
   };
 
-  const handleEdit = (employee) => {
+  const handleEdit = (employee: Employee) => {
     setEditingEmployee(employee);
     setIsEditDialogOpen(true);
   };
@@ -71,13 +86,13 @@ const Staff = () => {
   const handleEditSubmit = async () => {
     try {
       await ServerApi.put(
-        `api/v1/employee/${editingEmployee._id}`,
+        `api/v1/employee/${editingEmployee?._id}`,
         editingEmployee,
         { withCredentials: true }
       );
       setEmployees((prevEmployees) =>
         prevEmployees.map((employee) =>
-          employee._id === editingEmployee._id
+          employee._id === editingEmployee?._id
             ? { ...employee, ...editingEmployee }
             : employee
         )
@@ -88,7 +103,7 @@ const Staff = () => {
     }
   };
 
-  const handleNewEmployeeChange = (e) => {
+  const handleNewEmployeeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewEmployee((prev) => ({ ...prev, [name]: value }));
   };
