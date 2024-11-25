@@ -1,14 +1,33 @@
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from "react";
 import ServerApi from "../serverApi/axios";
 
-// Define the initial state
-const initialState = {
+interface UserData {
+  business: string;
+  name: string;
+  role: string;
+  userId: string;
+}
+
+interface UserState {
+  loggedIn: boolean;
+  userData: UserData | null;
+}
+
+// inital store
+const initialState: UserState = {
   loggedIn: false,
   userData: null,
 };
+type UserAction = { type: "LOGIN"; payload: UserData } | { type: "LOGOUT" };
 
-// Define the reducer
-const userReducer = (state, action) => {
+// Reducer function
+const userReducer = (state: UserState, action: UserAction): UserState => {
   switch (action.type) {
     case "LOGIN":
       return { loggedIn: true, userData: action.payload };
@@ -20,9 +39,20 @@ const userReducer = (state, action) => {
   }
 };
 
-const UserContext = createContext();
+interface UserContextProps {
+  state: UserState;
+  dispatch: React.Dispatch<UserAction>;
+  logout: () => Promise<void>;
+}
 
-export const UserProvider = ({ children }) => {
+const UserContext = createContext<UserContextProps | undefined>(undefined);
+
+// Provider component props
+interface UserProviderProps {
+  children: ReactNode;
+}
+
+export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   useEffect(() => {
@@ -59,4 +89,11 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-export const userContext = () => useContext(UserContext);
+// Hook for accessing the context
+export const userContext = (): UserContextProps => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUserContext must be used within a UserProvider");
+  }
+  return context;
+};

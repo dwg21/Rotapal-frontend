@@ -83,12 +83,7 @@ const VenueDetails = () => {
   }
 
   if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
+    return <div>Error</div>;
   }
 
   return (

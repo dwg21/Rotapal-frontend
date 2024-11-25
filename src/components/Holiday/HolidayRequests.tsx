@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import ServerApi from "@/serverApi/axios";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Check, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,62 +22,73 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const HolidayRequests = () => {
-  const [date, setDate] = useState(null);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [holidayRequests, setHolidayRequests] = useState([]);
+interface HolidayRequest {
+  id: string;
+  date: string;
+  status: string;
+}
 
-  const handleSubmit = async (e) => {
+type StatusType = "error" | "success" | "loading" | "";
+
+interface Status {
+  message: string;
+  type: StatusType;
+}
+
+const HolidayRequests: React.FC = () => {
+  const [date, setDate] = useState<Date | null>(null);
+  const [status, setStatus] = useState<Status>({ message: "", type: "" });
+  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
+  const [holidayRequests, setHolidayRequests] = useState<HolidayRequest[]>([]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!date) {
-      setError("Please select a date");
+      setStatus({ message: "Please select a date", type: "error" });
       return;
     }
 
-    setIsLoading(true);
-    setError("");
-    setSuccess(false);
+    setStatus({ message: "Submitting...", type: "loading" });
 
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
-      console.log(formattedDate);
       await ServerApi.post("/api/v1/holidays/book-holiday", {
         date: formattedDate,
       });
-      setSuccess(true);
+      setStatus({
+        message: "Holiday request submitted successfully",
+        type: "success",
+      });
       setDate(null);
       setIsCalendarOpen(false);
-    } catch (error) {
-      setError(
-        error.response ? error.response.data.error : "Error booking holiday"
-      );
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      setStatus({
+        message: error.response
+          ? error.response.data.error
+          : "Error booking holiday",
+        type: "error",
+      });
     }
   };
 
   const fetchPendingHolidays = useCallback(async () => {
     try {
-      const { data } = await ServerApi.get(`/api/v1/holidays/getUserHolidays`, {
+      const { data } = await ServerApi.get("/api/v1/holidays/getUserHolidays", {
         withCredentials: true,
       });
-      console.log(data.holidays);
       setHolidayRequests(data.holidays);
     } catch (err) {
-      setError("Failed to fetch employees. Please try again.");
+      setStatus({
+        message: "Failed to fetch holidays. Please try again.",
+        type: "error",
+      });
     }
   }, []);
 
   useEffect(() => {
     fetchPendingHolidays();
   }, [fetchPendingHolidays]);
-
-  // const sortedHolidays = [...holidayRequests].sort(
-  //   (a, b) => new Date(a.date) - new Date(b.date)
-  // );
 
   return (
     <div className="flex flex-col p-6 w-full min-h-screen bg-gray-50">
@@ -93,21 +102,27 @@ const HolidayRequests = () => {
         </CardHeader>
 
         <CardContent>
-          {error && (
+          {status.type === "error" && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{status.message}</AlertDescription>
             </Alert>
           )}
 
-          {success && (
+          {status.type === "success" && (
             <Alert className="mb-4 bg-green-50 text-green-700 border-green-200">
               <Check className="h-4 w-4" />
               <AlertTitle>Success</AlertTitle>
-              <AlertDescription>
-                Holiday request submitted successfully
-              </AlertDescription>
+              <AlertDescription>{status.message}</AlertDescription>
+            </Alert>
+          )}
+
+          {status.type === "loading" && (
+            <Alert className="mb-4 bg-blue-50 text-blue-700 border-blue-200">
+              <Clock className="h-4 w-4" />
+              <AlertTitle>Loading</AlertTitle>
+              <AlertDescription>{status.message}</AlertDescription>
             </Alert>
           )}
 
@@ -135,9 +150,13 @@ const HolidayRequests = () => {
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={date}
+                        selected={date ?? undefined} // Pass `undefined` if `date` is null
                         onSelect={(date) => {
-                          setDate(date);
+                          if (date) {
+                            setDate(date); // Only set `date` if it's not `undefined`
+                          } else {
+                            setDate(null); // Set to null if date is `undefined`
+                          }
                           setIsCalendarOpen(false);
                         }}
                         disabled={(date) => date < new Date()}
@@ -173,45 +192,12 @@ const HolidayRequests = () => {
         <CardFooter>
           <Button
             onClick={handleSubmit}
-            disabled={!date || isLoading}
+            disabled={!date || status.type === "loading"}
             className="w-full"
           >
-            {isLoading ? "Submitting..." : "Request Holiday"}
+            {status.type === "loading" ? "Submitting..." : "Request Holiday"}
           </Button>
         </CardFooter>
-      </Card>
-
-      <Card className="w-full max-w-md">
-        <CardHeader className="flex flex-row items-center space-x-2">
-          <Clock className="text-muted-foreground" />
-          <CardTitle className="text-lg">Pending Holiday Requests</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {holidayRequests.length === 0 ? (
-            <div className="text-muted-foreground text-center py-4">
-              No pending holiday requests
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {holidayRequests.map((holiday) => (
-                <li
-                  key={holiday.id}
-                  className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
-                >
-                  <span className="font-medium">
-                    {format(parseISO(holiday.date), "MMMM d, yyyy")}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className="text-yellow-600 border-yellow-600"
-                  >
-                    {holiday.status}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
       </Card>
     </div>
   );
