@@ -1,33 +1,28 @@
 import React from "react";
 import RotaDropdown from "../EmployeeRota/RotaDropdown";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import { Separator } from "@/components/ui/separator";
 import {
   ChevronLeft,
   ChevronRight,
   FileText,
   Image,
   Table,
-  Eye,
-  EyeOff,
-  Clock,
-  DollarSign,
 } from "lucide-react";
 import { format, addDays } from "date-fns";
+
+interface EmployeeToolbarProps {
+  setSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
+  startOfWeek: string | Date;
+  rotaNames: string[];
+  setSelectedRota: React.Dispatch<React.SetStateAction<string>>;
+  selectedRota: string;
+}
 
 const EmployeeToolbar = ({
   setSelectedWeek,
@@ -35,8 +30,8 @@ const EmployeeToolbar = ({
   rotaNames,
   setSelectedRota,
   selectedRota,
-}) => {
-  const handleChangeWeek = (direction) => {
+}: EmployeeToolbarProps) => {
+  const handleChangeWeek = (direction: "left" | "right") => {
     setSelectedWeek((prev) => prev + (direction === "right" ? 1 : -1));
   };
 
@@ -47,6 +42,14 @@ const EmployeeToolbar = ({
     weekEnd,
     "MMM d, yyyy"
   )}`;
+
+  const exportToPDF = () => {
+    console.log("Exporting to PDF...");
+  };
+
+  const exportToPng = () => {
+    console.log("Exporting to PNG...");
+  };
 
   return (
     <div className="w-full border-b bg-white">
@@ -86,11 +89,11 @@ const EmployeeToolbar = ({
               <Button variant="outline">Export</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => exportToPDF()}>
+              <DropdownMenuItem onClick={exportToPDF}>
                 <FileText className="mr-2 h-4 w-4" />
                 <span>PDF</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportToPng()}>
+              <DropdownMenuItem onClick={exportToPng}>
                 <Image className="mr-2 h-4 w-4" />
                 <span>Image</span>
               </DropdownMenuItem>

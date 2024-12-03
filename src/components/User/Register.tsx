@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  SubmitHandler,
+  FieldValues,
+} from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
 import { Button } from "@/components/ui/button";
@@ -16,23 +21,47 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 
+// Define types for form data
+interface Employee {
+  name: string;
+  email: string;
+  hourlyWage: number;
+}
+
+interface RegisterFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  venue: {
+    name?: string;
+    address?: string;
+    phone?: string;
+  };
+  employees: Employee[];
+}
+
 const Register = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [error, setError] = useState(null);
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [error, setError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm<RegisterFormData>();
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "employees",
   });
+
   const navigate = useNavigate();
 
-  const onSubmit = async (data) => {
+  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     try {
       const formattedData = {
         user: {
@@ -56,10 +85,10 @@ const Register = () => {
       console.log("Registration successful:", response.data);
       reset();
       navigate("/venues");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during registration:", error);
       setError(
-        error.response?.data?.msg ||
+        error?.response?.data?.msg ||
           "An error occurred during registration. Please try again."
       );
     }

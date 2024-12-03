@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import ServerApi from "../../serverApi/axios";
 import {
   Card,
   CardContent,
@@ -12,38 +11,18 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoIcon, Eye, Edit, BarChart2, Clock } from "lucide-react";
-
-const VenueUrl = "api/v1/venue/venues";
+import useVenues from "../../hooks/useVenues"; // Adjust the path if needed
 
 const Venues = () => {
-  const [venues, setVenues] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { venuesData: venues, loading, error } = useVenues();
 
-  useEffect(() => {
-    const fetchVenues = async () => {
-      try {
-        const response = await ServerApi.get(VenueUrl, {
-          withCredentials: true,
-        });
-        setVenues(response.data.venues);
-      } catch (err) {
-        setError("Failed to fetch venues");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVenues();
-  }, []);
-
-  const handleViewRota = (venueId) => {
+  const handleViewRota = (venueId: string) => {
     localStorage.setItem("selectedVenueID", venueId);
     navigate(`/rota/${venueId}`);
   };
 
-  const handleEditRota = (venueId) => {
+  const handleEditRota = (venueId: string) => {
     navigate(`/editvenue/${venueId}`);
   };
 

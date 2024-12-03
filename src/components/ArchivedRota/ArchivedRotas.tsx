@@ -1,6 +1,5 @@
 import React from "react";
 import VenueStatistics from "./VenueStatistics";
-import useArchivedRotas from "../../hooks/useArchivedRotas";
 
 const ArchivedRotas = () => {
   return (

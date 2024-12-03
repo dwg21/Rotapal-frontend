@@ -25,7 +25,7 @@ interface ChartCardProps {
   getFilteredStatistics: () => any[];
 }
 
-const ChartCard: React.FC<ChartCardProps> = ({
+const ChartCard = ({
   title,
   icon: Icon,
   data,
@@ -34,7 +34,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   chartType,
   generateChartData,
   getFilteredStatistics,
-}) => {
+}: ChartCardProps) => {
   const chartData = generateChartData(getFilteredStatistics(), data);
 
   const CustomizedDot = (props: any) => {

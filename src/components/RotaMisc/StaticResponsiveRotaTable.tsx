@@ -20,19 +20,36 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const StaticResponsiveRotaTable = ({
+import { ShiftData, Schedule } from "@/types";
+
+interface Person {
+  employee: string;
+  employeeName: string;
+  hourlyWage?: number;
+  schedule: Schedule[];
+}
+
+interface StaticResponsiveRotaTableProps {
+  rota: Person[];
+  dates: string[];
+  updateRota?: (employeeId: string, selectedDay: number) => void;
+  selectedWeek: number;
+  setSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
+}
+
+const StaticResponsiveRotaTable: React.FC<StaticResponsiveRotaTableProps> = ({
   rota = [],
   dates = [],
   updateRota,
   selectedWeek = 0,
   setSelectedWeek,
 }) => {
-  const [selectedDay, setSelectedDay] = useState(0);
-  const [showCost, setShowCost] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number>(0);
+  const [showCost, setShowCost] = useState<boolean>(false);
 
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const calculateStaffCost = (person) => {
+  const calculateStaffCost = (person: Person): number => {
     const totalHours = person.schedule.reduce((sum, shift) => {
       if (
         shift.shiftData &&
@@ -41,7 +58,8 @@ const StaticResponsiveRotaTable = ({
       ) {
         const start = new Date(`1970-01-01T${shift.shiftData.startTime}`);
         const end = new Date(`1970-01-01T${shift.shiftData.endTime}`);
-        const hoursWorked = (end - start) / (1000 * 60 * 60);
+        const hoursWorked =
+          (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         return sum + hoursWorked;
       }
       return sum;
@@ -49,11 +67,11 @@ const StaticResponsiveRotaTable = ({
     return totalHours * (person.hourlyWage || 0);
   };
 
-  const calculateTotalCost = () => {
+  const calculateTotalCost = (): number => {
     return rota.reduce((sum, person) => sum + calculateStaffCost(person), 0);
   };
 
-  const handleChangeWeek = (direction) => {
+  const handleChangeWeek = (direction: "left" | "right") => {
     if (direction === "right") {
       setSelectedWeek((prev) => prev + 1);
     } else if (direction === "left" && selectedWeek > 0) {
@@ -61,7 +79,7 @@ const StaticResponsiveRotaTable = ({
     }
   };
 
-  const formatSelectedDate = (dateString) => {
+  const formatSelectedDate = (dateString: string): string => {
     if (!dateString) return "No date available";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -155,8 +173,7 @@ const StaticResponsiveRotaTable = ({
                         <h3 className="font-semibold text-lg">
                           {person.employeeName}
                         </h3>
-                        {person.schedule[selectedDay]?.shiftData
-                          ?.holidayBooked ? (
+                        {person.schedule[selectedDay]?.holidayBooked ? (
                           <Badge variant="secondary">Holiday Booked</Badge>
                         ) : person.schedule[selectedDay]?.shiftData?.label ===
                           "Day Off" ? (

@@ -52,7 +52,7 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+export const UserProvider = ({ children }: UserProviderProps) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   useEffect(() => {

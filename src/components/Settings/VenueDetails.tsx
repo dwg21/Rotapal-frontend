@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ServerApi from "../../serverApi/axios";
 import { useForm } from "react-hook-form";
-
 import { Building2, Clock, Building, Phone, MapPin } from "lucide-react";
 
 import {
@@ -12,6 +11,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { useEditVenue } from "@/hooks/useEditVenue";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,53 +19,22 @@ import { Button } from "@/components/ui/button";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-// VenueDetails Component
+import { Venue } from "@/types";
+
 const VenueDetails = () => {
   const selectedVenueId = localStorage.getItem("selectedVenueID");
   const navigate = useNavigate();
-  const [venue, setVenue] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    openingHours: {},
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const { venue, setVenue } = useEditVenue(selectedVenueId);
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm();
-
-  useEffect(() => {
-    if (selectedVenueId) {
-      const fetchVenue = async () => {
-        try {
-          const response = await ServerApi.get(
-            `/api/v1/venue/venues/${selectedVenueId}`
-          );
-          setVenue(response.data.venue);
-          setLoading(false);
-        } catch (err) {
-          setError("Error fetching venue details");
-          setLoading(false);
-        }
-      };
-      fetchVenue();
-    } else {
-      setError("Invalid venue ID");
-      setLoading(false);
-    }
-  }, [selectedVenueId]);
-
-  const onSubmit = async (data) => {
-    try {
-      await ServerApi.put(`/api/v1/venue/venues/${selectedVenueId}`, data);
-      navigate("/venues");
-    } catch (error) {
-      setError("Error updating venue");
-    }
-  };
+  } = useForm<Venue>();
 
   if (loading) {
     return (
@@ -83,7 +52,7 @@ const VenueDetails = () => {
   }
 
   if (error) {
-    return <div>Error</div>;
+    return <div>{error}</div>;
   }
 
   return (
@@ -156,34 +125,7 @@ const VenueDetails = () => {
                 <Clock className="h-4 w-4" />
                 Opening Hours
               </Label>
-              <div className="grid gap-4">
-                {Object.keys(venue.openingHours).map((day) => (
-                  <div key={day} className="flex items-center gap-4">
-                    <span className="w-24 font-medium">
-                      {day.charAt(0).toUpperCase() + day.slice(1)}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="time"
-                        defaultValue={venue.openingHours[day].open}
-                        {...register(`openingHours.${day}.open`, {
-                          required: true,
-                        })}
-                        className="w-32"
-                      />
-                      <span>to</span>
-                      <Input
-                        type="time"
-                        defaultValue={venue.openingHours[day].close}
-                        {...register(`openingHours.${day}.close`, {
-                          required: true,
-                        })}
-                        className="w-32"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="grid gap-4"></div>
             </div>
           </div>
 

@@ -25,6 +25,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Toggle } from "@/components/ui/toggle";
 
+// Define the prop types for the Toolbar component
+interface ToolbarProps {
+  venueName: string;
+  setSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
+  selectedWeek: number;
+  weekStarting: string;
+  rota: { _id: string; published: boolean } | null;
+  setRota: React.Dispatch<
+    React.SetStateAction<{ _id: string; published: boolean } | null>
+  >;
+  showCost: boolean;
+  setShowCost: React.Dispatch<React.SetStateAction<boolean>>;
+  showHours: boolean;
+  setShowHours: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+// Define the type for the export options
+interface ExportOption {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}
+
 const Toolbar = ({
   venueName,
   setSelectedWeek,
@@ -36,7 +59,7 @@ const Toolbar = ({
   setShowCost,
   showHours,
   setShowHours,
-}) => {
+}: ToolbarProps) => {
   const navigate = useNavigate();
 
   const handleClickPublishRota = async () => {
@@ -52,7 +75,7 @@ const Toolbar = ({
     }
   };
 
-  const handleChangeWeek = (direction) => {
+  const handleChangeWeek = (direction: "left" | "right") => {
     setSelectedWeek((prev) => prev + (direction === "right" ? 1 : -1));
   };
 
@@ -60,7 +83,8 @@ const Toolbar = ({
   const endOfWeek = getDayLabel(
     subDays(addWeeks(new Date(weekStarting), 1), 1)
   );
-  const exportOptions = [
+
+  const exportOptions: ExportOption[] = [
     {
       label: "PDF",
       icon: <FileText className="mr-2 h-4 w-4" />,
@@ -81,7 +105,7 @@ const Toolbar = ({
   return (
     <Card className="w-full">
       <CardContent className="p-4">
-        <div className="flex  flex-wrap flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-wrap flex-col md:flex-row items-center justify-between gap-4">
           <h2 className="text-xl font-semibold">{venueName}</h2>
 
           <div className="flex flex-wrap items-center justify-center gap-4">

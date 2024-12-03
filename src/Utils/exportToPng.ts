@@ -1,8 +1,12 @@
 import html2canvas from "html2canvas";
 
-const exportToPNg = () => {
+const exportToPNg = (): void => {
   const input = document.getElementById("rota-content");
 
+  if (!input) {
+    console.error("Element with ID 'rota-content' not found.");
+    return;
+  }
   // Save original dimensions and styles
   const originalWidth = input.scrollWidth;
   const originalHeight = input.scrollHeight;

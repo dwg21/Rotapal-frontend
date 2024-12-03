@@ -1,12 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, MouseEvent } from "react";
 import { getDayLabel } from "../../Utils/utils";
 import ShiftDetailsModal from "./ShiftDetailsModal";
-import { IoAddSharp } from "react-icons/io5"; // Importing the IoAddSharp icon
+import { IoAddSharp } from "react-icons/io5";
+import { ShiftData, WeeklySchedule, Schedule } from "../../types"; // Assuming the types file is located in 'types'
 
-const StaticRotaTable = ({ dates, rota }) => {
+type StaticRotaTableProps = {
+  dates: string[];
+  rota: {
+    rotaData: WeeklySchedule[];
+  };
+};
+
+type SelectedShift = {
+  personIndex: number | null;
+  dayIndex: number | null;
+  shiftData: ShiftData;
+};
+
+const StaticRotaTable = ({ dates, rota }: StaticRotaTableProps) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
-  const [selectedShift, setSelectedShift] = useState({
+  const [modalPosition, setModalPosition] = useState<{
+    top: number;
+    left: number;
+  }>({
+    top: 0,
+    left: 0,
+  });
+  const [selectedShift, setSelectedShift] = useState<SelectedShift>({
     personIndex: null,
     dayIndex: null,
     shiftData: {
@@ -19,7 +39,11 @@ const StaticRotaTable = ({ dates, rota }) => {
     },
   });
 
-  const handleClickShift = (event, personIndex, dayIndex) => {
+  const handleClickShift = (
+    event: MouseEvent<HTMLDivElement>,
+    personIndex: number,
+    dayIndex: number
+  ) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const position = {
       top: rect.bottom + window.scrollY,
@@ -29,12 +53,17 @@ const StaticRotaTable = ({ dates, rota }) => {
     const shiftData =
       rota?.rotaData[personIndex]?.schedule[dayIndex]?.shiftData;
 
-    console.log(personIndex, dayIndex, shiftData);
-
     setSelectedShift({
       personIndex,
       dayIndex,
-      shiftData,
+      shiftData: shiftData || {
+        startTime: "",
+        endTime: "",
+        label: "",
+        message: "",
+        break_duration: 0,
+        break_startTime: "",
+      },
     });
 
     setModalPosition(position);
@@ -60,12 +89,12 @@ const StaticRotaTable = ({ dates, rota }) => {
           {rota?.rotaData?.map((person, personIndex) => (
             <tr key={person.employee}>
               <td className="border px-4 py-2 select-none">
-                {person.employeeName}
+                {person.employee}
               </td>
               {dates.map((day, dayIndex) => (
                 <td key={day} className="border h-full select-none">
                   {person.schedule[dayIndex]?.shiftData?.startTime ||
-                  person.schedule[dayIndex]?.shiftData?.holidayBooked ||
+                  person.schedule[dayIndex]?.holidayBooked ||
                   person.schedule[dayIndex]?.shiftData?.label ? (
                     <div
                       onClick={(event) =>
@@ -79,7 +108,7 @@ const StaticRotaTable = ({ dates, rota }) => {
                           : "bg-darkBlue"
                       }`}
                     >
-                      {person.schedule[dayIndex]?.shiftData?.holidayBooked ? (
+                      {person.schedule[dayIndex]?.holidayBooked ? (
                         <p>Holiday Booked</p>
                       ) : person.schedule[dayIndex]?.shiftData?.label ===
                         "Day Off" ? (
@@ -98,7 +127,7 @@ const StaticRotaTable = ({ dates, rota }) => {
                     </div>
                   ) : (
                     <div className="w-[140px] h-[90px] flex justify-center items-center hover:bg-slate-300 hover:cursor-pointer ">
-                      <IoAddSharp className="text-3xl  hover:block text-center" />
+                      <IoAddSharp className="text-3xl hover:block text-center" />
                     </div>
                   )}
                 </td>
@@ -111,7 +140,8 @@ const StaticRotaTable = ({ dates, rota }) => {
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
         position={modalPosition}
-        selectedShift={selectedShift} // Pass the selected shift to the modal
+        selectedShift={selectedShift}
+        showHours={false}
       />
     </>
   );

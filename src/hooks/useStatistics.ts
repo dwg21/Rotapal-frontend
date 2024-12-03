@@ -1,8 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import ServerApi from "../serverApi/axios";
 
+// Define the types for your statistics data
+interface Statistic {
+  weekStarting: string;
+  totalStaffHours: number;
+  totalStaffCost: number;
+  totalHolidayDays: number;
+  totalHolidayCost: number;
+}
+
+interface VenueStatistics {
+  venueName: string;
+  statistics: Statistic[];
+}
+
+interface StatisticsState {
+  businessData: Record<string, VenueStatistics>; // Using Record<string, VenueStatistics> for key-value mapping
+  loading: boolean;
+  error: any; // You can refine this to a more specific error type if needed
+}
+
 const useStatistics = () => {
-  const [statisticsState, setStatisticsState] = useState({
+  const [statisticsState, setStatisticsState] = useState<StatisticsState>({
     businessData: {},
     loading: true,
     error: null,
@@ -22,10 +42,8 @@ const useStatistics = () => {
         error: null,
       });
 
-      console.log("Hola", response.data.statistics);
-
       console.log(statisticsState.businessData);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch venue statistics", err);
       setStatisticsState({
         businessData: {},

@@ -5,8 +5,8 @@ import ServerApi from "../../serverApi/axios";
 import ShiftSwap from "./ShiftSwap";
 import StaticRotaTable from "../RotaMisc/StaticRotaTable";
 import StaticResponsiveRotaTable from "../RotaMisc/StaticResponsiveRotaTable";
-import EmployeeToolbar from "../RotaMisc/EmployeeToolbar.jsx";
-import { generateWeeks } from "../../Utils/utils.js";
+import EmployeeToolbar from "../RotaMisc/EmployeeToolbar";
+import { generateWeeks } from "../../Utils/utils";
 
 const EmployeeRota = () => {
   const { date } = useParams();

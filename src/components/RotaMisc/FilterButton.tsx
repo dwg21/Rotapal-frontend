@@ -1,17 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
-const FilterButton = ({ showCost, setShowCost, showHours, setShowHours }) => {
-  const [dropDownVisible, setDropDownVisible] = useState(false);
-  const dropdownRef = useRef(null);
+interface FilterButtonProps {
+  showCost: boolean;
+  setShowCost: React.Dispatch<React.SetStateAction<boolean>>;
+  showHours: boolean;
+  setShowHours: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-  const handleCheckboxChange = (setter) => {
+const FilterButton = ({
+  showCost,
+  setShowCost,
+  showHours,
+  setShowHours,
+}: FilterButtonProps) => {
+  const [dropDownVisible, setDropDownVisible] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleCheckboxChange = (
+    setter: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
     setter((prev) => !prev);
     console.log(showHours);
   };
-
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
       setDropDownVisible(false);
     }
   };

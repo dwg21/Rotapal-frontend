@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { userContext } from "../../Context/UserContext";
 import ServerApi from "../../serverApi/axios";
@@ -19,23 +19,26 @@ const loginUrl = "api/v1/auth/login";
 const Login = () => {
   const { dispatch } = userContext();
   const navigate = useNavigate();
-  const [user, setUser] = useState({ email: "", password: "" });
-  const [error, setError] = useState(null);
+  const [user, setUser] = useState<{ email: string; password: string }>({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const { data } = await ServerApi.post(loginUrl, user, {
+      const { data } = await ServerApi.post<{ user: any }>(loginUrl, user, {
         withCredentials: true,
       });
       dispatch({ type: "LOGIN", payload: data.user });
       navigate("/venues");
       setUser({ email: "", password: "" });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setError(
         error.response?.data?.msg || "An error occurred. Please try again."
@@ -45,7 +48,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 w-full">
-      <Card className=" max-w-[600px] min-w-[350px]">
+      <Card className="max-w-[600px] min-w-[350px]">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
             RotaPal

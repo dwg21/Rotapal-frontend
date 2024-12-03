@@ -35,7 +35,7 @@ interface Status {
   type: StatusType;
 }
 
-const HolidayRequests: React.FC = () => {
+const HolidayRequests = () => {
   const [date, setDate] = useState<Date | null>(null);
   const [status, setStatus] = useState<Status>({ message: "", type: "" });
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);

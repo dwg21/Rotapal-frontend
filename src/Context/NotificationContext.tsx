@@ -66,9 +66,9 @@ interface NotificationsProviderProps {
 }
 
 // Provider Component
-export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({
+export const NotificationsProvider = ({
   children,
-}) => {
+}: NotificationsProviderProps) => {
   const selectedVenueId = localStorage.getItem("selectedVenueID");
   const [notifications, setNotifications] = useState<
     (Notification | ShiftSwapRequest | Holiday)[]

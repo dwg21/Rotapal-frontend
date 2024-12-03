@@ -1,14 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+
+import { ShiftData } from "@/types";
+interface Position {
+  top: number;
+  left: number;
+}
+
+interface SelectedShift {
+  shiftData?: ShiftData;
+}
+
+interface ShiftDetailsModalProps {
+  modalVisible: boolean;
+  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  showHours: boolean;
+  position: Position;
+  selectedShift: SelectedShift;
+}
 
 const ShiftDetailsModal = ({
   modalVisible,
   setModalVisible,
   position,
   selectedShift,
-}) => {
+}: ShiftDetailsModalProps) => {
   if (!modalVisible) return null;
-
-  console.log(selectedShift);
 
   return (
     <div
@@ -28,7 +44,7 @@ const ShiftDetailsModal = ({
           <p> End Time: {selectedShift?.shiftData?.endTime}</p>
           <p> Label: {selectedShift?.shiftData?.label}</p>
           <p>
-            Break: {selectedShift?.shiftData?.breakDuration} break starting at
+            Break: {selectedShift?.shiftData?.break_duration} break starting at
             {selectedShift?.shiftData?.break_startTime}
           </p>
           <p>Message: {selectedShift?.shiftData?.message}</p>
