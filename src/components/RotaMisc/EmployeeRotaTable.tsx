@@ -4,7 +4,7 @@ import ShiftDetailsModal from "./ShiftDetailsModal";
 import { IoAddSharp } from "react-icons/io5";
 import { ShiftData, WeeklySchedule, Schedule } from "../../types"; // Assuming the types file is located in 'types'
 
-type StaticRotaTableProps = {
+type EmployeeRotaTableProps = {
   dates: string[];
   rota: {
     rotaData: WeeklySchedule[];
@@ -17,7 +17,7 @@ type SelectedShift = {
   shiftData: ShiftData;
 };
 
-const StaticRotaTable = ({ dates, rota }: StaticRotaTableProps) => {
+const EmployeeRotaTable = ({ dates, rota }: EmployeeRotaTableProps) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalPosition, setModalPosition] = useState<{
     top: number;
@@ -147,4 +147,4 @@ const StaticRotaTable = ({ dates, rota }: StaticRotaTableProps) => {
   );
 };
 
-export default StaticRotaTable;
+export default EmployeeRotaTable;

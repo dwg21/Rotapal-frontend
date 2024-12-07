@@ -29,6 +29,7 @@ interface Person {
 }
 
 interface Rota {
+  [x: string]: any;
   rotaData: Person[];
 }
 
@@ -62,6 +63,7 @@ const RotaTable = ({
 }: RotaTableProps) => {
   // Use the context
   const { filters, setFilters } = useRotaContext();
+  console.log(rota);
 
   const [shift, setShift] = useState<Shift>({
     personIndex: null,
@@ -156,12 +158,13 @@ const RotaTable = ({
   };
 
   const calculateStaffCost = (person: Person) => {
+    console.log(person);
     return calculateHoursWorked(person) * person.hourlyWage;
   };
 
   const calculateTotalCost = () => {
-    return rota.rotaData.reduce(
-      (sum, person) => sum + calculateStaffCost(person),
+    return rota.reduce(
+      (sum: number, person: Person) => sum + calculateStaffCost(person),
       0
     );
   };

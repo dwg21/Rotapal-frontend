@@ -11,7 +11,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   resetErrorBoundary,
 }) => {
   return (
-    <div className="min-h-[400px] flex flex-col items-center justify-center space-y-6 p-6 bg-gray-50">
+    <div className=" h-screen w-screen flex flex-col items-center justify-center space-y-6 p-6 bg-gray-50">
       <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center border border-gray-100 hover:shadow-xl transition-all duration-300">
         <div className="flex justify-center mb-6">
           <div className="animate-bounce p-4 bg-red-50 rounded-full">

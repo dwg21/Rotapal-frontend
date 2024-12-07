@@ -29,7 +29,7 @@ interface Person {
   schedule: Schedule[];
 }
 
-interface StaticResponsiveRotaTableProps {
+interface EmployeeRotaTableMobileProps {
   rota: Person[];
   dates: string[];
   updateRota?: (employeeId: string, selectedDay: number) => void;
@@ -37,13 +37,13 @@ interface StaticResponsiveRotaTableProps {
   setSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const StaticResponsiveRotaTable: React.FC<StaticResponsiveRotaTableProps> = ({
+const EmployeeRotaTableMobile = ({
   rota = [],
   dates = [],
   updateRota,
   selectedWeek = 0,
   setSelectedWeek,
-}) => {
+}: EmployeeRotaTableMobileProps) => {
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [showCost, setShowCost] = useState<boolean>(false);
 
@@ -238,4 +238,4 @@ const StaticResponsiveRotaTable: React.FC<StaticResponsiveRotaTableProps> = ({
   );
 };
 
-export default StaticResponsiveRotaTable;
+export default EmployeeRotaTableMobile;

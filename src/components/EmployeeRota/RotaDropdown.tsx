@@ -7,7 +7,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const RotaDropdown = ({ rotaNames, setSelectedRota, selectedRota }) => {
+interface RotaDropdownProps {
+  rotaNames: string[];
+  setSelectedRota: (rota: number) => void;
+  selectedRota: number;
+}
+
+const RotaDropdown = ({
+  rotaNames,
+  setSelectedRota,
+  selectedRota,
+}: RotaDropdownProps) => {
   return (
     <Select
       value={selectedRota.toString()}

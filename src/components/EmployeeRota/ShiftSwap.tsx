@@ -3,9 +3,52 @@ import { userContext } from "../../Context/UserContext";
 import ServerApi from "../../serverApi/axios";
 import { getDayLabel } from "../../Utils/utils";
 
-const ShiftSwap = ({ rota, weeks = [], selectedWeek, rotaDetails }) => {
+// Types for shift and rota data
+interface ShiftData {
+  startTime: string;
+  endTime: string;
+}
+
+interface Schedule {
+  _id?: string;
+  date?: string;
+  shiftData: ShiftData;
+}
+
+interface RotaPersonData {
+  _id: string;
+  employeeName: string;
+  schedule: Schedule[];
+}
+
+interface RotaData {
+  _id: string;
+  venue: string;
+  rotaData?: RotaPersonData[];
+}
+
+interface SwapDetailsState {
+  selectedColleague: string;
+  colleagueShift: string;
+  myShift: string;
+  colleagueShiftId: string;
+  myShiftId: string;
+}
+
+interface ShiftSwapProps {
+  rota: RotaData;
+  weeks?: string[][];
+  selectedWeek: number;
+  rotaDetails?: any; // You might want to type this more specifically
+}
+
+const ShiftSwap: React.FC<ShiftSwapProps> = ({
+  rota,
+  weeks = [],
+  selectedWeek,
+}) => {
   const { state } = userContext();
-  const [swapDetails, setSwapDetails] = useState({
+  const [swapDetails, setSwapDetails] = useState<SwapDetailsState>({
     selectedColleague: "",
     colleagueShift: "",
     myShift: "",
@@ -14,13 +57,13 @@ const ShiftSwap = ({ rota, weeks = [], selectedWeek, rotaDetails }) => {
   });
 
   const filteredShifts = rota?.rotaData?.filter(
-    (person) => person.employeeName === state.userData.name
+    (person) => person.employeeName === state?.userData?.name
   );
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setSwapDetails((prev) => {
-      const newState = {
+      const newState: SwapDetailsState = {
         ...prev,
         [name]: value,
       };
@@ -31,11 +74,14 @@ const ShiftSwap = ({ rota, weeks = [], selectedWeek, rotaDetails }) => {
       } else if (name === "colleagueShift") {
         const [colleagueIndex, shiftIndex] = value.split("-");
         newState.colleagueShiftId =
-          rota?.rotaData[colleagueIndex]?.schedule[shiftIndex]?._id;
+          rota?.rotaData?.[parseInt(colleagueIndex)]?.schedule[
+            parseInt(shiftIndex)
+          ]?._id || "";
       } else if (name === "myShift") {
         const [myIndex, myShiftIndex] = value.split("-");
         newState.myShiftId =
-          filteredShifts[myIndex]?.schedule[myShiftIndex]?._id;
+          filteredShifts?.[parseInt(myIndex)]?.schedule[parseInt(myShiftIndex)]
+            ?._id || "";
       }
 
       return newState;
@@ -90,7 +136,7 @@ const ShiftSwap = ({ rota, weeks = [], selectedWeek, rotaDetails }) => {
         >
           <option value="">Select a colleague</option>
           {rota?.rotaData?.map((person, index) => (
-            <option key={person._id} value={index}>
+            <option key={person._id} value={index.toString()}>
               {person.employeeName}
             </option>
           ))}
@@ -108,19 +154,19 @@ const ShiftSwap = ({ rota, weeks = [], selectedWeek, rotaDetails }) => {
           >
             <option value="">Select a shift</option>
             {weeks[selectedWeek] &&
-              rota?.rotaData[swapDetails.selectedColleague]?.schedule?.map(
-                (shift, dayIndex) => (
-                  <option
-                    key={`${swapDetails.selectedColleague}-${dayIndex}`}
-                    value={`${swapDetails.selectedColleague}-${dayIndex}`}
-                  >
-                    {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
-                    {shift.shiftData.startTime
-                      ? `${shift.shiftData.startTime} - ${shift.shiftData.endTime}`
-                      : "Day Off"}
-                  </option>
-                )
-              )}
+              rota?.rotaData[
+                parseInt(swapDetails.selectedColleague)
+              ]?.schedule?.map((shift, dayIndex) => (
+                <option
+                  key={`${swapDetails.selectedColleague}-${dayIndex}`}
+                  value={`${swapDetails.selectedColleague}-${dayIndex}`}
+                >
+                  {getDayLabel(new Date(weeks[selectedWeek][dayIndex]))} -{" "}
+                  {shift.shiftData.startTime
+                    ? `${shift.shiftData.startTime} - ${shift.shiftData.endTime}`
+                    : "Day Off"}
+                </option>
+              ))}
           </select>
         </div>
       )}
