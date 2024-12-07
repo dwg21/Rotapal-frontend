@@ -7,17 +7,7 @@ import React, {
 } from "react";
 import ServerApi from "../serverApi/axios";
 
-interface UserData {
-  business: string;
-  name: string;
-  role: string;
-  userId: string;
-}
-
-interface UserState {
-  loggedIn: boolean;
-  userData: UserData | null;
-}
+import { UserData, UserState } from "@/types/user";
 
 // inital store
 const initialState: UserState = {

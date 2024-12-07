@@ -20,7 +20,26 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const DraggableTemplate = ({ shift }) => {
+// Define types for props
+interface DraggableTemplateProps {
+  shift: {
+    id: string;
+    desc: string;
+    handleDeleteTemplate: (id: string) => void;
+  };
+}
+
+interface ShiftTemplatesProps {
+  selectedvenueID: string;
+  commonShifts: Array<{
+    id: string;
+    desc: string;
+  }>;
+  setCommonShifts: (shifts: any[]) => void;
+}
+
+// DraggableTemplate Component
+const DraggableTemplate = ({ shift }: DraggableTemplateProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: shift.id,
@@ -60,14 +79,19 @@ const DraggableTemplate = ({ shift }) => {
   );
 };
 
-const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
-  const [newTemplateLabel, setNewTemplateLabel] = useState("");
-  const [newTemplateStartTime, setNewTemplateStartTime] = useState("");
-  const [newTemplateEndTime, setNewTemplateEndTime] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+// ShiftTemplates Component
+const ShiftTemplates = ({
+  selectedvenueID,
+  commonShifts,
+  setCommonShifts,
+}: ShiftTemplatesProps) => {
+  const [newTemplateLabel, setNewTemplateLabel] = useState<string>("");
+  const [newTemplateStartTime, setNewTemplateStartTime] = useState<string>("");
+  const [newTemplateEndTime, setNewTemplateEndTime] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const handleAddNewTemplate = async (e) => {
+  const handleAddNewTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
       newTemplateStartTime.trim() === "" ||
@@ -100,7 +124,7 @@ const ShiftTemplates = ({ selectedvenueID, commonShifts, setCommonShifts }) => {
     }
   };
 
-  const handleDeleteTemplate = async (id) => {
+  const handleDeleteTemplate = async (id: string) => {
     try {
       const response = await ServerApi.delete(
         `api/v1/venue/${selectedvenueID}/common-shifts/${id}`,

@@ -1,8 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-
 import "./shiftmodal.css";
-const ShiftModal = ({
+
+// Use existing type declarations
+import { ShiftData, Schedule } from "../../types/rota"; // Adjust the import path if necessary
+
+interface Position {
+  top: number;
+  left: number;
+}
+
+interface ShiftModalProps {
+  shift: Schedule; // Use the Schedule type for the shift
+  setShift: React.Dispatch<React.SetStateAction<Schedule>>;
+  isOpen: boolean;
+  onRequestClose: () => void;
+  onSave: (shift: Schedule) => void;
+  position: Position;
+}
+
+const ShiftModal: React.FC<ShiftModalProps> = ({
   shift,
   setShift,
   isOpen,
@@ -11,7 +28,11 @@ const ShiftModal = ({
   position,
 }) => {
   // Handle changes to shiftData properties
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
     setShift((prev) => ({
       ...prev,
@@ -107,7 +128,6 @@ const ShiftModal = ({
           <label className="text-center flex">
             Message:
             <textarea
-              type="multitext"
               name="message"
               value={shift.shiftData?.message || ""}
               onChange={handleChange}

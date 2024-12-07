@@ -1,10 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, MouseEvent } from "react";
 import { getDayLabel } from "../../Utils/utils";
 import { IoAddSharp } from "react-icons/io5";
 import ShiftModal from "./ShiftModal";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import DroppableArea from "./DndComponents/DropppableArea";
 import DraggableItem from "./DndComponents/DraggableItem";
+import { useRotaContext } from "@/Context/RotaContext";
+
+// Keep existing interfaces
+interface ShiftData {
+  startTime: string;
+  endTime: string;
+  label: string;
+  message: string;
+  break_duration: number;
+  break_startTime: string;
+  holidayBooked?: boolean;
+}
+
+interface Schedule {
+  shiftData?: ShiftData;
+}
+
+interface Person {
+  employee: string;
+  employeeName: string;
+  schedule: Schedule[];
+  hourlyWage: number;
+}
+
+interface Rota {
+  rotaData: Person[];
+}
+
+interface RotaTableProps {
+  rota: Rota;
+  setRota: React.Dispatch<React.SetStateAction<Rota>>;
+  dates: string[];
+  isSpacePressed: boolean;
+  updateRota: (updatedRota: Rota) => Promise<void>;
+  archived: boolean;
+}
+
+interface Shift {
+  personIndex: number | null;
+  dayIndex: number | null;
+  shiftData: ShiftData;
+}
+
+interface ModalPosition {
+  top: number;
+  left: number;
+}
 
 const RotaTable = ({
   rota,
@@ -12,12 +58,12 @@ const RotaTable = ({
   dates,
   isSpacePressed,
   updateRota,
-  showCost,
   archived,
-  setShowCost,
-  showHours, // Add showHours prop
-}) => {
-  const [shift, setShift] = useState({
+}: RotaTableProps) => {
+  // Use the context
+  const { filters, setFilters } = useRotaContext();
+
+  const [shift, setShift] = useState<Shift>({
     personIndex: null,
     dayIndex: null,
     shiftData: {
@@ -29,13 +75,19 @@ const RotaTable = ({
       break_startTime: "",
     },
   });
-  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+  const [modalPosition, setModalPosition] = useState<ModalPosition>({
+    top: 0,
+    left: 0,
+  });
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [editShift, setEditShift] = useState(null);
+  const [editShift, setEditShift] = useState<Shift | null>(null);
 
-  const handleSaveShift = async (updatedShift) => {
+  // Rest of the component remains the same as in the original implementation
+  const handleSaveShift = async (updatedShift: Shift) => {
     const { personIndex, dayIndex, shiftData } = updatedShift;
-    const updatedRotaData = rota.map((person, pIndex) => {
+    if (personIndex === null || dayIndex === null) return;
+
+    const updatedRotaData = rota.rotaData.map((person, pIndex) => {
       if (pIndex === personIndex) {
         return {
           ...person,
@@ -53,22 +105,21 @@ const RotaTable = ({
       return person;
     });
 
-    // Set the updated rota state
-    setRota({
-      ...rota,
-      rotaData: updatedRotaData,
-    });
+    const updatedRota = { ...rota, rotaData: updatedRotaData };
+    setRota(updatedRota);
 
-    await updateRota({
-      ...rota,
-      rotaData: updatedRotaData,
-    });
+    await updateRota(updatedRota);
     setModalIsOpen(false);
     setEditShift(null);
   };
 
-  const handleEditShift = (personIndex, dayIndex, event) => {
-    const shiftData = rota[personIndex].schedule[dayIndex]?.shiftData || {};
+  const handleEditShift = (
+    personIndex: number,
+    dayIndex: number,
+    event: MouseEvent<HTMLTableCellElement>
+  ) => {
+    const shiftData =
+      rota.rotaData[personIndex].schedule[dayIndex]?.shiftData || {};
     const rect = event.currentTarget.getBoundingClientRect();
     const position = {
       top: rect.bottom + window.scrollY,
@@ -91,29 +142,29 @@ const RotaTable = ({
     setModalIsOpen(true);
   };
 
-  const calculateHoursWorked = (person) => {
+  const calculateHoursWorked = (person: Person) => {
     return person.schedule.reduce((total, shift) => {
       if (shift.shiftData?.startTime && shift.shiftData?.endTime) {
         const start = new Date(`1970-01-01T${shift.shiftData.startTime}`);
         const end = new Date(`1970-01-01T${shift.shiftData.endTime}`);
-        const hoursWorked = (end - start) / (1000 * 60 * 60); // Convert ms to hours
+        const hoursWorked =
+          (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         return total + hoursWorked;
       }
       return total;
     }, 0);
   };
 
-  const calculateStaffCost = (person) => {
+  const calculateStaffCost = (person: Person) => {
     return calculateHoursWorked(person) * person.hourlyWage;
   };
 
   const calculateTotalCost = () => {
-    return rota.reduce((sum, person) => {
-      return sum + calculateStaffCost(person);
-    }, 0);
+    return rota.rotaData.reduce(
+      (sum, person) => sum + calculateStaffCost(person),
+      0
+    );
   };
-
-  console.log(rota);
 
   return (
     <div>
@@ -132,12 +183,12 @@ const RotaTable = ({
                 </div>
               </th>
             ))}
-            {showHours && (
+            {filters.showHours && (
               <th className="px-4 py-2 border bg-gray-100 select-none">
                 Hours Worked
               </th>
             )}
-            {showCost && (
+            {filters.showCost && (
               <th className="px-4 py-2 border bg-gray-100 select-none">
                 Staff Costs
               </th>
@@ -209,12 +260,12 @@ const RotaTable = ({
                     </DroppableArea>
                   </td>
                 ))}
-                {showHours && (
+                {filters.showHours && (
                   <td className="border px-4 py-2 select-none text-center ">
                     {calculateHoursWorked(person).toFixed(0)}
                   </td>
                 )}
-                {showCost && (
+                {filters.showCost && (
                   <td className="border px-4 py-2 select-none text-center">
                     £{calculateStaffCost(person).toFixed(2)}
                   </td>
@@ -222,11 +273,11 @@ const RotaTable = ({
               </tr>
             ))}
         </tbody>
-        {showCost && (
+        {filters.showCost && (
           <tfoot>
             <tr>
               <td
-                colSpan={dates.length + (showHours ? 2 : 1)}
+                colSpan={dates.length + (filters.showHours ? 2 : 1)}
                 className="px-4 py-2 border bg-gray-100 text-right font-bold"
               >
                 Total Weekly Cost: £{rota && calculateTotalCost().toFixed(2)}

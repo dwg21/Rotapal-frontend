@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,20 +19,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ShiftData, WeeklySchedule, Schedule } from "@/types";
+import { useRotaContext } from "@/Context/RotaContext";
 
-const StaticResponsiveRotaTable = ({
+interface RotaTableMobileProps {
+  rota: WeeklySchedule[];
+  dates: string[];
+  updateRota?: (employeeId: string, selectedDay: number) => void;
+}
+
+const RotaTableMobile: React.FC<RotaTableMobileProps> = ({
   rota = [],
   dates = [],
   updateRota,
-  selectedWeek = 0,
-  setSelectedWeek,
 }) => {
-  const [selectedDay, setSelectedDay] = useState(0);
-  const [showCost, setShowCost] = useState(false);
+  // Use the context for selectedWeek and filters
+  const { selectedWeek, setSelectedWeek, filters, setFilters } =
+    useRotaContext();
+
+  const [selectedDay, setSelectedDay] = React.useState<number>(0);
 
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const calculateStaffCost = (person) => {
+  const calculateStaffCost = (person: WeeklySchedule): number => {
     const totalHours = person.schedule.reduce((sum, shift) => {
       if (
         shift.shiftData &&
@@ -41,7 +50,8 @@ const StaticResponsiveRotaTable = ({
       ) {
         const start = new Date(`1970-01-01T${shift.shiftData.startTime}`);
         const end = new Date(`1970-01-01T${shift.shiftData.endTime}`);
-        const hoursWorked = (end - start) / (1000 * 60 * 60);
+        const hoursWorked =
+          (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         return sum + hoursWorked;
       }
       return sum;
@@ -49,11 +59,11 @@ const StaticResponsiveRotaTable = ({
     return totalHours * (person.hourlyWage || 0);
   };
 
-  const calculateTotalCost = () => {
+  const calculateTotalCost = (): number => {
     return rota.reduce((sum, person) => sum + calculateStaffCost(person), 0);
   };
 
-  const handleChangeWeek = (direction) => {
+  const handleChangeWeek = (direction: "left" | "right"): void => {
     if (direction === "right") {
       setSelectedWeek((prev) => prev + 1);
     } else if (direction === "left" && selectedWeek > 0) {
@@ -61,7 +71,7 @@ const StaticResponsiveRotaTable = ({
     }
   };
 
-  const formatSelectedDate = (dateString) => {
+  const formatSelectedDate = (dateString: string): string => {
     if (!dateString) return "No date available";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -86,8 +96,10 @@ const StaticResponsiveRotaTable = ({
             <Label htmlFor="show-cost">Show Costs</Label>
             <Switch
               id="show-cost"
-              checked={showCost}
-              onCheckedChange={setShowCost}
+              checked={filters.showCost}
+              onCheckedChange={(checked) =>
+                setFilters((prev) => ({ ...prev, showCost: checked }))
+              }
             />
           </div>
         </div>
@@ -163,7 +175,7 @@ const StaticResponsiveRotaTable = ({
                           <Badge variant="secondary">Day Off</Badge>
                         ) : (
                           <div className="space-y-1">
-                            {showCost && (
+                            {filters.showCost && (
                               <p className="text-sm text-muted-foreground">
                                 Cost: £{calculateStaffCost(person).toFixed(2)}
                               </p>
@@ -174,8 +186,7 @@ const StaticResponsiveRotaTable = ({
                                 {
                                   person.schedule[selectedDay].shiftData
                                     .startTime
-                                }{" "}
-                                -{" "}
+                                }
                                 {person.schedule[selectedDay].shiftData.endTime}
                               </p>
                             )}
@@ -205,7 +216,7 @@ const StaticResponsiveRotaTable = ({
             </div>
           </ScrollArea>
 
-          {showCost && rota?.length > 0 && (
+          {filters.showCost && rota?.length > 0 && (
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total Weekly Cost</span>
@@ -221,4 +232,4 @@ const StaticResponsiveRotaTable = ({
   );
 };
 
-export default StaticResponsiveRotaTable;
+export default RotaTableMobile;

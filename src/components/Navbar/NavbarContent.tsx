@@ -1,15 +1,24 @@
 import React from "react";
-import { userContext } from "../../Context/UserContext";
 import { Link } from "react-router-dom";
-import {
-  BookText,
-  Home,
-  SquarePen,
-  UserCircle,
-  UsersRound,
-} from "lucide-react";
+import { userContext } from "../../Context/UserContext";
 
-const NavbarItem = ({ icon, text, linkDestination, onLinkClick }) => {
+// Define the types for the props of NavbarItem
+interface NavbarItemProps {
+  text: string;
+  linkDestination: string;
+  onLinkClick: () => void;
+}
+
+// Define the types for the props of NavbarContent
+interface NavbarContentProps {
+  onLinkClick: () => void;
+}
+
+const NavbarItem = ({
+  text,
+  linkDestination,
+  onLinkClick,
+}: NavbarItemProps) => {
   return (
     <li className="flex items-center hover:bg-slate-200 h-full px-4 py-2">
       <Link
@@ -23,13 +32,14 @@ const NavbarItem = ({ icon, text, linkDestination, onLinkClick }) => {
   );
 };
 
-const NavbarContent = ({ onLinkClick }) => {
+const NavbarContent = ({ onLinkClick }: NavbarContentProps) => {
+  // Use the context and type it properly
   const { state } = userContext();
 
+  // If the user is not logged in, show the login/register link
   if (!state?.loggedIn) {
     return (
       <NavbarItem
-        icon={<UserCircle size={20} />}
         text="Login / Register"
         linkDestination="/"
         onLinkClick={onLinkClick}
@@ -37,40 +47,35 @@ const NavbarContent = ({ onLinkClick }) => {
     );
   }
 
+  // Items for admin roles
   const adminItems = (
     <>
       <NavbarItem
-        icon={<BookText size={20} />}
         text="Master Rota"
         linkDestination="/rota"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<BookText size={20} />}
         text="Statistics"
         linkDestination="/archivedrotas"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<UsersRound size={20} />}
         text="Staff"
         linkDestination="/staff"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<SquarePen size={20} />}
         text="Create Venue"
         linkDestination="/createvenue"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<Home size={20} />}
         text="Rotas"
         linkDestination="/venues"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<Home size={20} />}
         text="View Notifications"
         linkDestination="/notifcations"
         onLinkClick={onLinkClick}
@@ -78,22 +83,20 @@ const NavbarContent = ({ onLinkClick }) => {
     </>
   );
 
+  // Items for user roles
   const userItems = (
     <>
       <NavbarItem
-        icon={<BookText size={20} />}
         text="Employee Rota"
         linkDestination="/employeerota"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<Home size={20} />}
         text="View Notifications"
         linkDestination="/notifcations"
         onLinkClick={onLinkClick}
       />
       <NavbarItem
-        icon={<BookText size={20} />}
         text="Request Holiday"
         linkDestination="/holidayrequests"
         onLinkClick={onLinkClick}
@@ -103,7 +106,8 @@ const NavbarContent = ({ onLinkClick }) => {
 
   return (
     <ul className="flex flex-col md:flex-row gap-4 md:gap-6">
-      {state.userData.role === "admin" || state.userData.role === "AccountOwner"
+      {state?.userData?.role === "admin" ||
+      state?.userData?.role === "AccountOwner"
         ? adminItems
         : userItems}
     </ul>

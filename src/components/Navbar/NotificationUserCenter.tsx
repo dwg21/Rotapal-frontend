@@ -3,37 +3,38 @@ import { FaBell, FaUserCircle } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { userContext } from "../../Context/UserContext";
 import { useNotifications } from "../../Context/NotificationContext";
-import { Button } from "@mui/material";
 import ServerApi from "../../serverApi/axios";
+
+import { Notification } from "@/types/notification";
 
 const NotificationUserCenter = () => {
   const { state, dispatch } = userContext();
   const { setNotifications } = useNotifications(); // Access NotificationsContext
   const navigate = useNavigate();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false);
 
   const { notifications, loading, error } = useNotifications();
 
   // Refs to detect clicks outside of the dropdowns
-  const notificationRef = useRef(null);
-  const userDropdownRef = useRef(null);
+  const notificationRef = useRef<HTMLDivElement | null>(null);
+  const userDropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Calculate unread count based on your logic
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     // Close dropdowns when clicking outside
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (
         notificationRef.current &&
-        !notificationRef.current.contains(event.target)
+        !notificationRef.current.contains(event.target as Node)
       ) {
         setIsNotificationOpen(false);
       }
       if (
         userDropdownRef.current &&
-        !userDropdownRef.current.contains(event.target)
+        !userDropdownRef.current.contains(event.target as Node)
       ) {
         setIsUserDropdownOpen(false);
       }
@@ -97,7 +98,7 @@ const NotificationUserCenter = () => {
               ) : notifications.length === 0 ? (
                 <div className="text-center py-4">No notifications found.</div>
               ) : (
-                notifications.slice(0, 5).map((notification) => (
+                notifications.slice(0, 5).map((notification: Notification) => (
                   <li
                     key={notification._id}
                     className="px-4 py-2 hover:bg-gray-100 border-b border-gray-200"

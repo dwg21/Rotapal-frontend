@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useDraggable, useDroppable, DndContext } from "@dnd-kit/core";
+import React, { useState, FormEvent } from "react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import ServerApi from "../../serverApi/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,39 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-const DraggableRotaTemplate = ({ rota, handleDeleteTemplate }) => {
+// Define types for the components' props
+interface Rota {
+  id: string;
+  label: string;
+  rotaData: Array<{
+    employee: string;
+    schedule: Array<{
+      date: string;
+      shiftData: any;
+    }>;
+  }>;
+}
+
+interface DraggableRotaTemplateProps {
+  rota: Rota;
+  handleDeleteTemplate: (id: string) => void;
+}
+
+interface DroppableRotaContainerProps {
+  children: React.ReactNode;
+}
+
+interface RotaTemplatesProps {
+  rota: any;
+  commonRotas: Rota[];
+  setCommonRotas: React.Dispatch<React.SetStateAction<Rota[]>>;
+  selectedvenueID: string;
+}
+
+const DraggableRotaTemplate = ({
+  rota,
+  handleDeleteTemplate,
+}: DraggableRotaTemplateProps) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: rota.id,
     data: {
@@ -42,7 +74,7 @@ const DraggableRotaTemplate = ({ rota, handleDeleteTemplate }) => {
   );
 };
 
-const DroppableRotaContainer = ({ children }) => {
+const DroppableRotaContainer = ({ children }: DroppableRotaContainerProps) => {
   const { isOver, setNodeRef } = useDroppable({
     id: "commonRotas",
   });
@@ -64,21 +96,21 @@ const RotaTemplates = ({
   commonRotas,
   setCommonRotas,
   selectedvenueID,
-}) => {
-  const [newRotaLabel, setNewRotaLabel] = useState("");
-  const [addTemplateVisible, setAddTemplateVisible] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+}: RotaTemplatesProps) => {
+  const [newRotaLabel, setNewRotaLabel] = useState<string>("");
+  const [addTemplateVisible, setAddTemplateVisible] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
-  const handleAddNewTemplate = async (e) => {
+  const handleAddNewTemplate = async (e: FormEvent) => {
     e.preventDefault();
     if (newRotaLabel.trim() === "") return;
 
     const newTemplate = {
       id: `${newRotaLabel}-${Date.now()}`,
       label: newRotaLabel,
-      rotaData: rota?.rotaData.map((person) => ({
+      rotaData: rota?.rotaData.map((person: any) => ({
         employee: person.employee,
-        schedule: person.schedule.map((shift) => ({
+        schedule: person.schedule.map((shift: any) => ({
           date: shift.date,
           shiftData: shift.shiftData,
         })),
@@ -99,7 +131,7 @@ const RotaTemplates = ({
     }
   };
 
-  const handleDeleteTemplate = async (id) => {
+  const handleDeleteTemplate = async (id: string) => {
     try {
       const response = await ServerApi.delete(
         `api/v1/venue/${selectedvenueID}/common-rotas/${id}`,
@@ -126,15 +158,6 @@ const RotaTemplates = ({
             </CollapsibleTrigger>
           </CardTitle>
         </CardHeader>
-        {/* <CardHeader>
-          <CardTitle>Rota Templates</CardTitle>
-        </CardHeader>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between">
-            <span>View Templates</span>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </CollapsibleTrigger> */}
         <CardContent>
           <CollapsibleContent>
             <p className="text-sm text-muted-foreground mb-4">

@@ -1,6 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { format, addWeeks, subDays } from "date-fns";
+import { addWeeks, subDays } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,6 +13,7 @@ import ServerApi from "../../serverApi/axios";
 import { getDayLabel } from "../../Utils/utils";
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
+import { useRotaContext } from "../../Context/RotaContext"; // Update this import path
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,20 +25,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Toggle } from "@/components/ui/toggle";
 
-// Define the prop types for the Toolbar component
+// Updated prop types to remove filter and week-related props
 interface ToolbarProps {
   venueName: string;
-  setSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
-  selectedWeek: number;
   weekStarting: string;
   rota: { _id: string; published: boolean } | null;
   setRota: React.Dispatch<
     React.SetStateAction<{ _id: string; published: boolean } | null>
   >;
-  showCost: boolean;
-  setShowCost: React.Dispatch<React.SetStateAction<boolean>>;
-  showHours: boolean;
-  setShowHours: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Define the type for the export options
@@ -48,19 +42,9 @@ interface ExportOption {
   onClick: () => void;
 }
 
-const Toolbar = ({
-  venueName,
-  setSelectedWeek,
-  selectedWeek,
-  weekStarting,
-  rota,
-  setRota,
-  showCost,
-  setShowCost,
-  showHours,
-  setShowHours,
-}: ToolbarProps) => {
-  const navigate = useNavigate();
+const Toolbar = ({ venueName, weekStarting, rota, setRota }: ToolbarProps) => {
+  // Use the new RotaContext
+  const { setSelectedWeek, filters, setFilters } = useRotaContext();
 
   const handleClickPublishRota = async () => {
     try {
@@ -163,15 +147,19 @@ const Toolbar = ({
 
             <div className="flex items-center gap-2">
               <Toggle
-                pressed={showCost}
-                onPressedChange={setShowCost}
+                pressed={filters.showCost}
+                onPressedChange={(pressed) =>
+                  setFilters((prev) => ({ ...prev, showCost: pressed }))
+                }
                 aria-label="Toggle cost"
               >
                 Cost
               </Toggle>
               <Toggle
-                pressed={showHours}
-                onPressedChange={setShowHours}
+                pressed={filters.showHours}
+                onPressedChange={(pressed) =>
+                  setFilters((prev) => ({ ...prev, showHours: pressed }))
+                }
                 aria-label="Toggle hours"
               >
                 Hours
