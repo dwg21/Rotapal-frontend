@@ -5,6 +5,10 @@ interface RotaFilters {
   showCost: boolean;
   showHours: boolean;
 }
+interface ToolbarSections {
+  shiftTemplates: boolean;
+  rotaTemplates: boolean;
+}
 
 // Create Rota Context
 const RotaContext = createContext<{
@@ -14,6 +18,10 @@ const RotaContext = createContext<{
   setSelectedWeek: React.Dispatch<React.SetStateAction<number>>;
   selectedVenueId: string;
   setSelectedVenueId: React.Dispatch<React.SetStateAction<string>>;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  toolbarSections: ToolbarSections;
+  setToolbarSections: React.Dispatch<React.SetStateAction<ToolbarSections>>;
 } | null>(null);
 
 // Rota Provider Component
@@ -21,6 +29,11 @@ export const RotaProvider = ({ children }: { children: React.ReactNode }) => {
   const [filters, setFilters] = useState<RotaFilters>({
     showCost: false,
     showHours: false,
+  });
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [toolbarSections, setToolbarSections] = useState<ToolbarSections>({
+    shiftTemplates: false,
+    rotaTemplates: false,
   });
 
   const [selectedWeek, setSelectedWeek] = useState(0);
@@ -37,8 +50,12 @@ export const RotaProvider = ({ children }: { children: React.ReactNode }) => {
       setSelectedWeek,
       selectedVenueId,
       setSelectedVenueId,
+      isSidebarOpen,
+      setIsSidebarOpen,
+      toolbarSections,
+      setToolbarSections,
     }),
-    [filters, selectedWeek, selectedVenueId]
+    [filters, selectedWeek, selectedVenueId, isSidebarOpen, toolbarSections]
   );
 
   return (

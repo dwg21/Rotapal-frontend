@@ -19,27 +19,30 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRotaContext } from "@/Context/RotaContext";
 
-// Define types for props
-interface DraggableTemplateProps {
-  shift: {
-    id: string;
-    desc: string;
-    handleDeleteTemplate: (id: string) => void;
+// Utility Types
+interface ShiftTemplate {
+  id: string;
+  desc: string;
+  shiftData: {
+    startTime: string;
+    endTime: string;
   };
 }
 
 interface ShiftTemplatesProps {
   selectedvenueID: string;
-  commonShifts: Array<{
-    id: string;
-    desc: string;
-  }>;
-  setCommonShifts: (shifts: any[]) => void;
+  commonShifts: ShiftTemplate[];
+  setCommonShifts: (shifts: ShiftTemplate[]) => void;
 }
 
-// DraggableTemplate Component
-const DraggableTemplate = ({ shift }: DraggableTemplateProps) => {
+// Draggable Shift Template Component
+const DraggableTemplate: React.FC<{
+  shift: ShiftTemplate & {
+    onDelete: (id: string) => void;
+  };
+}> = ({ shift }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: shift.id,
@@ -50,9 +53,7 @@ const DraggableTemplate = ({ shift }: DraggableTemplateProps) => {
     });
 
   const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
     : undefined;
 
   return (
@@ -60,18 +61,24 @@ const DraggableTemplate = ({ shift }: DraggableTemplateProps) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className={`flex items-center w-[200px] justify-between p-2 mb-2 border rounded-md bg-white shadow-sm ${
-        isDragging ? "opacity-50" : ""
-      }`}
+      className={`
+        flex items-center justify-between 
+        p-2 mb-1 border rounded-md bg-white shadow-sm 
+        ${isDragging ? "opacity-50" : ""}
+      `}
     >
-      <div className="flex items-center">
-        <GripVertical className="mr-2 h-4 w-4 cursor-move" {...listeners} />
-        <span>{shift.desc}</span>
+      <div className="flex items-center flex-grow">
+        <GripVertical
+          className="mr-2 h-4 w-4 cursor-move text-muted-foreground"
+          {...listeners}
+        />
+        <span className="text-sm truncate flex-grow">{shift.desc}</span>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => shift.handleDeleteTemplate(shift.id)}
+        className="h-6 w-6"
+        onClick={() => shift.onDelete(shift.id)}
       >
         <Trash2 className="h-4 w-4" />
       </Button>
@@ -79,46 +86,53 @@ const DraggableTemplate = ({ shift }: DraggableTemplateProps) => {
   );
 };
 
-// ShiftTemplates Component
-const ShiftTemplates = ({
+// Main Shift Templates Component
+const ShiftTemplates: React.FC<ShiftTemplatesProps> = ({
   selectedvenueID,
   commonShifts,
   setCommonShifts,
-}: ShiftTemplatesProps) => {
-  const [newTemplateLabel, setNewTemplateLabel] = useState<string>("");
-  const [newTemplateStartTime, setNewTemplateStartTime] = useState<string>("");
-  const [newTemplateEndTime, setNewTemplateEndTime] = useState<string>("");
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+}) => {
+  const [newTemplate, setNewTemplate] = useState({
+    label: "",
+    startTime: "",
+    endTime: "",
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { toolbarSections, setToolbarSections } = useRotaContext();
+
+  const resetTemplateForm = () => {
+    setNewTemplate({ label: "", startTime: "", endTime: "" });
+    setIsDialogOpen(false);
+  };
 
   const handleAddNewTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      newTemplateStartTime.trim() === "" ||
-      newTemplateEndTime.trim() === ""
-    ) {
+
+    // Validate input
+    const { label, startTime, endTime } = newTemplate;
+    if (!label.trim() || !startTime || !endTime) {
       return;
     }
-    const newTemplate = {
-      id: `${newTemplateLabel}-${Date.now()}`,
+
+    const newTemplateData = {
+      id: `${label}-${Date.now()}`,
       shiftData: {
-        startTime: newTemplateStartTime,
-        endTime: newTemplateEndTime,
+        startTime,
+        endTime,
       },
-      desc: newTemplateLabel,
+      desc: label,
     };
 
     try {
       const response = await ServerApi.post(
         `api/v1/venue/${selectedvenueID}/common-shifts`,
-        { shift: newTemplate },
+        { shift: newTemplateData },
         { withCredentials: true }
       );
+
       setCommonShifts(response.data.commonShifts);
-      setIsDialogOpen(false);
-      setNewTemplateLabel("");
-      setNewTemplateStartTime("");
-      setNewTemplateEndTime("");
+      resetTemplateForm();
     } catch (err) {
       console.error(err);
     }
@@ -136,63 +150,86 @@ const ShiftTemplates = ({
     }
   };
 
+  const toggleShiftTemplates = () =>
+    setToolbarSections({
+      ...toolbarSections,
+      shiftTemplates: !toolbarSections.shiftTemplates,
+    });
+
   return (
     <Card>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+      <Collapsible
+        open={toolbarSections.shiftTemplates}
+        onOpenChange={toggleShiftTemplates}
+      >
+        <CardHeader className="p-3">
+          <CardTitle className="flex items-center justify-between text-base">
             <span>Shift Templates</span>
             <CollapsibleTrigger>
               <ChevronDown
-                className={`h-4 w-4 transition-transform ${
-                  isOpen ? "transform rotate-180" : ""
-                }`}
+                className={`
+                  h-4 w-4 transition-transform 
+                  ${
+                    toolbarSections.shiftTemplates ? "transform rotate-180" : ""
+                  }
+                `}
               />
             </CollapsibleTrigger>
           </CardTitle>
         </CardHeader>
         <CollapsibleContent>
-          <CardContent>
-            <p className="mb-4">Drag and drop these shifts onto the rota.</p>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4  ">
-              <div className="space-y-2">
+          <CardContent className="p-3 space-y-2">
+            <p className="text-xs text-muted-foreground mb-2">
+              Drag and drop these shifts onto the rota
+            </p>
+            <ScrollArea className="h-[180px] w-full rounded-md border p-2">
+              <div className="space-y-1">
                 {commonShifts.map((shift) => (
                   <DraggableTemplate
                     key={shift.id}
-                    shift={{ ...shift, handleDeleteTemplate }}
+                    shift={{ ...shift, onDelete: handleDeleteTemplate }}
                   />
                 ))}
               </div>
             </ScrollArea>
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="mt-4">
-                  <Plus className="mr-2 h-4 w-4" /> Add Custom Template
+                <Button size="sm" className="w-full mt-2">
+                  <Plus className="mr-2 h-4 w-4" /> Add Template
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Custom Shift Template</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleAddNewTemplate} className="space-y-4">
+                <form onSubmit={handleAddNewTemplate} className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="template-label">Shift Label</Label>
                     <Input
                       id="template-label"
-                      value={newTemplateLabel}
-                      onChange={(e) => setNewTemplateLabel(e.target.value)}
+                      value={newTemplate.label}
+                      onChange={(e) =>
+                        setNewTemplate((prev) => ({
+                          ...prev,
+                          label: e.target.value,
+                        }))
+                      }
                       placeholder="Enter shift label"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label htmlFor="start-time">Start Time</Label>
                       <Input
                         id="start-time"
                         type="time"
-                        value={newTemplateStartTime}
+                        value={newTemplate.startTime}
                         onChange={(e) =>
-                          setNewTemplateStartTime(e.target.value)
+                          setNewTemplate((prev) => ({
+                            ...prev,
+                            startTime: e.target.value,
+                          }))
                         }
                       />
                     </div>
@@ -201,12 +238,19 @@ const ShiftTemplates = ({
                       <Input
                         id="end-time"
                         type="time"
-                        value={newTemplateEndTime}
-                        onChange={(e) => setNewTemplateEndTime(e.target.value)}
+                        value={newTemplate.endTime}
+                        onChange={(e) =>
+                          setNewTemplate((prev) => ({
+                            ...prev,
+                            endTime: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                   </div>
-                  <Button type="submit">Add Template</Button>
+                  <Button type="submit" className="w-full">
+                    Add Template
+                  </Button>
                 </form>
               </DialogContent>
             </Dialog>

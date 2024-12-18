@@ -9,7 +9,6 @@ import {
   Image,
   FileSpreadsheet,
 } from "lucide-react";
-import ServerApi from "../../serverApi/axios";
 import { getDayLabel } from "../../Utils/utils";
 import exportToPDF from "../../Utils/exportToPdf";
 import exportToPng from "../../Utils/exportToPng";
@@ -33,6 +32,7 @@ interface ToolbarProps {
   setRota: React.Dispatch<
     React.SetStateAction<{ _id: string; published: boolean } | null>
   >;
+  PublishRota: () => void;
 }
 
 // Define the type for the export options
@@ -42,21 +42,28 @@ interface ExportOption {
   onClick: () => void;
 }
 
-const Toolbar = ({ venueName, weekStarting, rota, setRota }: ToolbarProps) => {
+const Toolbar = ({
+  venueName,
+  weekStarting,
+  rota,
+  PublishRota,
+}: ToolbarProps) => {
   // Use the new RotaContext
-  const { setSelectedWeek, filters, setFilters } = useRotaContext();
+  const {
+    setSelectedWeek,
+    filters,
+    setFilters,
+    isSidebarOpen,
+    setIsSidebarOpen,
+    setToolbarSections,
+  } = useRotaContext();
 
-  const handleClickPublishRota = async () => {
-    try {
-      const { data } = await ServerApi.post(
-        `/api/v1/rotas/${rota?._id}/publish`,
-        { isPublished: true },
-        { withCredentials: true }
-      );
-      setRota(data.rota);
-    } catch (error) {
-      console.error(error);
-    }
+  const handleCloseSidebar = () => {
+    setToolbarSections({
+      shiftTemplates: false,
+      rotaTemplates: false,
+    });
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const handleChangeWeek = (direction: "left" | "right") => {
@@ -87,7 +94,7 @@ const Toolbar = ({ venueName, weekStarting, rota, setRota }: ToolbarProps) => {
   ];
 
   return (
-    <Card className="w-full">
+    <Card className=" max-w-[1600px] mb-6 ">
       <CardContent className="p-4">
         <div className="flex flex-wrap flex-col md:flex-row items-center justify-between gap-4">
           <h2 className="text-xl font-semibold">{venueName}</h2>
@@ -95,7 +102,7 @@ const Toolbar = ({ venueName, weekStarting, rota, setRota }: ToolbarProps) => {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button
               variant={rota?.published ? "secondary" : "default"}
-              onClick={handleClickPublishRota}
+              onClick={() => PublishRota(rota?._id)}
               disabled={rota?.published}
             >
               {rota?.published ? (
@@ -130,6 +137,10 @@ const Toolbar = ({ venueName, weekStarting, rota, setRota }: ToolbarProps) => {
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
+
+            <Button onClick={() => handleCloseSidebar()} variant="outline">
+              Tools
+            </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

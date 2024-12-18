@@ -4,6 +4,7 @@ import { IoAddSharp } from "react-icons/io5";
 import ShiftModal from "./ShiftModal";
 import DroppableArea from "./DndComponents/DropppableArea";
 import DraggableItem from "./DndComponents/DraggableItem";
+import { useDraggable } from "@dnd-kit/core";
 import { useRotaContext } from "@/Context/RotaContext";
 
 // Keep existing interfaces
@@ -61,6 +62,76 @@ const RotaTable = ({
   updateRota,
   archived,
 }: RotaTableProps) => {
+  const EmployeeDraggable = ({
+    personIndex,
+    employeeName,
+  }: {
+    personIndex: number;
+    employeeName: string;
+  }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+      id: `employee-${personIndex}`,
+      data: {
+        type: "employee",
+        personIndex,
+      },
+    });
+
+    const style = transform
+      ? {
+          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+          cursor: "grab",
+        }
+      : undefined;
+
+    return (
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        style={style}
+        className="cursor-grab select-none"
+      >
+        {employeeName}
+      </div>
+    );
+  };
+
+  const WeekDayDraggable = ({
+    dayIndex,
+    dayLabel,
+  }: {
+    dayIndex: number;
+    dayLabel: string;
+  }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+      id: `weekday-${dayIndex}`,
+      data: {
+        type: "weekday",
+        dayIndex,
+      },
+    });
+
+    const style = transform
+      ? {
+          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+          cursor: "grab",
+        }
+      : undefined;
+
+    return (
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        style={style}
+        className="flex justify-center items-center select-none cursor-grab"
+      >
+        {dayLabel}
+      </div>
+    );
+  };
+
   // Use the context
   const { filters, setFilters } = useRotaContext();
   console.log(rota);
@@ -180,10 +251,11 @@ const RotaTable = ({
               </th>
             )}
             {dates.map((day, dayIndex) => (
-              <th key={day} className="px-4 py-2 border bg-gray-100">
-                <div className="flex justify-center items-center select-none">
-                  {getDayLabel(new Date(day))}
-                </div>
+              <th key={dayIndex} className="px-4 py-2 border bg-gray-100">
+                <WeekDayDraggable
+                  dayIndex={dayIndex}
+                  dayLabel={getDayLabel(new Date(day))}
+                />
               </th>
             ))}
             {filters.showHours && (
@@ -203,11 +275,14 @@ const RotaTable = ({
             rota?.map((person, personIndex) => (
               <tr key={person.employee}>
                 <td className="border px-4 py-2 select-none">
-                  {person?.employeeName}
+                  <EmployeeDraggable
+                    personIndex={personIndex}
+                    employeeName={person?.employeeName}
+                  />
                 </td>
                 {dates.map((day, dayIndex) => (
                   <td
-                    key={day}
+                    key={dayIndex}
                     className="border h-full"
                     onDoubleClick={(event) =>
                       handleEditShift(personIndex, dayIndex, event)

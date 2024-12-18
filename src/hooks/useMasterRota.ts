@@ -28,6 +28,7 @@ interface Rota {
   _id: string;
   rotaData: RotaPerson[];
   archived?: boolean;
+  published: boolean;
 }
 
 interface CommonShift {
@@ -121,37 +122,39 @@ const useMasterRota = (selectedVenueId: string, selectedWeek: number) => {
   const onDragEnd = useCallback(
     (event: DragEvent) => {
       const { active, over } = event;
-      if (!over || !active) {
-        return;
-      }
 
-      const [sourcePersonIndex, sourceDayIndex] = active.id
-        .split("-")
-        .map(Number);
-      const [destPersonIndex, destDayIndex] = over.id.split("-").map(Number);
+      // Log drag event for debugging
+      console.log("Drag event:", event);
+      console.log("Active data:", active.data.current);
+      console.log("Over data:", over?.data?.current);
 
+      // Guard clauses for invalid drag actions
+      if (!over || !active) return;
+      if (rota.data?.archived) return; // Prevent actions on archived rota
+
+      // Clone current rota data to avoid direct mutation
       let updatedRotaData = [...rota.data.rotaData];
 
-      // Existing drag and drop logic from previous implementation
-      if (active.data.current?.droppableContainer?.id === "commonShifts") {
-        const shift = commonShifts.data.find((shift) => shift.id === active.id);
+      // Helper functions for different drag scenarios
+      const handleCommonShiftDrag = () => {
+        const [destPersonIndex, destDayIndex] = over.id.split("-").map(Number);
+        const shift = commonShifts.data.find((s) => s.id === active.id);
         if (!shift) return;
 
         updatedRotaData[destPersonIndex].schedule[destDayIndex] = {
           ...updatedRotaData[destPersonIndex].schedule[destDayIndex],
           shiftData: { ...shift.shiftData },
         };
-      } else if (
-        active.data.current?.droppableContainer?.id === "commonRotas"
-      ) {
+      };
+
+      const handleCommonRotaDrag = () => {
         const rotaTemplate = commonRotas.data.find((r) => r.id === active.id);
         if (!rotaTemplate) return;
 
-        updatedRotaData = rota.data.rotaData.map((person) => {
+        updatedRotaData = updatedRotaData.map((person) => {
           const templatePerson = rotaTemplate.rotaData.find(
             (p) => p.employee.toString() === person.employee.toString()
           );
-
           if (!templatePerson) return person;
 
           const updatedSchedule = person.schedule.map((shift, index) => ({
@@ -159,12 +162,84 @@ const useMasterRota = (selectedVenueId: string, selectedWeek: number) => {
             shiftData: { ...templatePerson.schedule[index].shiftData },
           }));
 
-          return {
-            ...person,
-            schedule: updatedSchedule,
-          };
+          return { ...person, schedule: updatedSchedule };
         });
-      } else {
+      };
+
+      const handleEmployeeDrag = () => {
+        const sourcePersonIndex = Number(active.id.split("-")[1]);
+        const destPersonIndex = Number(over.id.split("-")[0]);
+
+        if (sourcePersonIndex === destPersonIndex) return;
+
+        if (isShiftPressed) {
+          // Copy schedule from source to destination
+          updatedRotaData = updatedRotaData.map((person, index) => {
+            if (index === destPersonIndex) {
+              return {
+                ...person,
+                schedule: person.schedule.map((shift, dayIndex) => ({
+                  ...shift,
+                  shiftData: rota.data.rotaData[sourcePersonIndex].schedule[
+                    dayIndex
+                  ]?.shiftData || {
+                    startTime: "",
+                    endTime: "",
+                    label: "Day Off",
+                  },
+                })),
+              };
+            }
+            return person;
+          });
+        } else {
+          // Swap schedules
+          const tempSchedule = updatedRotaData[sourcePersonIndex].schedule;
+          updatedRotaData[sourcePersonIndex].schedule =
+            updatedRotaData[destPersonIndex].schedule;
+          updatedRotaData[destPersonIndex].schedule = tempSchedule;
+        }
+      };
+
+      const handleWeekdayDrag = () => {
+        const sourceDayIndex = active.data.current.dayIndex;
+        const destDayIndex = Number(over.id.split("-")[1]);
+
+        if (sourceDayIndex === destDayIndex) return;
+
+        if (isShiftPressed) {
+          // Copy entire day's shifts
+          updatedRotaData = updatedRotaData.map((person) => ({
+            ...person,
+            schedule: person.schedule.map((shift, index) => {
+              if (index === destDayIndex) {
+                return {
+                  ...shift,
+                  shiftData:
+                    person.schedule[sourceDayIndex].shiftData || undefined,
+                };
+              }
+              return shift;
+            }),
+          }));
+        } else {
+          // Swap day's shifts
+          updatedRotaData = updatedRotaData.map((person) => {
+            const tempShift = person.schedule[sourceDayIndex].shiftData;
+            person.schedule[sourceDayIndex].shiftData =
+              person.schedule[destDayIndex].shiftData;
+            person.schedule[destDayIndex].shiftData = tempShift;
+            return { ...person };
+          });
+        }
+      };
+
+      const handleIndividualShiftDrag = () => {
+        const [sourcePersonIndex, sourceDayIndex] = active.id
+          .split("-")
+          .map(Number);
+        const [destPersonIndex, destDayIndex] = over.id.split("-").map(Number);
+
         if (isShiftPressed) {
           // Copy shift
           updatedRotaData[destPersonIndex].schedule[destDayIndex] = {
@@ -186,13 +261,20 @@ const useMasterRota = (selectedVenueId: string, selectedWeek: number) => {
           updatedRotaData[destPersonIndex].schedule[destDayIndex].shiftData =
             tempShift;
         }
-      }
+      };
 
-      // Update rota and send to server
+      // Determine drag scenario
+      const containerId = active.data.current?.droppableContainer?.id;
+      if (containerId === "commonShifts") handleCommonShiftDrag();
+      else if (containerId === "commonRotas") handleCommonRotaDrag();
+      else if (active.data.current?.type === "employee") handleEmployeeDrag();
+      else if (active.data.current?.type === "weekday") handleWeekdayDrag();
+      else handleIndividualShiftDrag();
+
+      // Update rota data and trigger server update
       const updatedRota = { ...rota.data, rotaData: updatedRotaData };
       setRota((prev) => ({ ...prev, data: updatedRota }));
 
-      // Use ref to call updateRota safely
       if (updateRotaRef.current) {
         updateRotaRef.current(updatedRota);
       }
@@ -314,6 +396,26 @@ const useMasterRota = (selectedVenueId: string, selectedWeek: number) => {
     }
   };
 
+  const PublishRota = async (RotaId: string) => {
+    try {
+      const { data } = await ServerApi.post(
+        `/api/v1/rotas/${RotaId}/publish`,
+        { isPublished: true },
+        { withCredentials: true }
+      );
+      console.log(rota);
+      setRota({
+        ...rota,
+        data: {
+          ...rota.data,
+          published: true,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchRota();
   }, [fetchRota]);
@@ -358,6 +460,7 @@ const useMasterRota = (selectedVenueId: string, selectedWeek: number) => {
     onDragStart,
     onDragEnd,
     isShiftPressed,
+    PublishRota,
   };
 };
 
