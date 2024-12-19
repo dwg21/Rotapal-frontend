@@ -449,6 +449,7 @@ const useMasterRota = (selectedVenueId: string, selectedWeek: number) => {
 
   return {
     rota,
+    setRota,
     commonShifts,
     commonRotas,
     status,

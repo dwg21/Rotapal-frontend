@@ -126,7 +126,7 @@ const Toolbar = ({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm">
+              <span className="text-sm ">
                 {startOfWeek} - {endOfWeek}
               </span>
               <Button
@@ -138,7 +138,11 @@ const Toolbar = ({
               </Button>
             </div>
 
-            <Button onClick={() => handleCloseSidebar()} variant="outline">
+            <Button
+              onClick={() => handleCloseSidebar()}
+              variant="outline"
+              className={`${isSidebarOpen && "bg-slate-200"}`}
+            >
               Tools
             </Button>
 

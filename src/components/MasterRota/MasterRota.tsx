@@ -10,8 +10,8 @@ import {
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { ClipLoader } from "react-spinners";
 import Toolbar from "../RotaMisc/Toolbar";
-import RotaTable from "./RotaTable";
-import RotaTableMobile from "./RotaTableMobile";
+import RotaTable from "../Rotatable/RotaTable";
+import RotaTableMobile from "../Rotatable/RotaTableMobile";
 import useMasterRota from "../../hooks/useMasterRota";
 import { useRotaContext } from "../../Context/RotaContext";
 import DragPreview from "./DragPreview";
@@ -24,6 +24,7 @@ const MasterRota: React.FC = () => {
 
   const {
     rota,
+    setRota,
     commonShifts,
     commonRotas,
     status,
@@ -37,6 +38,8 @@ const MasterRota: React.FC = () => {
     isShiftPressed,
     PublishRota,
   } = useMasterRota(selectedVenueId, selectedWeek);
+
+  console.log(rota);
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
@@ -69,7 +72,8 @@ const MasterRota: React.FC = () => {
               <>
                 <div className="hidden lg:flex w-full justify-center">
                   <RotaTable
-                    rota={rota?.data?.rotaData}
+                    rota={rota}
+                    setRota={setRota}
                     dates={dates}
                     isShiftPressed={isShiftPressed}
                     updateRota={updateRota}
@@ -94,32 +98,9 @@ const MasterRota: React.FC = () => {
               </>
             ) : (
               <div className="text-center w-full p-6 bg-white rounded-lg shadow-md">
-                {rota.data?.futureDate ? (
-                  <div className="space-y-4">
-                    <p className="text-gray-700">
-                      There is no rota for this week yet. Would you like to
-                      generate one?
-                    </p>
-                    <button
-                      onClick={generateRota}
-                      className="
-                            px-4 py-2 
-                            bg-blue-600 
-                            text-white 
-                            rounded-md 
-                            hover:bg-blue-700 
-                            transition-colors 
-                            duration-300
-                          "
-                    >
-                      Generate Rota
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-xl font-medium text-gray-500">
-                    No Rota Found for this week
-                  </p>
-                )}
+                <p className="text-xl font-medium text-gray-500">
+                  No Rota Found for this week
+                </p>
               </div>
             )}
           </div>
